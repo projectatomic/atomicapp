@@ -8,6 +8,7 @@ from argparse import RawDescriptionHelpFormatter
 import ConfigParser
 from string import Template
 import tempfile
+import subprocess
 
 ATOMIC_FILE="Atomicfile"
 PARAMS_FILE="params.ini"
@@ -104,6 +105,14 @@ class AppEnt():
 
         return template.substitute(d)
 
+    def _callK8s(self, path):
+        cmd = ["kubectl", "create" "-f", path, "--api-version=v1beta1"]
+        print("Calling kubectl for %s" % path)
+        if subprocess.call(cmd) == 0:
+            return True
+        
+        return False
+
     def _processComponent(self, component):
         kube_artifacts = ["service", "rc", "pod"] #FIXME
         for artifact in kube_artifacts:
@@ -119,7 +128,8 @@ class AppEnt():
             with open(k8s_file, "w") as fp:
                 fp.write(data)
 
-            print("Calling k8s for %s" % k8s_file)
+            self._callK8s(k8s_file)
+
 
 
 if __name__ == "__main__":
