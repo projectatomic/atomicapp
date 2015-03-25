@@ -2,15 +2,12 @@
 
 from __future__ import print_function
 import os,sys
-import json
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-import ConfigParser
 from string import Template
 import tempfile
 import subprocess
 import anymarkup
-import docker
 import distutils.dir_util
 
 ATOMIC_FILE="Atomicfile"
