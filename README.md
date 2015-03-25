@@ -4,8 +4,11 @@ This tool lets you run your multi-container app in Kubernetes by calling a singl
 ##How to Run
 ```
 cd my-app/
-python $path_to_appent/app-ent.py [-a file]
+python $path_to_appent/app-ent.py [-a file] [--dry-run]
 ```
+
+###Output
+
 
 ##Artifacts
 There are few files/atrifacts needed to successfully run the application - Atomicfile, params.ini, Kubernetes configuration files..
