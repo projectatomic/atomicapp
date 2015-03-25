@@ -7,8 +7,9 @@ from argparse import RawDescriptionHelpFormatter
 from string import Template
 import tempfile
 import subprocess
-import anymarkup
+#import anymarkup
 import distutils.dir_util
+import ConfigParser, json
 
 ATOMIC_FILE="Atomicfile"
 PARAMS_FILE="params.conf"
@@ -62,18 +63,30 @@ class AppEnt():
     def _loadAtomicfile(self, path = None):
         if not os.path.exists(path):
             return None
-
-        self.atomicfile_data = anymarkup.parse_file(path)
+        
+        with open(path, "r") as fp:
+            self.atomicfile_data = json.load(fp)
 
         return self.atomicfile_data
 
     def _loadParams(self, path = None):
         if not os.path.exists(path):
             return None
+
+        config = ConfigParser.ConfigParser()
+
+
+        data = {}
+        with open(path, "r") as fp:
+            config.readfp(fp)
+
+            for section in config.sections():
+                data[section] = dict(config.items(section))
+
         if self.params_data:
-            self.params_data.update(anymarkup.parse_file(path))
+                self.params_data.update(data)
         else:
-            self.params_data = anymarkup.parse_file(path)
+            self.params_data = data
 
         return self.params_data
 
@@ -81,7 +94,17 @@ class AppEnt():
         if not os.path.exists(path):
             return None
 
-        self.answers_data = anymarkup.parse_file(path)
+        config = ConfigParser.ConfigParser()
+
+
+        data = {}
+        with open(path, "r") as fp:
+            config.readfp(fp)
+
+            for section in config.sections():
+                data[section] = dict(config.items(section))
+        
+        self.answers_data = data
 
         return self.answers_data
 
@@ -137,7 +160,9 @@ class AppEnt():
         path = os.path.join(self._getComponentDir(component))
         for entity in os.listdir(path):
             print(entity)
-            data = anymarkup.parse_file(os.path.join(path, entity))
+            data = None
+            with open(os.path.join(path, entity), "r") as fp:
+                data = json.load(fp)
             if "kind" in data:
                 kube_artifacts[data["kind"].lower()] = data
             else:
@@ -145,7 +170,7 @@ class AppEnt():
 
         for artifact in kube_order:
             filename = "%s-%s.json" % (component, artifact)
-            data = self._applyTemplate(anymarkup.serialize(kube_artifacts[artifact], "json"), component)
+            data = self._applyTemplate(json.dumps(kube_artifacts[artifact]), component)
         
             k8s_file = os.path.join(self.tmpdir, filename)
             with open(k8s_file, "w") as fp:
