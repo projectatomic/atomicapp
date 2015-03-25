@@ -1,0 +1,3 @@
+[submodule "wordpress-application"]
+	path = wordpress-application
+	url = https://github.com/goern/wordpress-application
