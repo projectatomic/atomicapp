@@ -18,12 +18,14 @@ K8S_DIR="Kubernetes"
 
 class AppEnt():
     debug = False
+    dryrun = False
     atomicfile_data = None
     params_data = None
     answers_data = None
     tmpdir = None
-    def __init__(self, answers, debug = False):
+    def __init__(self, answers, dryrun = False, debug = False):
         self.debug = debug
+        self.dryrun = dryrun
 
         self.tmpdir = tempfile.mkdtemp(prefix="appent-")
 
@@ -98,8 +100,8 @@ class AppEnt():
         if not self.params_data.has_section(component):
             print("No defaults for %s" % component)
             return data
-
-        d = dict(self.params_data.items(component))
+        d = dict(self.params_data.items("general"))
+        d.update(dict(self.params_data.items(component)))
         if self.answers_data and self.answers_data.has_section(component):
             d.update(dict(self.answers_data.items(component)))
 
@@ -108,8 +110,12 @@ class AppEnt():
     def _callK8s(self, path):
         cmd = ["kubectl", "create", "-f", path, "--api-version=v1beta1"]
         print("Calling: %s" % " ".join(cmd))
-        if subprocess.call(cmd) == 0:
+
+        if self.dryrun:
             return True
+        else:
+            if subprocess.call(cmd) == 0:
+                return True
         
         return False
 
@@ -135,10 +141,11 @@ class AppEnt():
 if __name__ == "__main__":
     parser = ArgumentParser(description='Run an application defined by Atomicfile', formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
+    parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
     parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
 
     args = parser.parse_args()
 
-    ae = AppEnt(args.answers, args.debug)
+    ae = AppEnt(args.answers, args.dryrun, args.debug)
 
     sys.exit(0)
