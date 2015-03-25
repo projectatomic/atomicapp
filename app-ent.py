@@ -106,8 +106,8 @@ class AppEnt():
         return template.substitute(d)
 
     def _callK8s(self, path):
-        cmd = ["kubectl", "create" "-f", path, "--api-version=v1beta1"]
-        print("Calling kubectl for %s" % path)
+        cmd = ["kubectl", "create", "-f", path, "--api-version=v1beta1"]
+        print("Calling: %s" % " ".join(cmd))
         if subprocess.call(cmd) == 0:
             return True
         
