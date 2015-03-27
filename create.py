@@ -4,7 +4,7 @@ from __future__ import print_function
 import os, sys
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
-import json
+import json, subprocess
 
 ANSWERS_FILE="answers.conf"
 PARAMS_FILE="params.conf"
@@ -32,15 +32,28 @@ MAINTAINER vpavlin <vpavlin@redhat.com>
 ADD / /application-entity/
 """
     name = None
-    def __init__(self, name):
+    dryrun = False
+    def __init__(self, name, dryrun = False):
         self.name = name
         self.app_id = self._nameToId(name)
+        self.dryrun = dryrun
 
     def create(self):
         self._writeAtomicfile()
         self._createGraph()
         self._writeParamsFile(os.getcwd())
         self._writeDockerfile()
+
+    def build(self, tag):
+        if not tag:
+            tag = self.app_id
+
+        cmd = ["docker", "build", "-t", tag, "."]
+        if self.dryrun:
+            print("Build: %s" % " ".join(cmd))
+        else:
+            subprocess.call(cmd)
+
 
 
     def _nameToId(self, name):
