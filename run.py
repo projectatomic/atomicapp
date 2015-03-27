@@ -11,6 +11,8 @@ import subprocess
 import distutils.dir_util
 import ConfigParser, json
 
+from yapsy.PluginManager import PluginManager
+
 ATOMIC_FILE="Atomicfile"
 PARAMS_FILE="params.conf"
 ANSWERS_FILE="answers.conf"
@@ -18,7 +20,6 @@ GRAPH_DIR="graph"
 APP_ENT_PATH="application-entity"
 GLOBAL_CONF="general"
 DEFAULT_PROVIDER="kubernetes"
-
 
 class AtomicappLevel:
     Main, Module = range(2)
@@ -28,14 +29,17 @@ class Atomicapp():
     dryrun = False
     atomicfile_data = None
     params_data = None
-    answers_data = None
+    answers_data = {GLOBAL_CONF: {}}
     tmpdir = None
     app_name = None
     answers_file = None
     provider = DEFAULT_PROVIDER
     installed = False
+    plugins = None
 
     def __init__(self, answers, app, dryrun = False, debug = False):
+
+        run_path = os.path.dirname(os.path.realpath(__file__))
         self.debug = debug
         self.dryrun = dryrun
 
@@ -45,6 +49,10 @@ class Atomicapp():
 
         self.app_name = app
         self.answers_file = answers
+
+        self.plugins = PluginManager()
+        self.plugins.setPluginPlaces([os.path.join(run_path, "providers")])
+        self.plugins.collectPlugins()
 
     def _getModuleName(self, app):
         return os.path.basename(app).split(":")[0]
@@ -78,7 +86,6 @@ class Atomicapp():
 
         config = ConfigParser.ConfigParser()
 
-
         data = {}
         with open(path, "r") as fp:
             config.readfp(fp)
@@ -98,7 +105,6 @@ class Atomicapp():
             return None
 
         config = ConfigParser.ConfigParser()
-
 
         data = {}
         with open(path, "r") as fp:
@@ -133,9 +139,9 @@ class Atomicapp():
                 print("Pulling %s" % component)
                 component_atomicapp = Atomicapp(self.answers_file, component, self.dryrun, self.debug)
                 component = component_atomicapp.install(component, AtomicappLevel.Module)
-                
+                component_path = self._getComponentDir(component)
 
-            component_params = os.path.join(component_path, PARAMS_FILE)
+            component_params = os.path.join(component_path, self.provider, PARAMS_FILE)
             if os.path.isfile(component_params):
                 self._loadParams(component_params)
             self._processComponent(component)
@@ -148,46 +154,39 @@ class Atomicapp():
 
         return template.substitute(component_config)
 
-    def _callK8s(self, path):
-        cmd = ["kubectl", "create", "-f", path, "--api-version=v1beta1"]
-        print("Calling: %s" % " ".join(cmd))
-
-        if self.dryrun:
-            return True
-        else:
-            if subprocess.call(cmd) == 0:
-                return True
-        
-        return False
+    def _getProvider(self):
+        for provider in self.plugins.getAllPlugins():
+            module_path = provider.details.get("Core", "Module")
+            if os.path.basename(module_path) == self.provider:
+                return provider.plugin_object
 
     def _processComponent(self, component):
-        kube_order = ["service", "rc", "pod"] #FIXME
-        kube_artifacts = {"service":None, "rc":None, "pod":None}
         path = os.path.join(self._getProviderDir(component))
-        for entity in os.listdir(path):
-            print(entity)
-            data = None
-            with open(os.path.join(path, entity), "r") as fp:
-                data = json.load(fp)
-            if "kind" in data:
-                kube_artifacts[data["kind"].lower()] = data
-            else:
-                print("Malformed kube file")
-
-        for artifact in kube_order:
-            if not kube_artifacts[artifact]:
+        data = None
+        for artifact in os.listdir(path):
+            if artifact == PARAMS_FILE:
                 continue
-            filename = "%s-%s.json" % (component, artifact)
-            data = self._applyTemplate(json.dumps(kube_artifacts[artifact]), component)
+            with open(os.path.join(path, artifact), "r") as fp:
+                data = fp.read()
+
+#            print("Data: %s" % data)
+
+            data = self._applyTemplate(data, component)
         
-            k8s_file = os.path.join(self.tmpdir, filename)
-            with open(k8s_file, "w") as fp:
+            dst_dir = os.path.join(self.tmpdir, component)
+            artifact_dst = os.path.join(dst_dir, artifact)
+            
+            if not os.path.isdir(dst_dir):
+                os.makedirs(dst_dir)
+            with open(artifact_dst, "w") as fp:
                 fp.write(data)
 
-            self._callK8s(k8s_file)
+        provider = self._getProvider()
+        provider.init(self._mergeConfig(), os.path.join(self.tmpdir, component), self.debug, self.dryrun)
+        provider.deploy()
+
 
     def _pullApp(self, app):
-        
         config = self._mergeConfig()
         
         if GLOBAL_CONF in config and "registry" in config[GLOBAL_CONF]:
@@ -195,7 +194,9 @@ class Atomicapp():
             app = os.path.join(config[GLOBAL_CONF]["registry"], app)
 
         pull = ["docker", "pull", app]
-        #subprocess.call(pull)
+        if False and subprocess.call(pull) != 0:
+            print("Couldn't pull %s" % app)
+            sys.exit(1)
             
         name = self._getModuleName(app)
         
@@ -206,9 +207,6 @@ class Atomicapp():
 
         rm = ["docker", "rm", name]
         subprocess.call(rm)
-
-
-#        client.remove_container(container, force=True)
 
     def _populateMainApp(self):
         print("Copying app %s" % self._getModuleName(self.app_name))
@@ -245,7 +243,11 @@ class Atomicapp():
         if not self._loadParams(os.path.join(os.getcwd(), PARAMS_FILE)):
             print("Failed to load %s" % PARAMS_FILE)
             return
-        
+
+        config = self._mergeConfig()
+        if "provider" in config[GLOBAL_CONF]:
+            self.provider = config[GLOBAL_CONF]["provider"]
+
         if self.debug:
             print(self.params_data)
 
@@ -271,7 +273,6 @@ class Atomicapp():
 
         self.installed = True
         return self.app_id
-
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='Run an application defined by Atomicfile', formatter_class=RawDescriptionHelpFormatter)
