@@ -127,18 +127,42 @@ class Atomicapp():
     def _getTmpAppDir(self):
         return os.path.join(self.tmpdir, APP_ENT_PATH)
 
+    def _getComponentName(self, graph_item):
+        if type(graph_item) is str or type(graph_item) is unicode:
+            return graph_item
+        elif type(graph_item) is dict:
+            return graph_item["name"]
+        else:
+            return None
+    
+    def _getComponentImageName(self, graph_item):
+        if type(graph_item) is str or type(graph_item) is unicode:
+            return graph_item
+        elif type(graph_item) is dict:
+            print(graph_item)
+            repo = ""
+            if "repository" in graph_item:
+                repo = graph_item["repository"]
+
+            print(repo)
+            return os.path.join(repo, graph_item["name"])
+        else:
+            return None
+
     def _dispatchGraph(self):
         if not "graph" in self.atomicfile_data:
             raise Exception("Graph not specified in %s" % ATOMIC_FILE)
         if not os.path.isdir(os.path.join(os.getcwd(), GRAPH_DIR)):
             raise Exception("Couldn't find %s directory" % GRAPH_DIR)
 
-        for component in self.atomicfile_data["graph"]:
+        for graph_item in self.atomicfile_data["graph"]:
+            component = self._getComponentName(graph_item)
             component_path = self._getComponentDir(component)
             if not os.path.isdir(component_path):
-                print("Pulling %s" % component)
+                image_name = self._getComponentImageName(graph_item)
+                print("Pulling %s" % image_name)
                 component_atomicapp = Atomicapp(self.answers_file, component, self.dryrun, self.debug)
-                component = component_atomicapp.install(component, AtomicappLevel.Module)
+                component = component_atomicapp.install(image_name, AtomicappLevel.Module)
                 component_path = self._getComponentDir(component)
 
             component_params = os.path.join(component_path, self.provider, PARAMS_FILE)
