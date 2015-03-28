@@ -37,7 +37,7 @@ if __name__ == "__main__":
                 ac.build(args.TAG)
     elif args.action == "run":
         ae = run.Atomicapp(args.answers, args.APP, args.dryrun, args.debug)
-        ae.run(args.app)
+        ae.run(args.APP)
 
     sys.exit(0)
 
