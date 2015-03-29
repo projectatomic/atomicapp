@@ -10,17 +10,26 @@ if __name__ == "__main__":
     parser = ArgumentParser(description='TBD', formatter_class=RawDescriptionHelpFormatter)
     parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
     parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
+    parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), run.ANSWERS_FILE), help="Path to %s" % run.ANSWERS_FILE)
+
     subparsers = parser.add_subparsers(dest="action")
+
     parser_create = subparsers.add_parser("create")
     parser_create.add_argument("NAME", help="App name")
 
+    
     parser_run = subparsers.add_parser("run")
-    parser_run.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), run.ANSWERS_FILE), help="Path to %s" % run.ANSWERS_FILE)
-    parser_run.add_argument("APP", help="App to run")
+    parser_run.add_argument("APP", nargs="?", help="App to run")
+    
+    parser_install = subparsers.add_parser("install")
 
+    parser_install.add_argument("-r", "--recursive", dest="recursive", default=True, help="Don't call k8s")
+    parser_install.add_argument("APP",  default=None, help="Name of the image containing your app")
     
     parser_run = subparsers.add_parser("build")
     parser_run.add_argument("TAG", nargs="?", default=None, help="Name of the image containing your app")
+    
+    
 
 
     args = parser.parse_args()
@@ -35,9 +44,12 @@ if __name__ == "__main__":
                 data = json.load(fp)
                 ac = create.AtomicappCreate(data["id"], args.dryrun)
                 ac.build(args.TAG)
-    elif args.action == "run":
-        ae = run.Atomicapp(args.answers, args.APP, args.dryrun, args.debug)
-        ae.run(args.APP)
+    elif args.action == "run" or args.action == "install":
+        ae = run.Atomicapp(args.answers, args.APP, args.recursive, args.dryrun, args.debug)
+        if args.action == "run":
+            ae.run(args.APP)
+        else:
+            ae.install(args.APP, run.AtomicappLevel.Main)
 
     sys.exit(0)
 

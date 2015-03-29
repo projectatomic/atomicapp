@@ -36,12 +36,14 @@ class Atomicapp():
     provider = DEFAULT_PROVIDER
     installed = False
     plugins = None
+    recursive = True
 
-    def __init__(self, answers, app, dryrun = False, debug = False):
+    def __init__(self, answers, app, recursive = True, dryrun = False, debug = False):
 
         run_path = os.path.dirname(os.path.realpath(__file__))
         self.debug = debug
         self.dryrun = dryrun
+        self.recursive = True if str(recursive).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
 
         self.tmpdir = tempfile.mkdtemp(prefix="appent-%s" % self._getModuleName(app))
         if self.debug:
@@ -158,13 +160,8 @@ class Atomicapp():
         for graph_item in self.atomicfile_data["graph"]:
             component = self._getComponentName(graph_item)
             component_path = self._getComponentDir(component)
-            if not os.path.isdir(component_path):
-                image_name = self._getComponentImageName(graph_item)
-                print("Pulling %s" % image_name)
-                component_atomicapp = Atomicapp(self.answers_file, component, self.dryrun, self.debug)
-                component = component_atomicapp.install(image_name, AtomicappLevel.Module)
-                component_path = self._getComponentDir(component)
 
+        
             component_params = os.path.join(component_path, self.provider, PARAMS_FILE)
             if os.path.isfile(component_params):
                 self._loadParams(component_params)
@@ -295,8 +292,24 @@ class Atomicapp():
             elif level == AtomicappLevel.Module:
                 self._populateModule()
 
+        if self.recursive:
+            self._installDependencies()
+
         self.installed = True
         return self.app_id
+
+    def _installDependencies(self):
+        for graph_item in self.atomicfile_data["graph"]:
+            component = self._getComponentName(graph_item)
+            component_path = self._getComponentDir(component)
+            if not os.path.isdir(component_path):
+                image_name = self._getComponentImageName(graph_item)
+                print("Pulling %s" % image_name)
+                component_atomicapp = Atomicapp(self.answers_file, component, self.dryrun, self.debug)
+                component = component_atomicapp.install(image_name, AtomicappLevel.Module)
+                component_path = self._getComponentDir(component)
+                print("Component installed into %s" % component_path)
+
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='Run an application defined by Atomicfile', formatter_class=RawDescriptionHelpFormatter)
