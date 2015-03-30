@@ -1,62 +1,33 @@
-# AppEnt (PoC, WIP, FIXME...:)
+# ContainerApp
+ContainerApp tool is a reference implementation of [Container Application Specification](https://github.com/aweiteka/containerapp-spec). It can be used to bootstrap container application and to install and run them
 
-This tool lets you run your multi-container app in Kubernetes by calling a single command
-##How to Run
+## How To
+
+### Create
 ```
-cd my-app/
-python $path_to_appent/app-ent.py [-a file] [--dry-run]
+containerapp.py [--dry-run] create APP_NAME
 ```
-
-###Output
-
-
-##Artifacts
-There are a few files/atrifacts needed to successfully run the application - `Atomicfile`, `params.ini`, and Kubernetes configuration files..
-
-###Atomicfile
-`Atomicfile` describes your application and defines the startup sequence.
-
-For our simple WordPress app it looks like this
-
+### Build
 ```
-{
-    "name": "Wordpress-App",
-    "version": "0.0.1",
-    "graph": [
-        "mariadb",
-        "wordpress"
-    ]
-}
+containerapp.py [--dry-run] build [TAG]
+```
+### Install
+```
+containerapp.py [--dry-run] [-a answers.conf] install [--recursive] APP 
+```
+### Run
+```
+containerapp.py [--dry-run] [-a answers.conf] run APP
 ```
 
-The `graph` is the most important part here - it defines what containers and in which order they should be started. In this example it simply means: first, start the `mariadb` container, then, if it succeeded, start the `wordpress` container.
+## Providers
 
-###params.ini
-In this file you can define values for `$variables` used in JSON/YAML Kubernetes configuration files. 
+Providers represent various deployment targets. They are based on yapsy plugin system and can be added by implementing interface explained in [Providers](providers/README.md)
 
-A section corresponds with the `graph` item in `Atomicfile`. A general section is available for all `graph` items during the substitution
+## Examples
 
-```
-# This a a parameters file for an Application
-[general]
-registry = docker-registry.example.com
-foo = bar
+### Mariadb App
 
-[mariadb]
-password = test
-rootpassword = roottest
-
-[wordpress]
-title = Team7
-foo = baz
-public_ip = None # None means required
-```
-###answers.ini
-This file is optional and has the same structure as `params.ini`. File `params.ini` is part of the application and is defined by the developer where, on the other hand, `answers.ini` is used and modified by administration to override or fill in the blanks.
-
-By default we search for `answers.ini` in the current directory, but it can be overried with `-a file`.
-
-###Kuberentes configs
-Configuration files for Kuberenetes as defined by the project (FIXME link). Variables can be used in these configs - they replace with values from `params.ini` and `answers.ini` on start.
+### Wordpress App
 
 
