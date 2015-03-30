@@ -5,9 +5,11 @@ import os, sys
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import json, subprocess
+import urllib2
 
 ANSWERS_FILE="answers.conf"
 PARAMS_FILE="params.conf"
+SCHEMA_URL="https://raw.githubusercontent.com/aweiteka/containerapp-spec/master/spec/v1-alpha/schema.json"
 class AtomicappCreate():
     Atomicfile = """
     {
@@ -33,16 +35,32 @@ ADD / /application-entity/
 """
     name = None
     dryrun = False
-    def __init__(self, name, dryrun = False):
+    schema = None
+    def __init__(self, name, schema = None, dryrun = False):
         self.name = name
         self.app_id = self._nameToId(name)
         self.dryrun = dryrun
 
+        if not schema: 
+            schema = SCHEMA_URL
+        
+        if not os.path.isfile(schema):
+            response = urllib2.urlopen(schema)
+            with open(os.path.basename(schema), "w") as fp:
+                fp.write(response.read())
+                schema = os.path.basename(schema)
+        
+        with open(schema, "r") as fp:
+            self.schema = json.load(fp)
+
     def create(self):
-        self._writeAtomicfile()
-        self._createGraph()
-        self._writeParamsFile(os.getcwd())
-        self._writeDockerfile()
+        if self.schema:
+            self._writeFromSchema(self.schema["elements"])
+        else:
+            self._writeAtomicfile()
+            self._createGraph()
+            self._writeParamsFile(os.getcwd())
+            self._writeDockerfile()
 
     def build(self, tag):
         if not tag:
@@ -54,6 +72,28 @@ ADD / /application-entity/
         else:
             subprocess.call(cmd)
 
+
+    def _writeFromSchema(self, elements):
+        for element in elements:
+            value = element["value"]
+            if not element["contents"] and not value:
+                continue
+            if element["name"] == "application":
+                value = self.app_id
+            print("Writing %s" % element["name"])
+            if element["elementType"] == "directory":
+                os.mkdir(value)
+                os.chdir(value)
+                self._writeFromSchema(element["contents"])
+                os.chdir("..")
+            elif element["elementType"] == "file":
+                with open(value, "w") as fp:
+                    if element["contents"]:
+                        if element["contentType"] == "text/plain":
+                            fp.write(element["contents"])
+                        elif element["contentType"] == "application/json":
+                            fp.write(json.dumps(element["contents"]))
+    
 
 
     def _nameToId(self, name):

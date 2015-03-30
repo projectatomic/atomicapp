@@ -5,7 +5,7 @@ ContainerApp tool is a reference implementation of [Container Application Specif
 
 ### Create
 ```
-containerapp.py [--dry-run] create APP_NAME
+containerapp.py [--dry-run] create --schema PATH|URL APP_NAME
 ```
 ### Build
 ```

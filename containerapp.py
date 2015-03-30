@@ -15,6 +15,7 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers(dest="action")
 
     parser_create = subparsers.add_parser("create")
+    parser_create.add_argument("--schema", default=None, help="Schema for the app spec")
     parser_create.add_argument("NAME", help="App name")
 
     
@@ -36,7 +37,7 @@ if __name__ == "__main__":
     print(args)
    
     if args.action == "create":
-        ac = create.AtomicappCreate(args.NAME, args.dryrun)
+        ac = create.AtomicappCreate(args.NAME, args.schema, args.dryrun)
         ac.create()
     elif args.action == "build":
         if os.path.isfile(os.path.join(os.getcwd(), run.ATOMIC_FILE)):
