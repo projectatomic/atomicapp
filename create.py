@@ -92,12 +92,26 @@ ADD / /application-entity/
                         if element["contentType"] == "text/plain":
                             fp.write(element["contents"])
                         elif element["contentType"] == "application/json":
+                            if element["name"] == "Atomicfile":
+                                element["contents"] = self._updateAtomicfile(element["contents"])
+
                             fp.write(json.dumps(element["contents"]))
     
 
 
     def _nameToId(self, name):
         return name.strip().lower().replace(" ", "-")
+
+    def _updateAtomicfile(self, contents):
+        print(contents)
+        if "name" in contents:
+            contents["name"] = self.name
+        if "id" in contents:
+            contents["id"] = self.app_id
+        if "graph" in contents:
+            contents["graph"].append(self.app_id)
+
+        return contents
 
     def _writeAtomicfile(self):
         with open(os.path.join(os.getcwd(), "Atomicfile"), "w") as fp:
