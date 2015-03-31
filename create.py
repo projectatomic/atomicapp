@@ -109,7 +109,8 @@ ADD / /application-entity/
         if "id" in contents:
             contents["id"] = self.app_id
         if "graph" in contents:
-            contents["graph"].append(self.app_id)
+            component = {"repository": "", "name": self.app_id}
+            contents["graph"].append(component)
 
         return contents
 
