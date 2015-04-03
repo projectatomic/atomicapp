@@ -47,7 +47,7 @@ if __name__ == "__main__":
                 ac = create.AtomicappCreate(data["id"], args.dryrun)
                 ac.build(args.TAG)
     elif args.action == "run" or args.action == "install":
-        ae = run.Atomicapp(args.answers, args.APP, args.recursive, args.dryrun, args.debug)
+        ae = run.Atomicapp(args.answers, args.APP, args.recursive, None, args.dryrun, args.debug)
         if args.action == "run":
             ae.run(args.APP)
         else:
