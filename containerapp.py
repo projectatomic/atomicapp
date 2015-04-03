@@ -20,6 +20,7 @@ if __name__ == "__main__":
 
     
     parser_run = subparsers.add_parser("run")
+    parser_run.add_argument("-r", "--recursive", dest="recursive", default=True, help="Don't call k8s")
     parser_run.add_argument("APP", nargs="?", help="App to run")
     
     parser_install = subparsers.add_parser("install")

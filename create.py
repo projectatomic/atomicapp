@@ -11,29 +11,8 @@ ANSWERS_FILE="answers.conf"
 PARAMS_FILE="params.conf"
 SCHEMA_URL="https://raw.githubusercontent.com/aweiteka/containerapp-spec/master/spec/v1-alpha/schema.json"
 class AtomicappCreate():
-    Atomicfile = """
-    {
-        "specversion": "v1-alpha", 
-        "name": "%s",
-        "id": "%s",
-        "appversion": "0.0.1",
-        "description": "My App",
-        "graph": [
-            "%s"
-        ]
-    }
-    """
-    parameters = """[general]
-
-"""
-    dockerfile = """
-FROM scratch
-
-MAINTAINER vpavlin <vpavlin@redhat.com>
-
-ADD / /application-entity/
-"""
     name = None
+    app_id = None
     dryrun = False
     schema = None
     def __init__(self, name, schema = None, dryrun = False):
@@ -54,14 +33,11 @@ ADD / /application-entity/
             self.schema = json.load(fp)
 
     def create(self):
-        if self.schema:
+        if self.schema and "elements" in self.schema:
             self._writeFromSchema(self.schema["elements"])
         else:
-            self._writeAtomicfile()
-            self._createGraph()
-            self._writeParamsFile(os.getcwd())
-            self._writeDockerfile()
-
+            print("Corrupted schema, couldn't create app")
+    
     def build(self, tag):
         if not tag:
             tag = self.app_id
@@ -113,24 +89,6 @@ ADD / /application-entity/
             contents["graph"].append(component)
 
         return contents
-
-    def _writeAtomicfile(self):
-        with open(os.path.join(os.getcwd(), "Atomicfile"), "w") as fp:
-            fp.write(json.dumps(json.loads(self.Atomicfile % (self.name, self.app_id, self.app_id))))
-
-    def _writeDockerfile(self):
-         with open(os.path.join(os.getcwd(), "Dockerfile"), "w") as fp:
-             fp.write(self.dockerfile)
-
-    def _writeParamsFile(self, path):
-        with open(os.path.join(path, PARAMS_FILE), "w") as fp:
-            fp.write(self.parameters)
-
-    def _createGraph(self):
-        app_path = os.path.join(os.getcwd(), "graph", "provider", self.app_id)
-        os.makedirs(app_path)
-        self._writeParamsFile(app_path)
-
 
 if __name__ == "__main__":
     parser = ArgumentParser(description='Create a Container App specification complient project', formatter_class=RawDescriptionHelpFormatter)
