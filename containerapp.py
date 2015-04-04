@@ -55,9 +55,9 @@ if __name__ == "__main__":
             args.path = None
         ae = run.Atomicapp(args.answers, args.APP, args.recursive, args.update, args.path, args.dryrun, args.debug)
         if args.action == "run":
-            ae.run(args.APP)
+            ae.run()
         else:
-            ae.install(args.APP, run.AtomicappLevel.Main)
+            ae.install(run.AtomicappLevel.Main)
 
     sys.exit(0)
 
