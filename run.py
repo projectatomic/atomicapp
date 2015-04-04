@@ -73,7 +73,7 @@ class Atomicapp():
             if not os.path.basename(app) == ATOMIC_FILE:
                 app = os.path.join(app, ATOMIC_FILE)
             atomic_data = self._loadAtomicfile(app)
-            app = atomic_data["id"]
+            app = os.environ["IMAGE"] if "IMAGE" in os.environ else atomic_data["id"]
             self.app_id = atomic_data["id"]
             print("Setting path to %s" % self.app_path)
 
