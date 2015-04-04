@@ -13,6 +13,17 @@ import ConfigParser, json
 
 from yapsy.PluginManager import PluginManager
 
+import logging
+from pprint import pprint
+
+logger = logging.getLogger()
+handler = logging.StreamHandler()
+formatter = logging.Formatter(
+        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+
 ATOMIC_FILE="Atomicfile"
 PARAMS_FILE="params.conf"
 ANSWERS_FILE="answers.conf"
@@ -23,6 +34,11 @@ DEFAULT_PROVIDER="kubernetes"
 
 class AtomicappLevel:
     Main, Module = range(2)
+
+def isTrue(val):
+    logger.debug("Value: %s" % val)
+    return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
+
 
 class Atomicapp():
     debug = False
@@ -37,18 +53,20 @@ class Atomicapp():
     installed = False
     plugins = None
     recursive = True
+    update = False
     app_path = None
     target_path = None
     app_id = None
 
-    def __init__(self, answers, app, recursive = True, target_path = None, dryrun = False, debug = False):
+    def __init__(self, answers, app, recursive = True, update = False, target_path = None, dryrun = False, debug = False):
 
         run_path = os.path.dirname(os.path.realpath(__file__))
         self.debug = debug
         self.dryrun = dryrun
-        self.recursive = True if str(recursive).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
+        self.recursive = isTrue(recursive)
+        self.update = isTrue(update)
         self.target_path = target_path
-        print("Path for %s is %s" % (app, target_path))
+        logger.info("Path for %s is %s" % (app, target_path))
 
         if os.path.exists(app):
             self.app_path = app
@@ -66,9 +84,8 @@ class Atomicapp():
                 self.target_path = os.getcwd()
 
 
-        self.tmpdir = tempfile.mkdtemp(prefix="appent-%s" % self._getModuleName(app))
-        if self.debug:
-            print(self.tmpdir)
+        self.tmpdir = tempfile.mkdtemp(prefix="appent-%s" % self._getComponentName(app))
+        logger.debug("Temporary dir: %s" % self.tmpdir)
 
         self.app_name = app
         self.answers_file = answers
@@ -76,9 +93,6 @@ class Atomicapp():
         self.plugins = PluginManager()
         self.plugins.setPluginPlaces([os.path.join(run_path, "providers")])
         self.plugins.collectPlugins()
-
-    def _getModuleName(self, app):
-        return os.path.basename(app).split(":")[0]
 
     def _sanitizeName(self, app):
         return app.replace("/", "-")
@@ -94,14 +108,21 @@ class Atomicapp():
 
         return config
 
+    #LOAD FUNCTIONS
+
     def _loadAtomicfile(self, path = None):
+        print(os.path.isfile(path))
         if not os.path.exists(path):
-            return None
+            print("Path: %s" % path)
+            logger.error("Atomicfile not found: %s" % path)
+            sys.exit(1)
+
         
         with open(path, "r") as fp:
             self.atomicfile_data = json.load(fp)
             self.app_id = self.atomicfile_data["id"]
 
+        pprint(self.atomicfile_data)
         return self.atomicfile_data
 
     def _loadParams(self, path = None):
@@ -141,21 +162,29 @@ class Atomicapp():
 
         return self.answers_data
 
+    #GET_FUNCTIONS
+
     def _getComponentDir(self, component):
-        return os.path.join(self.target_path, GRAPH_DIR, component)
+        return os.path.join(self.target_path, GRAPH_DIR, self._getComponentName(component))
 
     def _getProviderDir(self, component):
-#FIXME add provider resolution by answers file
+        #FIXME add provider resolution by answers file
         return os.path.join(self.target_path, GRAPH_DIR, component, self.provider)
+
+    def _getComponentConf(self, component):
+        return os.path.join(self._getComponentDir(component), self.provider, PARAMS_FILE)
 
     def _getTmpAppDir(self):
         return os.path.join(self.tmpdir, APP_ENT_PATH)
 
+    def _getGraphDir(self):
+        return os.path.join(self.target_path, GRAPH_DIR)
+
     def _getComponentName(self, graph_item):
         if type(graph_item) is str or type(graph_item) is unicode:
-            return graph_item
+            return os.path.basename(graph_item).split(":")[0]
         elif type(graph_item) is dict:
-            return graph_item["name"]
+            return graph_item["name"].split(":")[0]
         else:
             return None
     
@@ -176,7 +205,7 @@ class Atomicapp():
     def _dispatchGraph(self):
         if not "graph" in self.atomicfile_data:
             raise Exception("Graph not specified in %s" % ATOMIC_FILE)
-        if not os.path.isdir(os.path.join(self.target_path, GRAPH_DIR)):
+        if not os.path.isdir(self._getGraphDir()):
             raise Exception("Couldn't find %s directory" % GRAPH_DIR)
 
         for graph_item in self.atomicfile_data["graph"]:
@@ -184,7 +213,7 @@ class Atomicapp():
             component_path = self._getComponentDir(component)
 
         
-            component_params = os.path.join(component_path, self.provider, PARAMS_FILE)
+            component_params = self._getComponentConf(component)
             if os.path.isfile(component_params):
                 self._loadParams(component_params)
             self._processComponent(component)
@@ -204,15 +233,13 @@ class Atomicapp():
                 return provider.plugin_object
 
     def _processComponent(self, component):
-        path = os.path.join(self._getProviderDir(component))
+        path = self._getProviderDir(component)
         data = None
         for artifact in os.listdir(path):
             if artifact == PARAMS_FILE:
                 continue
             with open(os.path.join(path, artifact), "r") as fp:
                 data = fp.read()
-
-#            print("Data: %s" % data)
 
             data = self._applyTemplate(data, component)
         
@@ -229,30 +256,40 @@ class Atomicapp():
         provider.deploy()
 
 
-    def _pullApp(self, app):
+    def _getImageURI(self, app):
         config = self._mergeConfig()
         
-        if GLOBAL_CONF in config and "registry" in config[GLOBAL_CONF]:
+        if config and GLOBAL_CONF in config and "registry" in config[GLOBAL_CONF]:
             print("Adding registry %s" % config[GLOBAL_CONF]["registry"])
             app = os.path.join(config[GLOBAL_CONF]["registry"], app)
+        
+        return app
+
+    def _pullApp(self, app):
+        app = self._getImageURI(app)
 
         pull = ["docker", "pull", app]
-        if False and subprocess.call(pull) != 0:
+        if subprocess.call(pull) != 0:
             print("Couldn't pull %s" % app)
             sys.exit(1)
             
-        name = self._getModuleName(app)
+
+    def _copyFromContainer(self, app):
+        app = self._getImageURI(app)
+        name = self._getComponentName(app)
         
         create = ["docker", "create", "--name", name, app, "nop"]
         subprocess.call(create)
         cp = ["docker", "cp", "%s:/%s" % (name, APP_ENT_PATH), self.tmpdir]
-        subprocess.call(cp)
+        if not subprocess.call(cp):
+            logger.debug("Application entity data copied to %s" % self.tmpdir)
+
 
         rm = ["docker", "rm", name]
         subprocess.call(rm)
 
     def _populateMainApp(self, src = None, dst = None):
-        print("Copying app %s" % self._getModuleName(self.app_name))
+        print("Copying app %s" % self._getComponentName(self.app_name))
         if not src:
             src = os.path.join(self.tmpdir, APP_ENT_PATH)
             
@@ -268,16 +305,17 @@ class Atomicapp():
                 "params.conf"
                 ]
         
-        print("Copying module %s" % self._getModuleName(self.app_name))
+        logger.info("Populating module %s" % self._getComponentName(self.app_name))
         for item in data_list:
             path = os.path.join(self.tmpdir, APP_ENT_PATH, item)
             if os.path.isdir(path):
-                distutils.dir_util.copy_tree(path, os.path.join(self.target_path, GRAPH_DIR, self.app_id))
+                logger.debug("%s/%s/%s" % (self.target_path, GRAPH_DIR, self.app_id))
+                distutils.dir_util.copy_tree(path, self._getComponentDir(self.app_id))
             else:
-                distutils.file_util.copy_file(path, os.path.join(self.target_path, GRAPH_DIR, self.app_id, item))
+                logger.debug("copy item %s > %s > %s > %s" % (self.target_path, GRAPH_DIR, self.app_id, item))
+                distutils.file_util.copy_file(path, os.path.join(self._getComponentDir(self.app_id), item))
 
     def run(self, app, level = AtomicappLevel.Main):
-        print(app)
         if not self.installed:
             self.install(app, level)
 
@@ -311,15 +349,25 @@ class Atomicapp():
             self._populateMainApp(src=self.app_path)
 
         atomicfile_path = os.path.join(self.target_path, ATOMIC_FILE)
-        if not self.app_path and not os.path.exists(os.path.join(self.target_path, GRAPH_DIR, os.path.basename(app))):
-#            print("Checking if component exists: %s" % os.path.join(self.target_path, GRAPH_DIR, self.app_id))
+        
+        if level == AtomicappLevel.Module:
+            atomicfile_path = os.path.join(self._getComponentDir(app), ATOMIC_FILE)
+        
+        logger.debug("Test: %s -> %s" % (app, ( not self.app_path and not os.path.exists(self._getComponentDir(app)))))
+        if self.update or (not self.app_path and not os.path.exists(self._getComponentDir(app))):
             self._pullApp(app)
+            self._copyFromContainer(app)
             atomicfile_path = os.path.join(self._getTmpAppDir(), ATOMIC_FILE)
+            logger.debug("Atomicfile path for pulled image: %s" % atomicfile_path)
             self._loadAtomicfile(atomicfile_path)
+            logger.debug("App ID: %s" % self.app_id)
+       
             if level == AtomicappLevel.Main:
                 self._populateMainApp()
             elif level == AtomicappLevel.Module:
                 self._populateModule()
+        else:
+            logger.info("Component data exist in %s, skipping population..." % self._getComponentDir(app))
        
         if not self.atomicfile_data:
             self._loadAtomicfile(atomicfile_path)
@@ -334,14 +382,15 @@ class Atomicapp():
         for graph_item in self.atomicfile_data["graph"]:
             component = self._getComponentName(graph_item)
             component_path = self._getComponentDir(component)
-            print(component_path)
-            if not os.path.isdir(component_path):
+            logger.debug("Component path: %s" % component_path)
+            logger.debug("%s == %s -> %s" % (component, self.app_id, component == self.app_id))
+            if not component == self.app_id and (self.update or not os.path.isdir(component_path)):
                 image_name = self._getComponentImageName(graph_item)
                 print("Pulling %s" % image_name)
-                component_atomicapp = Atomicapp(self.answers_file, component, True, self.target_path, self.dryrun, self.debug)
+                component_atomicapp = Atomicapp(self.answers_file, component, self.recursive, self.update, self.target_path, self.dryrun, self.debug)
                 component = component_atomicapp.install(image_name, AtomicappLevel.Module)
                 component_path = self._getComponentDir(component)
-                print("Component installed into %s" % component_path)
+                logger.info("Component installed into %s" % component_path)
 
 
 if __name__ == "__main__":
@@ -353,7 +402,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    ae = Atomicapp(args.answers, args.app, True, None, args.dryrun, args.debug)
+    ae = Atomicapp(args.answers, args.app, True, False, None, args.dryrun, args.debug)
     ae.run(args.app)
 
     sys.exit(0)

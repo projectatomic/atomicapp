@@ -20,12 +20,15 @@ if __name__ == "__main__":
 
     
     parser_run = subparsers.add_parser("run")
-    parser_run.add_argument("-r", "--recursive", dest="recursive", default=True, help="Don't call k8s")
+    parser_run.add_argument("-r", "--recursive", dest="recursive", default=True, help="Pull and populate full dependency tree")
+    parser_run.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Overwrite existing files")
+    parser_run.add_argument("-p", "--path", dest="path", default=None, help="Target directory for install")
     parser_run.add_argument("APP", nargs="?", help="App to run")
     
     parser_install = subparsers.add_parser("install")
 
-    parser_install.add_argument("-r", "--recursive", dest="recursive", default=True, help="Don't call k8s")
+    parser_install.add_argument("-r", "--recursive", dest="recursive", default=True, help="Pull and populate full dependency tree")
+    parser_install.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Overwrite existing files")
     parser_install.add_argument("-p", "--path", dest="path", default=None, help="Target directory for install")
     parser_install.add_argument("APP",  default=None, help="Name of the image containing your app")
     
@@ -50,7 +53,7 @@ if __name__ == "__main__":
     elif args.action == "run" or args.action == "install":
         if not "path" in args:
             args.path = None
-        ae = run.Atomicapp(args.answers, args.APP, args.recursive, args.path, args.dryrun, args.debug)
+        ae = run.Atomicapp(args.answers, args.APP, args.recursive, args.update, args.path, args.dryrun, args.debug)
         if args.action == "run":
             ae.run(args.APP)
         else:
