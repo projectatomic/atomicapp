@@ -384,7 +384,8 @@ class Atomicapp():
             component_path = self._getComponentDir(component)
             logger.debug("Component path: %s" % component_path)
             logger.debug("%s == %s -> %s" % (component, self.app_id, component == self.app_id))
-            if not component == self.app_id and not self.app_path and (self.update or not os.path.isdir(component_path)):
+            if not component == self.app_id and not os.path.isdir(component_path) and (not self.app_path or self.update):
+
                 image_name = self._getComponentImageName(graph_item)
                 print("Pulling %s" % image_name)
                 component_atomicapp = Atomicapp(self.answers_file, image_name, self.recursive, self.update, self.target_path, self.dryrun, self.debug)
