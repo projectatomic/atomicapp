@@ -10,6 +10,7 @@ import subprocess
 #import anymarkup
 import distutils.dir_util
 import ConfigParser, json
+import collections
 
 from yapsy.PluginManager import PluginManager
 
@@ -38,6 +39,17 @@ class AtomicappLevel:
 def isTrue(val):
     logger.debug("Value: %s" % val)
     return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
+
+def update(orig_dict, new_dict):
+    for key, val in new_dict.iteritems():
+        if isinstance(val, collections.Mapping):
+            tmp = update(orig_dict.get(key, { }), val)
+            orig_dict[key] = tmp
+        elif isinstance(val, list):
+            orig_dict[key] = (orig_dict[key] + val)
+        else:
+            orig_dict[key] = new_dict[key]
+    return orig_dict
 
 
 class Atomicapp():
@@ -98,15 +110,23 @@ class Atomicapp():
         return app.replace("/", "-")
 
     def _mergeConfig(self):
-
         config = self.params_data
         if self.answers_data:
             if config:
-                config.update(self.answers_data)
+                config = update(config, self.answers_data)
             else:
                 config = self.answers_data
 
         return config
+
+    def _mergeConfigComponent(self, component):
+        config = self._mergeConfig()
+        component_config = config[GLOBAL_CONF] if GLOBAL_CONF in config else {}
+        if component in config:
+            component_config = update(component_config, config[component])
+
+        return component_config
+        
 
     #LOAD FUNCTIONS
 
@@ -126,10 +146,12 @@ class Atomicapp():
         return self.atomicfile_data
 
     def _loadParams(self, path = None):
+        logger.debug("Loading %s" % path)
         if not os.path.exists(path):
             return None
 
         config = ConfigParser.ConfigParser()
+        config.optionxform = str
 
         data = {}
         with open(path, "r") as fp:
@@ -150,6 +172,7 @@ class Atomicapp():
             return None
 
         config = ConfigParser.ConfigParser()
+        config.optionxform = str
 
         data = {}
         with open(path, "r") as fp:
@@ -220,11 +243,8 @@ class Atomicapp():
 
     def _applyTemplate(self, data, component):
         template = Template(data)
-
-        config = self._mergeConfig()
-        component_config = config[component] if component in config else None
-
-        return template.substitute(component_config)
+        config = self._mergeConfigComponent(component)
+        return template.substitute(config)
 
     def _getProvider(self):
         for provider in self.plugins.getAllPlugins():
@@ -241,6 +261,7 @@ class Atomicapp():
             with open(os.path.join(path, artifact), "r") as fp:
                 data = fp.read()
 
+            logger.debug("Templating artifact %s/%s" % (path, artifact))
             data = self._applyTemplate(data, component)
         
             dst_dir = os.path.join(self.tmpdir, component)
@@ -252,7 +273,7 @@ class Atomicapp():
                 fp.write(data)
 
         provider = self._getProvider()
-        provider.init(self._mergeConfig(), os.path.join(self.tmpdir, component), self.debug, self.dryrun)
+        provider.init(self._mergeConfigComponent(component), os.path.join(self.tmpdir, component), self.debug, self.dryrun)
         provider.deploy()
 
 
@@ -327,15 +348,14 @@ class Atomicapp():
             print(self.atomicfile_data)
 
         if not self._loadParams(os.path.join(self.target_path, PARAMS_FILE)):
-            print("Failed to load %s" % PARAMS_FILE)
+            logger.error("Failed to load %s" % PARAMS_FILE)
             return
+        else:
+            logger.debug("Loaded params: %s" % self.params_data)
 
         config = self._mergeConfig()
         if "provider" in config[GLOBAL_CONF]:
             self.provider = config[GLOBAL_CONF]["provider"]
-
-        if self.debug:
-            print(self.params_data)
 
         self._dispatchGraph()
 
