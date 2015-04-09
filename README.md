@@ -1,5 +1,7 @@
 # ContainerApp
-ContainerApp tool is a reference implementation of [Container Application Specification](https://github.com/aweiteka/containerapp-spec). It can be used to bootstrap container application and to install and run them
+ContainerApp tool is a reference implementation of [Container Application Specification](https://github.com/aweiteka/containerapp-spec). It can be used to bootstrap container application and to install and run them.
+
+Example applications consist of [MariaDB](https://github.com/vpavlin/atomicapp-mariadb) and [Wordpress](https://github.com/vpavlin/atomicapp-wordpress) applications, where Wordpress depends on MariaDB.
 
 ## How To
 
@@ -7,18 +9,23 @@ ContainerApp tool is a reference implementation of [Container Application Specif
 ```
 containerapp.py [--dry-run] create --schema PATH|URL APP_NAME
 ```
+
+Constructs directory structure and fills Atomicfile with application name and id.
 ### Build
 ```
 containerapp.py [--dry-run] build [TAG]
 ```
-### Install
+Calls Docker build to package up the application and tags the resulting image.
+### Install and Run
 ```
-containerapp.py [--dry-run] [-a answers.conf] install [--recursive] APP 
+containerapp.py [--dry-run] [-a answers.conf] install|run [--recursive] [--update] [--path PATH] APP|PATH 
 ```
-### Run
-```
-containerapp.py [--dry-run] [-a answers.conf] run APP
-```
+Pulls the application and it's dependencies. If the last argument is existing path, it looks for Atomicfile there instead of pulling anything.
+* `--recursive yes|no` Pull whole dependency tree
+* `--update` Overwrite any existing files
+* `--path PATH` Unpack the application into given directory instead of current directory
+
+Action `run` performs `install` prior it's own tasks are executed. When `run` is selected, providers' code is invoked and containers are deployed.
 
 ## Providers
 
