@@ -1,9 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from __future__ import print_function
 import os, sys
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 import json, subprocess
 import urllib2
 
@@ -90,16 +88,3 @@ class AtomicappCreate():
 
         return contents
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description='Create a Container App specification complient project', formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
-    parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
-    parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
-    parser.add_argument("NAME", help="App name")
-
-    args = parser.parse_args()
-
-    ac = AtomicappCreate(args.NAME)
-    ac.create()
-
-    sys.exit(0)

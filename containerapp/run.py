@@ -1,9 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from __future__ import print_function
 import os,sys
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 from string import Template
 import tempfile
 import subprocess
@@ -16,6 +14,8 @@ from yapsy.PluginManager import PluginManager
 
 import logging
 from pprint import pprint
+
+from params import Params
 
 logger = logging.getLogger()
 handler = logging.StreamHandler()
@@ -40,23 +40,11 @@ def isTrue(val):
     logger.debug("Value: %s" % val)
     return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
 
-def update(orig_dict, new_dict):
-    for key, val in new_dict.iteritems():
-        if isinstance(val, collections.Mapping):
-            tmp = update(orig_dict.get(key, { }), val)
-            orig_dict[key] = tmp
-        elif isinstance(val, list):
-            orig_dict[key] = (orig_dict[key] + val)
-        else:
-            orig_dict[key] = new_dict[key]
-    return orig_dict
-
-
-class Atomicapp():
+class Execute():
     debug = False
     dryrun = False
     atomicfile_data = None
-    params_data = None
+    params = None
     answers_data = {GLOBAL_CONF: {}}
     tmpdir = None
     answers_file = None
@@ -78,6 +66,7 @@ class Atomicapp():
         self.recursive = isTrue(recursive)
         self.update = isTrue(update)
         self.target_path = target_path
+        self.params = Params()
         logger.info("Path for %s is %s" % (app, target_path))
 
         if os.path.exists(app):
@@ -109,25 +98,6 @@ class Atomicapp():
     def _sanitizeName(self, app):
         return app.replace("/", "-")
 
-    def _mergeConfig(self):
-        config = self.params_data
-        if self.answers_data:
-            if config:
-                config = update(config, self.answers_data)
-            else:
-                config = self.answers_data
-
-        return config
-
-    def _mergeConfigComponent(self, component):
-        config = self._mergeConfig()
-        component_config = config[GLOBAL_CONF] if GLOBAL_CONF in config else {}
-        if component in config:
-            component_config = update(component_config, config[component])
-
-        return component_config
-        
-
     #LOAD FUNCTIONS
 
     def _loadAtomicfile(self, path = None):
@@ -145,27 +115,7 @@ class Atomicapp():
         pprint(self.atomicfile_data)
         return self.atomicfile_data
 
-    def _loadParams(self, path = None):
-        logger.debug("Loading %s" % path)
-        if not os.path.exists(path):
-            return None
-
-        config = ConfigParser.ConfigParser()
-        config.optionxform = str
-
-        data = {}
-        with open(path, "r") as fp:
-            config.readfp(fp)
-
-            for section in config.sections():
-                data[section] = dict(config.items(section))
-
-        if self.params_data:
-                self.params_data.update(data)
-        else:
-            self.params_data = data
-
-        return self.params_data
+ 
 
     def _loadAnswers(self, path = None):
         if not os.path.exists(path):
@@ -238,12 +188,12 @@ class Atomicapp():
         
             component_params = self._getComponentConf(component)
             if os.path.isfile(component_params):
-                self._loadParams(component_params)
+                self.params.loadParams(component_params)
             self._processComponent(component)
 
     def _applyTemplate(self, data, component):
         template = Template(data)
-        config = self._mergeConfigComponent(component)
+        config = self.params.get(component)
         return template.substitute(config)
 
     def _getProvider(self):
@@ -273,12 +223,12 @@ class Atomicapp():
                 fp.write(data)
 
         provider = self._getProvider()
-        provider.init(self._mergeConfigComponent(component), os.path.join(self.tmpdir, component), self.debug, self.dryrun)
+        provider.init(self.params.get(component), os.path.join(self.tmpdir, component), self.debug, self.dryrun)
         provider.deploy()
 
 
     def _getImageURI(self, image):
-        config = self._mergeConfig()
+        config = self.params.get()
         
         if config and GLOBAL_CONF in config and "registry" in config[GLOBAL_CONF]:
             print("Adding registry %s for %s" % (config[GLOBAL_CONF]["registry"], image))
@@ -347,13 +297,13 @@ class Atomicapp():
         if self.debug:
             print(self.atomicfile_data)
 
-        if not self._loadParams(os.path.join(self.target_path, PARAMS_FILE)):
+        if not self.params.loadParams(os.path.join(self.target_path, PARAMS_FILE)):
             logger.error("Failed to load %s" % PARAMS_FILE)
             return
         else:
             logger.debug("Loaded params: %s" % self.params_data)
 
-        config = self._mergeConfig()
+        config = self.params.get()
         if "provider" in config[GLOBAL_CONF]:
             self.provider = config[GLOBAL_CONF]["provider"]
 
@@ -361,7 +311,7 @@ class Atomicapp():
 
     def install(self, level = AtomicappLevel.Main):
 
-        if not self._loadAnswers(self.answers_file):
+        if not self.params.loadAnswers(self.answers_file):
             print("No %s file found, using defaults" % ANSWERS_FILE)
 
         if self.app_path and not self.target_path == self.app_path:
@@ -414,16 +364,4 @@ class Atomicapp():
                 logger.info("Component installed into %s" % component_path)
 
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description='Run an application defined by Atomicfile', formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
-    parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
-    parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
-    parser.add_argument("app", help="App to run")
 
-    args = parser.parse_args()
-
-    ae = Atomicapp(args.answers, args.app, True, False, None, args.dryrun, args.debug)
-    ae.run()
-
-    sys.exit(0)
