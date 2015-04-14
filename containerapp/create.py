@@ -1,9 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from __future__ import print_function
 import os, sys
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
 import json, subprocess
 import urllib2
 
@@ -19,20 +17,23 @@ class AtomicappCreate():
         self.name = name
         self.app_id = self._nameToId(name)
         self.dryrun = dryrun
+        self.schema_path = schema
 
-        if not schema: 
-            schema = SCHEMA_URL
-        
-        if not os.path.isfile(schema):
-            response = urllib2.urlopen(schema)
-            with open(os.path.basename(schema), "w") as fp:
+        if not self.schema_path: 
+            self.schema_path = SCHEMA_URL
+
+    def _loadSchema(self):    
+        if not os.path.isfile(self.schema_path):
+            response = urllib2.urlopen(self.schema_path)
+            with open(os.path.basename(self.schema_path), "w") as fp:
                 fp.write(response.read())
-                schema = os.path.basename(schema)
+                schema = os.path.basename(self.schema_path)
         
         with open(schema, "r") as fp:
             self.schema = json.load(fp)
 
     def create(self):
+        self._loadSchema()
         if self.schema and "elements" in self.schema:
             self._writeFromSchema(self.schema["elements"])
         else:
@@ -90,16 +91,3 @@ class AtomicappCreate():
 
         return contents
 
-if __name__ == "__main__":
-    parser = ArgumentParser(description='Create a Container App specification complient project', formatter_class=RawDescriptionHelpFormatter)
-    parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
-    parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
-    parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
-    parser.add_argument("NAME", help="App name")
-
-    args = parser.parse_args()
-
-    ac = AtomicappCreate(args.NAME)
-    ac.create()
-
-    sys.exit(0)
