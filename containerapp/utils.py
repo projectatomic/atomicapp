@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+
+from __future__ import print_function
+import os
+import subprocess
+import tempfile
+
+import logging
+
+from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, ATOMIC_FILE
+
+logger = logging.getLogger(__name__)
+
+class Utils(object):
+
+    __tmpdir = None
+
+    @property
+    def tmpdir(self):
+        if not self.__tmpdir:
+            self.__tmpdir = tempfile.mkdtemp(prefix="appent-%s" % self.getComponentName(self.params.app)) #FIXME include the app name!
+            logger.info("Using temporary directory %s" % self.__tmpdir)
+
+        return self.__tmpdir
+
+    def __init__(self, params):
+        self.params = params
+
+    def loadApp(self, app_path):
+        self.params.app_path = app_path
+        if not os.path.basename(app_path) == ATOMIC_FILE:
+            app_path = os.path.join(app_path, ATOMIC_FILE)
+        atomic_data = self.params.loadAtomicfile(app_path)
+        app = os.environ["IMAGE"] if "IMAGE" in os.environ else atomic_data["id"]
+        logger.debug("Setting path to %s" % self.params.app_path)
+
+        return app
+
+    def sanitizeName(self, app):
+        return app.replace("/", "-")
+
+    def getComponentDir(self, component):
+        return os.path.join(self.params.target_path, GRAPH_DIR, self.getComponentName(component))
+
+    def getProviderDir(self, component):
+        return os.path.join(self.params.target_path, GRAPH_DIR, component, self.params.provider)
+
+    def getComponentConf(self, component):
+        return os.path.join(self.getComponentDir(component), self.params.provider, PARAMS_FILE)
+
+    def getTmpAppDir(self):
+        return os.path.join(self.tmpdir, APP_ENT_PATH)
+
+    def getGraphDir(self):
+        return os.path.join(self.params.target_path, GRAPH_DIR)
+
+    @staticmethod
+    def getComponentName(graph_item):
+        #logger.debug("Getting name for %s" % graph_item)
+        if type(graph_item) is str or type(graph_item) is unicode:
+            return os.path.basename(graph_item).split(":")[0]
+        elif type(graph_item) is dict:
+            return graph_item["name"].split(":")[0]
+        else:
+            raise ValueError
+    
+    def getComponentImageName(self, graph_item):
+        if type(graph_item) is str or type(graph_item) is unicode:
+            return graph_item
+        elif type(graph_item) is dict:
+            repo = ""
+            if "repository" in graph_item:
+                repo = graph_item["repository"]
+
+            return os.path.join(repo, graph_item["name"])
+        else:
+            return None
+
+    def getImageURI(self, image):
+        config = self.params.get()
+        
+        if config and GLOBAL_CONF in config and "registry" in config[GLOBAL_CONF]:
+            logger.info("Adding registry %s for %s" % (config[GLOBAL_CONF]["registry"], image))
+            image = os.path.join(config[GLOBAL_CONF]["registry"], image)
+        
+        return image
+
+    def pullApp(self, image):
+        image = self.getImageURI(image)
+
+        pull = ["docker", "pull", image]
+        if subprocess.call(pull) != 0:
+            raise Exception("Couldn't pull %s" % image)

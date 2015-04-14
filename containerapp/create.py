@@ -17,20 +17,23 @@ class AtomicappCreate():
         self.name = name
         self.app_id = self._nameToId(name)
         self.dryrun = dryrun
+        self.schema_path = schema
 
-        if not schema: 
-            schema = SCHEMA_URL
-        
-        if not os.path.isfile(schema):
-            response = urllib2.urlopen(schema)
-            with open(os.path.basename(schema), "w") as fp:
+        if not self.schema_path: 
+            self.schema_path = SCHEMA_URL
+
+    def _loadSchema(self):    
+        if not os.path.isfile(self.schema_path):
+            response = urllib2.urlopen(self.schema_path)
+            with open(os.path.basename(self.schema_path), "w") as fp:
                 fp.write(response.read())
-                schema = os.path.basename(schema)
+                schema = os.path.basename(self.schema_path)
         
         with open(schema, "r") as fp:
             self.schema = json.load(fp)
 
     def create(self):
+        self._loadSchema()
         if self.schema and "elements" in self.schema:
             self._writeFromSchema(self.schema["elements"])
         else:

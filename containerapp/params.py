@@ -3,45 +3,86 @@
 import anymarkup
 import os
 import logging
+import collections
 
-logger = logging.getLogger("params")
+from constants import ATOMIC_FILE, GLOBAL_CONF, DEFAULT_PROVIDER
 
-PARAMS_KEY="params"
-ATOMIC_FILE="Atomicfile"
-PARAMS_FILE="params.conf"
-ANSWERS_FILE="answers.conf"
+import utils
 
-class Params():
+logger = logging.getLogger(__name__)
+
+class Params(object):
     answers_data = None
     params_data = None
-    
-    def __init__(self):
-        pass
+    atomicfile_data = None
+    target_path = None
+    recursive = True
+    app_id = None
+    app_path = None
+    __provider = DEFAULT_PROVIDER
+    __app = None
 
+    @property
+    def app(self):
+        if not self.__app and self.atomicfile_data:
+            self.__app = self.app_id
+        return self.__app
+
+    @app.setter
+    def app(self, val):
+        self.__app = val
+
+    @property
+    def provider(self):
+        config = self.get()
+        if GLOBAL_CONF in config:
+            if "provider" in config[GLOBAL_CONF]:
+                return config[GLOBAL_CONF]["provider"]
+        return self.__provider
+
+    def __init__(self, recursive, update, target_path):
+        self.target_path = target_path
+        self.recursive = self._isTrue(recursive)
+        self.update = self._isTrue(update)
 
     def loadParams(self, data = {}):
-        logger.debug("Data %s" % data)
         if os.path.exists(data):
             logger.debug("Path given, loading %s" % data)
             data = anymarkup.parse_file(data)
+        else:
+            logger.debug("Data given: %s" % data)
 
         if "specversion" in data:
-            logger.debug("Params merged with %s" % ATOMICFILE)
+            logger.debug("Params part of %s" % ATOMIC_FILE)
             data = data[PARAMS_KEY]
         else:
             logger.debug("Params in separate file")
 
         if self.params_data:
-                self._update(data)
+                self.params_data = self._update(self.params_data, data)
         else:
             self.params_data = data
 
         return self.params_data
 
+    def loadAtomicfile(self, path = None):
+        if not os.path.exists(path):
+            raise Exception("%s not found: %s" % (ATOMIC_FILE, path))
+
+        self.atomicfile_data = anymarkup.parse_file(path)
+        if "id" in self.atomicfile_data:
+            self.app_id = self.atomicfile_data["id"]
+        else:
+            raise Exception ("Missing ID in %s" % self.atomicfile_data)
+
+        return self.atomicfile_data
+
     def loadAnswers(self, data = {}):
         if os.path.exists(data):
-            logger.debug("Path given, loading %s" % data)
+            logger.debug("Path to answers file given, loading %s" % data)
             data = anymarkup.parse_file(data)
+        elif not len(data):
+            raise Exception("No data answers data given")
 
         self.answers_data = data
         return self.answers_data
@@ -73,13 +114,16 @@ class Params():
 
         return component_config
 
-    def _update(self, new_dict):
+    def _update(self, old_dict, new_dict):
         for key, val in new_dict.iteritems():
             if isinstance(val, collections.Mapping):
-                tmp = _update(self.params_data.get(key, { }), val)
-                self.params_data[key] = tmp
+                tmp = self._update(old_dict.get(key, { }), val)
+                old_dict[key] = tmp
             elif isinstance(val, list):
-                self.params_data[key] = (self.params_data[key] + val)
+                old_dict[key] = (old_dict[key] + val)
             else:
-                self.params_data[key] = new_dict[key]
-        return self.params_data
+                old_dict[key] = new_dict[key]
+        return old_dict
+
+    def _isTrue(self, val):
+        return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False

@@ -19,10 +19,10 @@ class DockerProvider(IPlugin):
         client = ""
         server = ""
         for line in docker_version:
-            if i.startswith("Client API version"):
-                client = i.split(":")[1]
-            if i.startswith("Server API version"):
-                server = i.split(":")[1]
+            if line.startswith("Client API version"):
+                client = line.split(":")[1]
+            if line.startswith("Server API version"):
+                server = line.split(":")[1]
 
         if client > server:
             print("Docker version in app image is higher than the one on host. Pleas update your host.")
