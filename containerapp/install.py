@@ -102,7 +102,6 @@ class Install():
         if level == AtomicappLevel.Module:
             atomicfile_path = os.path.join(self.utils.getComponentDir(self.params.app), ATOMIC_FILE)
         
-        #logger.debug("Test: %s -> %s" % (self.params.app, ( not self.app_path and not os.path.exists(self.utils.getComponentDir(self.params.app)))))
         if not self.params.app_path and (self.params.update or not os.path.exists(self.utils.getComponentDir(self.params.app))):
             self.utils.pullApp(self.params.app)
             self._copyFromContainer(self.params.app)
@@ -127,14 +126,17 @@ class Install():
         return self.params.app_id
 
     def _installDependencies(self):
-        for graph_item in self.params.atomicfile_data["graph"]:
-            component = self.utils.getComponentName(graph_item)
+        for component, graph_item in self.params.atomicfile_data["graph"].iteritems():
+            print("%s: %s" % (component, graph_item))
+            if not self.utils.isExternal(graph_item):
+                logger.info("Checked component %s" % component)
+
+            image_name = self.utils.getSourceImage(graph_item)
+#            component = self.utils.getComponentName(graph_item)
             component_path = self.utils.getComponentDir(component)
-            logger.debug("Component path: %s" % component_path)
+            logger.debug("AAA Component path: %s" % image_name)
             logger.debug("%s == %s -> %s" % (component, self.params.app_id, component == self.params.app_id))
             if not component == self.params.app_id and (not os.path.isdir(component_path) or self.params.update): #not self.params.app_path or  ???
-
-                image_name = self.utils.getComponentImageName(graph_item)
                 logger.debug("Pulling %s" % image_name)
                 component_atomicapp = Install(self.answers_file, image_name, self.params.recursive, self.params.update, self.params.target_path, self.dryrun)
                 component = component_atomicapp.install(AtomicappLevel.Module)

@@ -91,3 +91,22 @@ class Utils(object):
         pull = ["docker", "pull", image]
         if subprocess.call(pull) != 0:
             raise Exception("Couldn't pull %s" % image)
+
+    def isExternal(self, graph_item):
+        logger.debug(graph_item)
+        if "artifacts" in graph_item:
+            return False
+
+        if not "source" in graph_item:
+            return False
+
+        return True
+
+    def getSourceImage(self, graph_item):
+        if not "source" in graph_item:
+            return None
+
+        if graph_item["source"].startswith("docker://"):
+            return graph_item["source"][len("docker://"):]
+
+        return None
