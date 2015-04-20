@@ -10,7 +10,7 @@ import logging
 
 from params import Params
 from utils import Utils
-from constants import GLOBAL_CONF, DEFAULT_PROVIDER, ATOMIC_FILE, PARAMS_FILE
+from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, PARAMS_FILE
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,6 @@ def isTrue(val):
 class Run():
     debug = False
     dryrun = False
-    atomicfile_data = None
     params = None
     answers_data = {GLOBAL_CONF: {}}
     tmpdir = None
@@ -69,12 +68,12 @@ class Run():
         self.plugins.collectPlugins()
 
     def _dispatchGraph(self):
-        if not "graph" in self.params.atomicfile_data:
-            raise Exception("Graph not specified in %s" % ATOMIC_FILE)
+        if not "graph" in self.params.mainfile_data:
+            raise Exception("Graph not specified in %s" % MAIN_FILE)
         if not os.path.isdir(self.utils.getGraphDir()):
             raise Exception("Couldn't find %s directory" % GRAPH_DIR)
 
-        for graph_item in self.params.atomicfile_data["graph"]:
+        for graph_item in self.params.mainfile_data["graph"]:
             component = self.utils.getComponentName(graph_item)
             component_path = self.utils.getComponentDir(component)
 
@@ -120,7 +119,7 @@ class Run():
         provider.deploy()
 
     def run(self, level = AtomicappLevel.Main):
-        self.params.loadAtomicfile(os.path.join(self.params.target_path, ATOMIC_FILE))
+        self.params.loadMainfile(os.path.join(self.params.target_path, MAIN_FILE))
 
         if not self.params.loadAnswers(self.answers_file):
             logger.debug("No %s file found, using defaults" % ANSWERS_FILE)

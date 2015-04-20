@@ -7,8 +7,10 @@ from containerapp import params
 import os, sys, json
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
+import logging
 
-from containerapp.constants import ANSWERS_FILE, ATOMIC_FILE
+from containerapp import set_logging
+from containerapp.constants import ANSWERS_FILE, MAIN_FILE
 
 def cli_install(args):
     print(args)
@@ -21,8 +23,8 @@ def cli_create(args):
     ac.create()
 
 def cli_build(args):
-    if os.path.isfile(os.path.join(os.getcwd(), ATOMIC_FILE)):
-        with open(os.path.join(os.getcwd(), ATOMIC_FILE), "r") as fp:
+    if os.path.isfile(os.path.join(os.getcwd(), MAIN_FILE)):
+        with open(os.path.join(os.getcwd(), MAIN_FILE), "r") as fp:
             data = json.load(fp)
             ac = create.AtomicappCreate(data["id"], args.dryrun)
             ac.build(args.TAG)
@@ -39,6 +41,9 @@ class CLI():
     def set_arguments(self):
 
         self.parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
+        self.parser.add_argument("-v", "--verbose", dest="verbose", default=False, action="store_true", help="Verbose")
+        self.parser.add_argument("-q", "--quiet", dest="quiet", default=False, action="store_true", help="Quiet")
+
         self.parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
         self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
 
@@ -72,12 +77,12 @@ class CLI():
     def run(self):
         self.set_arguments()
         args = self.parser.parse_args()
-#        if args.verbose:
-#            set_logging(level=logging.DEBUG)
-#        elif args.quiet:
-#            set_logging(level=logging.WARNING)
-#        else:
-#            set_logging(level=logging.INFO)
+        if args.verbose:
+            set_logging(level=logging.DEBUG)
+        elif args.quiet:
+            set_logging(level=logging.WARNING)
+        else:
+            set_logging(level=logging.INFO)
         try:
             args.func(args)
         except AttributeError:
@@ -101,25 +106,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-#    if args.action == "create":
-#        ac = create.AtomicappCreate(args.NAME, args.schema, args.dryrun)
-#        ac.create()
-#    elif args.action == "build":
-#        if os.path.isfile(os.path.join(os.getcwd(), run.ATOMIC_FILE)):
-#            with open(os.path.join(os.getcwd(), run.ATOMIC_FILE), "r") as fp:
-#                data = json.load(fp)
-#                ac = create.AtomicappCreate(data["id"], args.dryrun)
-#                ac.build(args.TAG)
-#    elif args.action == "run" or args.action == "install":
-#        if not "path" in args:
-#            args.path = None
-#        ae = Run(args.answers, args.APP, args.recursive, args.update, args.path, args.dryrun, args.debug)
-#        if args.action == "run":
-#            ae.run()
-#        else:
-#            ae.install(run.AtomicappLevel.Main)
-#
-#    sys.exit(0)
-
-

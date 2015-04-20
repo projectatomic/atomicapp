@@ -14,7 +14,7 @@ metadata:
   description": "Simple Wordpress App"
 graph:
   mariadb-app:
-    source: docker://vpavlin/mariadb-app  #FIXME
+    source: docker://vpavlin/mariadb-app-0.0.1  #FIXME
   wordpress-app:
     params:
       name:
@@ -27,7 +27,7 @@ graph:
       docker:
         - file://graph/docker/label_run
       openshift:
-        - file://graph/docker/wordpress-pod.json
-        - file://graph/docker/wordpress-service.json
+        - file://graph/kubernetes/wordpress-pod.json
+        - file://graph/kubernetes/wordpress-service.json
 
         

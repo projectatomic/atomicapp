@@ -7,7 +7,7 @@ import tempfile
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, ATOMIC_FILE
+from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -28,16 +28,19 @@ class Utils(object):
 
     def loadApp(self, app_path):
         self.params.app_path = app_path
-        if not os.path.basename(app_path) == ATOMIC_FILE:
-            app_path = os.path.join(app_path, ATOMIC_FILE)
-        atomic_data = self.params.loadAtomicfile(app_path)
-        app = os.environ["IMAGE"] if "IMAGE" in os.environ else atomic_data["id"]
+        if not os.path.basename(app_path) == MAIN_FILE:
+            app_path = os.path.join(app_path, MAIN_FILE)
+        mainfile_data = self.params.loadMainfile(app_path)
+        app = os.environ["IMAGE"] if "IMAGE" in os.environ else mainfile_data["id"]
         logger.debug("Setting path to %s" % self.params.app_path)
 
         return app
 
     def sanitizeName(self, app):
         return app.replace("/", "-")
+
+    def getExternalAppDir(self, component):
+        return os.path.join(self.params.target_path, EXTERNAL_APP_DIR, self.getComponentName(component))
 
     def getComponentDir(self, component):
         return os.path.join(self.params.target_path, GRAPH_DIR, self.getComponentName(component))
@@ -110,3 +113,31 @@ class Utils(object):
             return graph_item["source"][len("docker://"):]
 
         return None
+
+    def _sanitizePath(self, path):
+        if path.startswith("file://"):
+            return path[7:]
+
+    def getArtifacts(self, component):
+        if component in self.params.mainfile_data["graph"]:
+            if "artifacts" in self.params.mainfile_data["graph"][component]:
+                return self.params.mainfile_data["graph"][component]["artifacts"]
+
+        return None
+
+    def checkArtifacts(self):
+        for component in self.params.mainfile_data["graph"].keys():
+            artifacts = self.params.getArtifacts(component)
+            if not artifacts:
+                logger.debug("No artifacts for %s" % component)
+                continue
+
+            for provider, artifact_list in artifacts.iteritems():
+                logger.debug("Provider: %s" % provider)
+                for artifact in artifact_list:
+                    path = os.path.join(self.params.target_path, self._sanitizePath(artifact))
+                    if os.path.isfile(path):
+                        logger.debug("Artifact %s: OK" % artifact)
+                    else:
+                        raise Exception("Missing artifact %s (%s)" % (artifact, path))
+
