@@ -12,7 +12,6 @@ RUN yum install -y yum-utils && \
     yum-config-manager --enable rhel-server-rhscl-7-rpms && \
     yum-config-manager --enable epel && \
     yum install -y --setopt=tsflags=nodocs python-pip docker
-RUN pip install anymarkup yapsy
 
 ADD containerapp/ /opt/atomicapp/containerapp/
 ADD setup.py /opt/atomicapp/
