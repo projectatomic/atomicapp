@@ -40,7 +40,7 @@ class Params(object):
                 return config[GLOBAL_CONF]["provider"]
         return self.__provider
 
-    def __init__(self, recursive, update, target_path):
+    def __init__(self, recursive=True, update=False, target_path=None):
         self.target_path = target_path
         self.recursive = self._isTrue(recursive)
         self.update = self._isTrue(update)
@@ -110,8 +110,9 @@ class Params(object):
     def _mergeParamsComponent(self, component):
         config = self._mergeParams()
         component_config = config[GLOBAL_CONF] if GLOBAL_CONF in config else {}
-        if component in config:
-            component_config = self._update(component_config, config[component])
+        config = dict((name, p["default"] if "default" in p else None) 
+                for name, p in self.mainfile_data["graph"][component]["params"].iteritems())
+        component_config = self._update(component_config, config)
 
         return component_config
 
@@ -129,9 +130,4 @@ class Params(object):
     def _isTrue(self, val):
         return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
 
-    def getArtifacts(self, component):
-        if component in self.mainfile_data["graph"]:
-            if "artifacts" in self.mainfile_data["graph"][component]:
-                return self.mainfile_data["graph"][component]["artifacts"]
-
-        return None
+    

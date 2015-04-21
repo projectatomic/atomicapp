@@ -114,7 +114,8 @@ class Utils(object):
 
         return None
 
-    def _sanitizePath(self, path):
+    @staticmethod
+    def sanitizePath(path):
         if path.startswith("file://"):
             return path[7:]
 
@@ -127,7 +128,7 @@ class Utils(object):
 
     def checkArtifacts(self):
         for component in self.params.mainfile_data["graph"].keys():
-            artifacts = self.params.getArtifacts(component)
+            artifacts = self.getArtifacts(component)
             if not artifacts:
                 logger.debug("No artifacts for %s" % component)
                 continue
@@ -135,9 +136,12 @@ class Utils(object):
             for provider, artifact_list in artifacts.iteritems():
                 logger.debug("Provider: %s" % provider)
                 for artifact in artifact_list:
-                    path = os.path.join(self.params.target_path, self._sanitizePath(artifact))
+                    path = os.path.join(self.params.target_path, self.sanitizePath(artifact))
                     if os.path.isfile(path):
                         logger.debug("Artifact %s: OK" % artifact)
                     else:
                         raise Exception("Missing artifact %s (%s)" % (artifact, path))
+
+            logger.info("Artifacts for %s present for these providers: %s" % (component, ", ".join(artifacts.keys())))
+
 

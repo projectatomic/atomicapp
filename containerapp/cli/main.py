@@ -40,12 +40,10 @@ class CLI():
 
     def set_arguments(self):
 
-        self.parser.add_argument("-d", "--debug", dest="debug", default=False, action="store_true", help="Debug")
         self.parser.add_argument("-v", "--verbose", dest="verbose", default=False, action="store_true", help="Verbose")
         self.parser.add_argument("-q", "--quiet", dest="quiet", default=False, action="store_true", help="Quiet")
 
         self.parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
-        self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
 
         subparsers = self.parser.add_subparsers(dest="action")
 
@@ -56,9 +54,7 @@ class CLI():
 
     
         parser_run = subparsers.add_parser("run")
-        parser_run.add_argument("-r", "--recursive", dest="recursive", default=True, help="Pull and populate full dependency tree")
-        parser_run.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Overwrite existing files")
-        parser_run.add_argument("-p", "--path", dest="target_path", default=None, help="Target directory for install")
+        self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
         parser_run.add_argument("APP", nargs="?", help="App to run")
         parser_run.set_defaults(func=cli_run)
     

@@ -103,14 +103,18 @@ class Install():
     def _installDependencies(self):
         for component, graph_item in self.params.mainfile_data["graph"].iteritems():
             if not self.utils.isExternal(graph_item):
-                logger.info("Checked component %s" % component)
+                logger.debug("Component %s is part of the app" % component)
+                continue
+            else:
+                logger.info("Component %s is external dependency" % component)
 
             image_name = self.utils.getSourceImage(graph_item)
             component_path = self.utils.getExternalAppDir(component)
             logger.debug("Component path: %s" % component_path)
-            logger.debug("%s == %s -> %s" % (component, self.params.app_id, component == self.params.app_id))
             if not component == self.params.app_id and (not os.path.isdir(component_path) or self.params.update): #not self.params.app_path or  ???
-                logger.debug("Pulling %s" % image_name)
+                logger.info("Pulling %s" % image_name)
                 component_app = Install(self.answers_file, image_name, self.params.recursive, self.params.update, component_path, self.dryrun)
                 component = component_app.install()
                 logger.info("Component installed into %s" % component_path)
+            else:
+                logger.info("Component %s already exists at %s - remove the directory or use --update option" % (component, component_path))
