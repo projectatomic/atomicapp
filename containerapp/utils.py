@@ -90,6 +90,12 @@ class Utils(object):
 
     def pullApp(self, image):
         image = self.getImageURI(image)
+        if not self.params.update:
+            check_cmd = ["docker", "images", "-q", image]
+            id = subprocess.check_output(check_cmd)
+            if len(id) != 0:
+                logger.debug("Image %s already present with id %s. Use --update to re-pull." % (image, id.strip()))
+                return
 
         pull = ["docker", "pull", image]
         if subprocess.call(pull) != 0:
