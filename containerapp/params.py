@@ -110,9 +110,10 @@ class Params(object):
     def _mergeParamsComponent(self, component):
         config = self._mergeParams()
         component_config = config[GLOBAL_CONF] if GLOBAL_CONF in config else {}
-        config = dict((name, p["default"] if "default" in p else None) 
-                for name, p in self.mainfile_data["graph"][component]["params"].iteritems())
-        component_config = self._update(component_config, config)
+        if "params" in self.mainfile_data["graph"][component]:
+            config = dict((name, p["default"] if "default" in p else None) 
+                    for name, p in self.mainfile_data["graph"][component]["params"].iteritems())
+            component_config = self._update(component_config, config)
 
         return component_config
 
