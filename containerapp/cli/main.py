@@ -40,10 +40,10 @@ class CLI():
 
     def set_arguments(self):
 
-        self.parser.add_argument("-v", "--verbose", dest="verbose", default=False, action="store_true", help="Verbose")
-        self.parser.add_argument("-q", "--quiet", dest="quiet", default=False, action="store_true", help="Quiet")
+        self.parser.add_argument("-v", "--verbose", dest="verbose", default=False, action="store_true", help="Verbose output mode.")
+        self.parser.add_argument("-q", "--quiet", dest="quiet", default=False, action="store_true", help="Quiet output mode.")
 
-        self.parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't call k8s")
+        self.parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't actually call provider. The commands that should be run will be sent to stdout but not run.")
 
         subparsers = self.parser.add_subparsers(dest="action")
 
@@ -55,15 +55,15 @@ class CLI():
     
         parser_run = subparsers.add_parser("run")
         self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
-        parser_run.add_argument("APP", nargs="?", help="App to run")
+        parser_run.add_argument("APP", nargs="?", help="Path to the directory where the image is installed (current directory by default).")
         parser_run.set_defaults(func=cli_run)
     
         parser_install = subparsers.add_parser("install")
 
         parser_install.add_argument("-r", "--recursive", dest="recursive", default=True, help="Pull and populate full dependency tree")
-        parser_install.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Overwrite existing files")
+        parser_install.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Re-pull images and overwrite existing files")
         parser_install.add_argument("-p", "--path", dest="target_path", default=None, help="Target directory for install")
-        parser_install.add_argument("APP",  default=None, help="Name of the image containing your app")
+        parser_install.add_argument("APP",  default=None, help="Application to run. This is a container image that has the metadata describing the whole application.")
         parser_install.set_defaults(func=cli_install)
     
         parser_build = subparsers.add_parser("build")
