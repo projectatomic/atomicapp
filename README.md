@@ -5,20 +5,35 @@ Example applications consist of [MariaDB](https://github.com/vpavlin/atomicapp-m
 
 ## How To
 
+### Install this project
+Simply run
+
+```
+python setup.py install
+```
+
+If you want to do some changes to the code, I suggest to do:
+
+```
+cd atomicapp-run
+export PYTHONPATH=$PWD/containerapp:$PYTHONPATH
+alias containerapp="$PWD/containerapp/cli/main.py"
+```
+
 ### Create
 ```
-containerapp.py [--dry-run] create --schema PATH|URL APP_NAME
+containerapp [--dry-run] create --schema PATH|URL APP_NAME
 ```
 
 Constructs directory structure and fills Atomicfile with application name and id.
 ### Build
 ```
-containerapp.py [--dry-run] build [TAG]
+containerapp [--dry-run] build [TAG]
 ```
 Calls Docker build to package up the application and tags the resulting image.
 ### Install and Run
 ```
-containerapp.py [--dry-run] [-a answers.conf] install|run [--recursive] [--update] [--path PATH] APP|PATH 
+containerapp [--dry-run] [-a answers.conf] install|run [--recursive] [--update] [--path PATH] APP|PATH 
 ```
 Pulls the application and it's dependencies. If the last argument is existing path, it looks for Atomicfile there instead of pulling anything.
 * `--recursive yes|no` Pull whole dependency tree
