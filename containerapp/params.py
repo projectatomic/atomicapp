@@ -4,10 +4,14 @@ import anymarkup
 import os
 import logging
 import collections
+import re
+import pprint
+from collections import OrderedDict
 
-from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER
+from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY
 
 import utils
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,26 +39,30 @@ class Params(object):
     @property
     def provider(self):
         config = self.get()
-        if GLOBAL_CONF in config:
-            if "provider" in config[GLOBAL_CONF]:
-                return config[GLOBAL_CONF]["provider"]
+        if "provider" in config:
+            return config["provider"]
         return self.__provider
 
     def __init__(self, recursive=True, update=False, target_path=None):
         self.target_path = target_path
         self.recursive = self._isTrue(recursive)
         self.update = self._isTrue(update)
+        self.override = self._isTrue(False)
 
     def loadParams(self, data = {}):
-        if os.path.exists(data):
+        if type(data) == dict:
+            logger.debug("Data given: %s" % data)
+        elif os.path.exists(data):
             logger.debug("Path given, loading %s" % data)
             data = anymarkup.parse_file(data)
         else:
-            logger.debug("Data given: %s" % data)
+            raise Exception("Given params are broken: %s" % data)
 
         if "specversion" in data:
             logger.debug("Params part of %s" % MAIN_FILE)
-            data = data[PARAMS_KEY]
+            tmp = {}
+            tmp[GLOBAL_CONF] = data[PARAMS_KEY]
+            data = tmp
         else:
             logger.debug("Params in separate file")
 
@@ -76,13 +84,21 @@ class Params(object):
         else:
             raise Exception ("Missing ID in %s" % self.mainfile_data)
 
+        if PARAMS_KEY in self.mainfile_data:
+            logger.debug("Loading params")
+            self.loadParams(self.mainfile_data)
+
+
         return self.mainfile_data
 
     def loadAnswers(self, data = {}):
         if os.path.exists(data):
             logger.debug("Path to answers file given, loading %s" % data)
             data = anymarkup.parse_file(data)
-        elif not len(data):
+            pprint.pprint(data)
+        elif not type(data) == dict:
+            raise Exception("Answers are nor file path neither dictionary")
+        elif not data:
             raise Exception("No data answers data given")
 
         self.answers_data = data
@@ -93,38 +109,103 @@ class Params(object):
         if component:
             params = self._mergeParamsComponent(component)
         else:
-            params = self._mergeParams()
+            params = self._mergeParamsComponent()#self._mergeParams()
 
         return params
 
-    def _mergeParams(self):
+    def getValues(self, component = GLOBAL_CONF):
+        params = self.get(component)
+
+        a = self._getComponentValues(params)
+        for n, p  in a.iteritems():
+            self._updateAnswers(component, n, p)
+        return a
+
+
+    def _mergeGlobalParams(self):
         config = self.params_data
         if self.answers_data:
             if config:
                 config = self._update(config, self.answers_data)
             else:
                 config = self.answers_data
-
         return config
 
-    def _mergeParamsComponent(self, component):
-        config = self._mergeParams()
-        component_config = config[GLOBAL_CONF] if GLOBAL_CONF in config else {}
-        if "params" in self.mainfile_data["graph"][component]:
-            config = dict((name, p["default"] if "default" in p else None) 
-                    for name, p in self.mainfile_data["graph"][component]["params"].iteritems())
+    def _mergeParamsComponent(self, component=GLOBAL_CONF):
+        component_config = self._mergeParamsComponent() if not component == GLOBAL_CONF else {}
+        if component==GLOBAL_CONF:
+            if PARAMS_KEY in self.mainfile_data:
+                component_config = self._update(component_config, self.mainfile_data[PARAMS_KEY])
+        elif component in self.mainfile_data["graph"] and PARAMS_KEY in self.mainfile_data["graph"][component]:
+            config = self.mainfile_data["graph"][component][PARAMS_KEY]
             component_config = self._update(component_config, config)
 
+        if component in self.answers_data:
+            component_config = self._update(component_config, self.answers_data[component])
         return component_config
+
+    def _getValue(self, param, name):
+        value = None
+        if type(param) == dict:
+            if "default" in param:
+                value = param["default"]
+            if (self.override or not value) and "description" in param: #FIXME
+                logger.debug("Ask for %s: %s" % (name, param["description"]))
+                value = self._askFor(name, param["description"], param["constraints"])
+            elif not value:
+                logger.debug("Skipping %s" % name)
+                value = param
+        else:
+            value = param
+
+        return value
+
+    def _getComponentValues(self, data):
+        result = {}
+        for name, p in data.iteritems():
+            value = self._getValue(p, name)
+            result[name] = value
+        return result
+
+    def _askFor(self, what, desc, constraints = None):
+        repeat = True
+        const_text = ""
+        while repeat:
+            repeat = False
+            value = raw_input("%s (%s): " % (what, desc))
+            if constraints:
+                for constraint in constraints:
+                    if not re.match(constraint["allowed_pattern"], value):
+                        logger.error(constraint["description"])
+                        repeat = True
+
+        return value
+
+    def _updateAnswers(self, component, param, value):
+        if not component in self.answers_data:
+            self.answers_data[component] = {}
+
+        if not param in self.answers_data[component]:
+            self.answers_data[component][param] = None
+
+        self.answers_data[component][param] = value
+
+    def writeAnswers(self, path):
+        anymarkup.serialize_file(self.answers_data, path, format='yaml')
 
     def _update(self, old_dict, new_dict):
         for key, val in new_dict.iteritems():
             if isinstance(val, collections.Mapping):
                 tmp = self._update(old_dict.get(key, { }), val)
                 old_dict[key] = tmp
-            elif isinstance(val, list):
-                old_dict[key] = (old_dict[key] + val)
+            elif isinstance(val, list) and key in old_dict:
+                res = (old_dict[key] + val)
+                if isinstance(val[0], collections.Mapping):
+                    old_dict[key] = [dict(y) for y in set(tuple(x.items()) for x in res)]
+                else:
+                    old_dict[key] = list(set(res))
             else:
+#                print("%s %s %s" % (old_dict, val, new_dict))
                 old_dict[key] = new_dict[key]
         return old_dict
 

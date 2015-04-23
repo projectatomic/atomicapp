@@ -18,6 +18,7 @@ class OpenshiftProvider(IPlugin):
         self.path = path
         self.dryrun = dryrun
         self.logger = logger.getChild("openshift")
+        logger.debug(config)
 
     def _callK8s(self, path):
         cmd = ["kubectl", "create", "-f", path, "--api-version=v1beta1"]

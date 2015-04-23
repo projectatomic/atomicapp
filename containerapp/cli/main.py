@@ -55,6 +55,7 @@ class CLI():
     
         parser_run = subparsers.add_parser("run")
         self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
+        parser_run.add_argument("--write-answers", dest="answers_output", default=os.path.join(os.getcwd(), "%s.new" % ANSWERS_FILE), help="A file which will contain anwsers provided in interactive mode")
         parser_run.add_argument("APP", nargs="?", help="Path to the directory where the image is installed (current directory by default).")
         parser_run.set_defaults(func=cli_run)
     

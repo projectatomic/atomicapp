@@ -33,11 +33,14 @@ class Run():
     target_path = None
     app_id = None
     app = None
+    answers_output = None
 
     def __init__(self, answers, APP, dryrun = False, debug = False, **kwargs):
 
         self.debug = debug
         self.dryrun = dryrun
+        if "answers_output" in kwargs:
+            self.answers_output = kwargs["answers_output"]
 
         if os.path.exists(APP):
             self.app_path = APP
@@ -58,8 +61,6 @@ class Run():
     def _dispatchGraph(self):
         if not "graph" in self.params.mainfile_data:
             raise Exception("Graph not specified in %s" % MAIN_FILE)
-        if not os.path.isdir(self.utils.getGraphDir()):
-            raise Exception("Couldn't find %s directory" % GRAPH_DIR)
 
         for component, graph_item in self.params.mainfile_data["graph"].iteritems():
             if self.utils.isExternal(graph_item):
@@ -70,7 +71,8 @@ class Run():
 
     def _applyTemplate(self, data, component):
         template = Template(data)
-        config = self.params.get(component)
+        config = self.params.getValues(component)
+        logger.debug("Config: %s " % config)
         return template.substitute(config)
 
     def _getProvider(self):
@@ -84,7 +86,6 @@ class Run():
         
         data = None
         artifacts = self.utils.getArtifacts(component)
-        logger.debug(artifacts)
         artifact_provider_list = []
         if not self.params.provider in artifacts:
             raise Exception("Data for provider \"%s\" are not part of this app" % self.params.provider)
@@ -110,7 +111,7 @@ class Run():
 
         provider = self._getProvider()
         logger.info("Using provider %s for component %s" % (self.params.provider, component))
-        provider.init(self.params.get(component), artifact_provider_list, dst_dir, self.dryrun, logger)
+        provider.init(self.params.getValues(component), artifact_provider_list, dst_dir, self.dryrun, logger)
         provider.deploy()
 
     def run(self):
@@ -119,10 +120,14 @@ class Run():
 
         self.utils.checkArtifacts()
         config = self.params.get()
-        if "provider" in config[GLOBAL_CONF]:
-            self.provider = config[GLOBAL_CONF]["provider"]
+        print(config)
+        if "provider" in config:
+            self.provider = config["provider"]
 
         self._dispatchGraph()
+
+        if self.answers_output:
+            self.params.writeAnswers(self.answers_output)
 
     
 

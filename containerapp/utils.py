@@ -149,5 +149,3 @@ class Utils(object):
                         raise Exception("Missing artifact %s (%s)" % (artifact, path))
 
             logger.info("Artifacts for %s present for these providers: %s" % (component, ", ".join(artifacts.keys())))
-
-
