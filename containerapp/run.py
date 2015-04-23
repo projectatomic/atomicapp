@@ -42,10 +42,10 @@ class Run():
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
 
-        if os.path.exists(APP):
+        if APP and os.path.exists(APP):
             self.app_path = APP
         else:
-            logger.error("App path %s does not exist." % APP)
+            raise Exception("App path %s does not exist." % APP)
 
 
         self.params = Params(target_path=self.app_path)
