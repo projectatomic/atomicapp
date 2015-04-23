@@ -34,13 +34,17 @@ class Run():
     app_id = None
     app = None
     answers_output = None
+    kwargs = None
 
     def __init__(self, answers, APP, dryrun = False, debug = False, **kwargs):
 
         self.debug = debug
         self.dryrun = dryrun
+        self.kwargs = kwargs
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
+            print(self.answers_output)
+
 
         if APP and os.path.exists(APP):
             self.app_path = APP
@@ -49,6 +53,9 @@ class Run():
 
 
         self.params = Params(target_path=self.app_path)
+        if "ask" in kwargs:
+            self.params.ask = kwargs["ask"]
+
         self.utils = Utils(self.params)
 
         self.answers_file = answers
@@ -64,8 +71,10 @@ class Run():
 
         for component, graph_item in self.params.mainfile_data["graph"].iteritems():
             if self.utils.isExternal(graph_item):
-                component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug)
-                component_run.run()
+                component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug, **self.kwargs)
+                ret = component_run.run()
+                if self.answers_output:
+                    self.params.loadAnswers(ret)
             else:
                 self._processComponent(component, graph_item)
 
@@ -126,8 +135,13 @@ class Run():
 
         self._dispatchGraph()
 
+
+
         if self.answers_output:
             self.params.writeAnswers(self.answers_output)
+            return self.params.answers_data
+
+        return None
 
     
 

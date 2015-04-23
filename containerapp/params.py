@@ -25,6 +25,7 @@ class Params(object):
     app_path = None
     __provider = DEFAULT_PROVIDER
     __app = None
+    ask = False
 
     @property
     def app(self):
@@ -92,16 +93,21 @@ class Params(object):
         return self.mainfile_data
 
     def loadAnswers(self, data = {}):
-        if os.path.exists(data):
-            logger.debug("Path to answers file given, loading %s" % data)
-            data = anymarkup.parse_file(data)
-            pprint.pprint(data)
-        elif not type(data) == dict:
-            raise Exception("Answers are nor file path neither dictionary")
-        elif not data:
+        if not data:
             raise Exception("No data answers data given")
 
-        self.answers_data = data
+        if type(data) == dict:
+            logger.debug("Data given %s" % data)
+        elif os.path.exists(data):
+            logger.debug("Path to answers file given, loading %s" % data)
+            data = anymarkup.parse_file(data)
+        else:
+            raise Exception("Answers are nor file path neither dictionary")
+
+        if self.answers_data:
+            self.answers_data = self._update(self.answers_data, data)
+        else:
+            self.answers_data = data
         return self.answers_data
 
     def get(self, component = None):
@@ -149,9 +155,9 @@ class Params(object):
         if type(param) == dict:
             if "default" in param:
                 value = param["default"]
-            if (self.override or not value) and "description" in param: #FIXME
+            if (self.ask or not value) and "description" in param: #FIXME
                 logger.debug("Ask for %s: %s" % (name, param["description"]))
-                value = self._askFor(name, param["description"], param["constraints"])
+                value = self._askFor(name, param)
             elif not value:
                 logger.debug("Skipping %s" % name)
                 value = param
@@ -167,12 +173,21 @@ class Params(object):
             result[name] = value
         return result
 
-    def _askFor(self, what, desc, constraints = None):
+    def _askFor(self, what, info):
         repeat = True
+        desc = info["description"]
         const_text = ""
+        constraints = None
+        if "constraints" in info:
+            constraints = info["constraints"]
         while repeat:
             repeat = False
-            value = raw_input("%s (%s): " % (what, desc))
+            if "default" in info:
+                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
+                if len(value) == 0:
+                    value = info["default"]
+            else:
+                value = raw_input("%s (%s): " % (what, desc))
             if constraints:
                 for constraint in constraints:
                     if not re.match(constraint["allowed_pattern"], value):
@@ -184,6 +199,10 @@ class Params(object):
     def _updateAnswers(self, component, param, value):
         if not component in self.answers_data:
             self.answers_data[component] = {}
+
+        if component != GLOBAL_CONF and param in self.answers_data[GLOBAL_CONF] and value == self.answers_data[GLOBAL_CONF][param]:
+            logger.debug("Param %s already in %s with value %s" % (param, GLOBAL_CONF, value))
+            return
 
         if not param in self.answers_data[component]:
             self.answers_data[component][param] = None
