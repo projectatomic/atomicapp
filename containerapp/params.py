@@ -190,7 +190,8 @@ class Params(object):
                 value = raw_input("%s (%s): " % (what, desc))
             if constraints:
                 for constraint in constraints:
-                    if not re.match(constraint["allowed_pattern"], value):
+                    logger.debug("Checking pattern: %s" % constraint["allowed_pattern"])
+                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
                         logger.error(constraint["description"])
                         repeat = True
 

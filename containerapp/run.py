@@ -43,14 +43,11 @@ class Run():
         self.kwargs = kwargs
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
-            print(self.answers_output)
-
 
         if APP and os.path.exists(APP):
             self.app_path = APP
         else:
             raise Exception("App path %s does not exist." % APP)
-
 
         self.params = Params(target_path=self.app_path)
         if "ask" in kwargs:
@@ -129,14 +126,13 @@ class Run():
 
         self.utils.checkArtifacts()
         config = self.params.get()
-        print(config)
         if "provider" in config:
             self.provider = config["provider"]
 
         self._dispatchGraph()
 
 
-
+#Think about this a bit more probably - it's (re)written for all components...
         if self.answers_output:
             self.params.writeAnswers(self.answers_output)
             return self.params.answers_data
