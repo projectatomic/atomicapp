@@ -79,7 +79,21 @@ class Run():
         template = Template(data)
         config = self.params.getValues(component)
         logger.debug("Config: %s " % config)
-        return template.substitute(config)
+
+        output = None
+        while not output:
+            try:
+                logger.debug(config)
+                output = template.substitute(config)
+            except KeyError as ex:
+                name = ex.args[0]
+                logger.debug("Artifact contains unknown parameter %s, asking for it" % name)
+                config[name] = self.params._askFor(name, {"description": "Missing parameter '%s', provide the value or fix your %s" % (name, MAIN_FILE)})
+                if not len(config[name]):
+                    raise Exception("Artifact contains unknown parameter %s" % name)
+                self.params.loadAnswers({component: {name: config[name]}})
+
+        return output
 
     def _getProvider(self):
         for provider in self.plugins.getAllPlugins():
