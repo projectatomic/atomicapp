@@ -20,9 +20,10 @@ class Install():
     params = None
     answers_file = None
 
-    def __init__(self, answers, APP, recursive = True, update = False, target_path = None, dryrun = False, **kwargs):
+    def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, **kwargs):
         run_path = os.path.dirname(os.path.realpath(__file__))
         self.dryrun = dryrun
+        recursive = not nodeps
 
         app = APP #FIXME
 

@@ -60,7 +60,7 @@ class CLI():
     
         parser_install = subparsers.add_parser("install")
 
-        parser_install.add_argument("-r", "--recursive", dest="recursive", default=True, help="Pull and populate full dependency tree")
+        parser_install.add_argument("--no-deps", dest="nodeps", default=False, action="store_true", help="Skip pulling dependencies of the app")
         parser_install.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Re-pull images and overwrite existing files")
         parser_install.add_argument("-p", "--path", dest="target_path", default=None, help="Target directory for install")
         parser_install.add_argument("APP",  help="Application to run. This is a container image that has the metadata describing the whole application.")

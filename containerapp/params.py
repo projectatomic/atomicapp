@@ -140,7 +140,7 @@ class Params(object):
     def _mergeParamsComponent(self, component=GLOBAL_CONF):
         component_config = self._mergeParamsComponent() if not component == GLOBAL_CONF else {}
         if component==GLOBAL_CONF:
-            if PARAMS_KEY in self.mainfile_data:
+            if self.mainfile_data and PARAMS_KEY in self.mainfile_data:
                 component_config = self._update(component_config, self.mainfile_data[PARAMS_KEY])
         elif component in self.mainfile_data["graph"] and PARAMS_KEY in self.mainfile_data["graph"][component]:
             config = self.mainfile_data["graph"][component][PARAMS_KEY]
