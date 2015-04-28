@@ -2,7 +2,7 @@
 
 from containerapp.run import Run
 from containerapp.install import Install
-from containerapp import create
+from containerapp.create import Create
 from containerapp import params
 import os, sys, json
 from argparse import ArgumentParser
@@ -17,8 +17,7 @@ def cli_install(args):
     install.install()
 
 def cli_create(args):
-    raise Exception("This is broken, sorry:/")
-    ac = create.AtomicappCreate(args.NAME, args.schema, args.dryrun)
+    ac = Create(args.NAME, args.schema, args.dryrun)
     ac.create()
 
 def cli_build(args):
