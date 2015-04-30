@@ -8,6 +8,7 @@ import os, sys, json
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
+import anymarkup #FIXME
 
 from containerapp import set_logging
 from containerapp.constants import ANSWERS_FILE, MAIN_FILE
@@ -22,10 +23,9 @@ def cli_create(args):
 
 def cli_build(args):
     if os.path.isfile(os.path.join(os.getcwd(), MAIN_FILE)):
-        with open(os.path.join(os.getcwd(), MAIN_FILE), "r") as fp:
-            data = json.load(fp)
-            ac = create.AtomicappCreate(data["id"], args.dryrun)
-            ac.build(args.TAG)
+        data = anymarkup.parse_file(os.path.join(os.getcwd(), MAIN_FILE))
+        ac = Create(data["id"], args.dryrun)
+        ac.build(args.TAG)
 
 def cli_run(args):
     ae = Run(**vars(args))
