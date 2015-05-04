@@ -1,24 +1,23 @@
 FROM fedora
 MAINTAINER langdon <langdon@fedoraproject.org>
 #Derived from Vaclav Pavlin <vpavlin@redhat.com>; https://github.com/vpavlin/atomicapp-run
-RUN yum clean all && yum -y update
-RUN yum -y install python python-pip
-RUN yum clean all
+
+RUN yum -y update && yum clean all
+RUN yum -y install python python-pip docker && yum clean all
 
 ADD requirements.txt /opt/atomicapp/
-RUN pip install -r /opt/atomicapp/requirements.txt
+ADD setup.py /opt/atomicapp/
+ADD containerapp/ /opt/atomicapp/containerapp/
 
-ADD run.py /opt/atomicapp/run.py
-ADD containerapp.py /opt/atomicapp/containerapp.py
-ADD create.py /opt/atomicapp/create.py
-ADD providers /opt/atomicapp/providers
+WORKDIR /opt/atomicapp
+RUN python setup.py install
 
-VOLUME /application-entity
+
 WORKDIR /application-entity
+VOLUME /application-entity/answers.conf
 
-LABEL RUN docker run -it --privileged -v ${DATADIR}:/atomicapp -v /run:/run -v /:/host -v ${CONFDIR}/answers.conf:/application-entity/answers.conf --name NAME -e NAME=NAME -e IMAGE=IMAGE IMAGE /opt/atomicapp/containerapp.py -d run /atomicapp
-LABEL INSTALL docker run --rm -it --privileged -v /run:/run -v ${DATADIR}:/atomicapp -v /:/host -v ${CONFDIR}/answers.conf:/application-entity/answers.conf -e IMAGE=IMAGE -e NAME=NAME --name NAME IMAGE /opt/atomicapp/containerapp.py -d install --update --path /atomicapp /application-entity
+LABEL RUN docker run -it --privileged -v ${DATADIR}:/atomicapp -v /run:/run -v /:/host -v ${CONFDIR}/answers.conf:/application-entity/answers.conf --name NAME -e NAME=NAME -e IMAGE=IMAGE IMAGE containerapp -v run /atomicapp
+LABEL INSTALL docker run --rm -it --privileged -v /run:/run -v ${DATADIR}:/atomicapp -v /:/host -v ${CONFDIR}/answers.conf:/application-entity/answers.conf -e IMAGE=IMAGE -e NAME=NAME --name NAME IMAGE containerapp -v install --path /atomicapp /application-entity
 
-#CMD python /opt/atomicapp/run.py -a /answers.conf -d
+CMD  containerapp -h
 
-ENTRYPOINT ["/opt/atomicapp/containerapp.py"]

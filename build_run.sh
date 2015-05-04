@@ -1,5 +1,10 @@
 #!/bin/bash
 
+WHAT=$1
+
+[ -z "${WHAT}" ] && echo "Need to provide a distro you want to build for (fedora|centos|rhel7)" && exit
+ln -s Dockerfile.${WHAT} Dockerfile
+
 if [ -z "$USERNAME" ]; then
     echo "setting USERNAME to " `whoami` 
     USERNAME=`whoami`
@@ -9,6 +14,8 @@ echo docker build --rm -t $USERNAME/atomicapp-run .
 
 
 docker build --rm -t $USERNAME/atomicapp-run .
+
+rm -f Dockerfile
 
 #doesn't really make sense to run it
 #test

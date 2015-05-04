@@ -102,7 +102,7 @@ class Params(object):
             logger.debug("Path to answers file given, loading %s" % data)
             data = anymarkup.parse_file(data)
         else:
-            raise Exception("Answers are nor file path neither dictionary")
+            raise Exception("Answers (%s) are nor file path neither dictionary" % data)
 
         if self.answers_data:
             self.answers_data = self._update(self.answers_data, data)

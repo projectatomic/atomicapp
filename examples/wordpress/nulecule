@@ -14,7 +14,7 @@ metadata:
   description": "Simple Wordpress App"
 graph:
   mariadb-app:
-    source: docker://vpavlin/mariadb-app-0.0.1  #FIXME
+    source: docker://vpavlin/mariadb-app  #FIXME
   wordpress-app:
     params:
       name:
