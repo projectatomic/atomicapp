@@ -18,7 +18,7 @@ class KubernetesProvider(Provider):
         self.dryrun = dryrun
 
     def _callK8s(self, path):
-        cmd = ["kubectl", "create", "-f", path, "--api-version=v1beta1"]
+        cmd = ["kubectl", "create", "-f", path]
         print("Calling: %s" % " ".join(cmd))
 
         if self.dryrun:
