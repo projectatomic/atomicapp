@@ -1,13 +1,14 @@
-from yapsy.IPlugin import IPlugin
-
+from containerapp.plugin import Provider
 import os, subprocess
 
-class DockerProvider(IPlugin):
+class DockerProvider(Provider):
     config = None
     path = None
     artifacts = None
     dryrun = None
     logger = None
+    key = "docker"
+
     def init(self, config, artifacts, path, dryrun, logger):
         self.confif = config
         self.artifacts = artifacts

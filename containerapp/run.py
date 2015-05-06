@@ -4,13 +4,12 @@ from __future__ import print_function
 import os,sys
 from string import Template
 
-from yapsy.PluginManager import PluginManager
-
 import logging
 
 from params import Params
 from utils import Utils
 from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, PARAMS_FILE
+from plugin import Plugin
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ class Run():
     answers_file = None
     provider = DEFAULT_PROVIDER
     installed = False
-    plugins = None
+    plugins = []
     update = False
     app_path = None
     target_path = None
@@ -56,11 +55,8 @@ class Run():
         self.utils = Utils(self.params)
 
         self.answers_file = answers
-
-        run_path = os.path.dirname(os.path.realpath(__file__))
-        self.plugins = PluginManager()
-        self.plugins.setPluginPlaces([os.path.join(run_path, "providers")])
-        self.plugins.collectPlugins()
+        self.plugin = Plugin()
+        self.plugin.load_plugins()
 
     def _dispatchGraph(self):
         if not "graph" in self.params.mainfile_data:
@@ -95,12 +91,6 @@ class Run():
 
         return output
 
-    def _getProvider(self):
-        for provider in self.plugins.getAllPlugins():
-            module_path = provider.details.get("Core", "Module")
-            if os.path.basename(module_path) == self.params.provider:
-                return provider.plugin_object
-
     def _processComponent(self, component, graph_item):
         logger.debug("Processing component %s" % component)
         
@@ -129,8 +119,11 @@ class Run():
 
             artifact_provider_list.append(artifact_path)
 
-        provider = self._getProvider()
-        logger.info("Using provider %s for component %s" % (self.params.provider, component))
+        provider = self.plugin.getProvider(self.params.provider)
+        if provider:
+            logger.info("Using provider %s for component %s" % (self.params.provider, component))
+        else:
+            raise Exception("Something is broken - couldn't get the provider")
         provider.init(self.params.getValues(component), artifact_provider_list, dst_dir, self.dryrun, logger)
         provider.deploy()
 

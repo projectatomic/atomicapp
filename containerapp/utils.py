@@ -81,10 +81,11 @@ class Utils(object):
 
     def getImageURI(self, image):
         config = self.params.get()
+        logger.debug(config)
         
-        if config and GLOBAL_CONF in config and "registry" in config[GLOBAL_CONF]:
-            logger.info("Adding registry %s for %s" % (config[GLOBAL_CONF]["registry"], image))
-            image = os.path.join(config[GLOBAL_CONF]["registry"], image)
+        if "registry" in config:
+            logger.info("Adding registry %s for %s" % (config["registry"], image))
+            image = os.path.join(config["registry"], image)
         
         return image
 

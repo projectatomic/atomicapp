@@ -1,9 +1,11 @@
-from yapsy.IPlugin import IPlugin
+from containerapp.plugin import Provider
 
 from collections import OrderedDict
 import os, json, subprocess
 
-class KubernetesProvider(IPlugin):
+class KubernetesProvider(Provider):
+    key = "kubernetes"
+
     config = None
     component_dir = None
     debug = None

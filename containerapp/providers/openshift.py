@@ -1,4 +1,4 @@
-from yapsy.IPlugin import IPlugin
+from containerapp.plugin import Provider
 
 from collections import OrderedDict
 
@@ -6,7 +6,9 @@ import os, subprocess
 import anymarkup
 import logging
 
-class OpenshiftProvider(IPlugin):
+class OpenshiftProvider(Provider):
+    key = "openshift"
+
     config = None
     path = None
     artifacts = None

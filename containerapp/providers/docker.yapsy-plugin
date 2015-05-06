@@ -1,9 +1,0 @@
-[Core]
-Name = Docker Provider
-Module = docker
-
-[Documentation]
-Author = Vaclav Pavlin
-Version = 0.1
-Website = https://github.com/vpavlin/atomicapp-run
-Description = TBD
