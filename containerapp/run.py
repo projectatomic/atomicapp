@@ -124,7 +124,7 @@ class Run():
             logger.info("Using provider %s for component %s" % (self.params.provider, component))
         else:
             raise Exception("Something is broken - couldn't get the provider")
-        provider.init(self.params.getValues(component), artifact_provider_list, dst_dir, self.dryrun, logger)
+        provider.init(self.params.getValues(component), artifact_provider_list, dst_dir, self.debug, self.dryrun)
         provider.deploy()
 
     def run(self):
