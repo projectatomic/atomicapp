@@ -1,4 +1,4 @@
-from containerapp.plugin import Provider
+from atomicapp.plugin import Provider
 import os, subprocess
 
 import logging

@@ -1,4 +1,4 @@
-from containerapp.plugin import Provider
+from atomicapp.plugin import Provider
 
 from collections import OrderedDict
 import os, json, subprocess

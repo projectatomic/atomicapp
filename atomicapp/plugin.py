@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Based on https://github.com/DBuildService/dock/blob/master/dock/plugin.py
 
 from __future__ import print_function
 import os,sys
@@ -55,7 +56,7 @@ class Plugin():
             if f.endswith(".py"):
                 module_name = os.path.basename(f).rsplit('.', 1)[0]
                 try:
-                    f_module = imp.load_source("containerapp.providers.%s" % module_name, os.path.join(providers_dir, f))
+                    f_module = imp.load_source("atomicapp.providers.%s" % module_name, os.path.join(providers_dir, f))
                 except (IOError, OSError, ImportError) as ex:
                     logger.warning("can't load module '%s': %s", f, repr(ex))
                     continue
@@ -69,16 +70,12 @@ class Plugin():
                         # but
                         # <class 'plugins.plugin_rpmqa.PostBuildRPMqaPlugin'> <= <class 'dock.plugin.PostBuildPlugin'>
                         is_sub = issubclass(binding, plugin_class)
-                        logger.debug("issubclass")
                     except TypeError:
                         is_sub = False
                     if binding and is_sub and plugin_class.__name__ != binding.__name__:
                         plugin_classes[binding.key] = binding
-                        logger.debug("Binding %s %s" % (binding.key, binding))
-
                 
         self.plugins = plugin_classes
-        logger.debug(self.plugins)
 
     def getProvider(self, provider_key):
         for key, provider in self.plugins.iteritems():
