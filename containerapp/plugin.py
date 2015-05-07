@@ -11,13 +11,36 @@ logger = logging.getLogger(__name__)
 
 class Provider():
     key = None
-    def __init__(self):
-        pass
+
+    config = None
+    path = None
+    artifacts = None
+    dryrun = None
+    container = False
+    def __init__(self, config, artifacts, path, dryrun):
+        self.confif = config
+        self.artifacts = artifacts
+        self.path = path
+        self.dryrun = dryrun
+        if os.path.exists("/host"):
+            self.container = True
+
+    def init(self):
+        logger.warning("This is default 'init()' method, consider implementing provider specific one.")
+
+    def deploy(self):
+        raise NotImplemented()
+
+    def __str__(self):
+        return "%s" % self.key
+
+    def __repr__(self):
+        return "Plugin(key='%s')" % self.key
 
 
 class Plugin():
     plugins = []
-    def __init__(self):
+    def __init__(self, ):
         pass
 
     def load_plugins(self):
@@ -61,5 +84,5 @@ class Plugin():
         for key, provider in self.plugins.iteritems():
             logger.debug(key)
             if key == provider_key:
-                logger.debug("Found provider %s" % (provider.key))
-                return provider()
+                logger.debug("Found provider %s" % (provider))
+                return provider

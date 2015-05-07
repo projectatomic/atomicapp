@@ -3,22 +3,21 @@ from containerapp.plugin import Provider
 from collections import OrderedDict
 import os, json, subprocess
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 class KubernetesProvider(Provider):
     key = "kubernetes"
 
-    config = None
-    component_dir = None
-    debug = None
-    dryrun = None
-    def init(self, config, component_dir, dst_dir, debug, dryrun):
-        self.confif = config
-        self.component_dir = component_dir
-        self.dst_dir = dst_dir
-        self.debug = debug
-        self.dryrun = dryrun
+    kubectl = "kubectl"
+    def init(self):
+        if self.container:
+            self.kubectl = "/host/usr/bin/kubectl"
+            os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
 
     def _callK8s(self, path):
-        cmd = ["kubectl", "create", "-f", path]
+        cmd = [self.kubectl, "create", "-f", path]
         print("Calling: %s" % " ".join(cmd))
 
         if self.dryrun:
@@ -38,7 +37,7 @@ class KubernetesProvider(Provider):
             if "kind" in data:
                 kube_order[data["kind"].lower()] = artifact
             else:
-                print("Malformed kube file")
+                logger.info("Malformed kube file")
 
         for artifact in kube_order:
             if not kube_order[artifact]:
