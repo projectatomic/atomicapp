@@ -30,9 +30,9 @@ class KubernetesProvider(Provider):
 
     def deploy(self):
         kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
-        for artifact in self.component_dir:
+        for artifact in self.artifacts:
             data = None
-            with open(os.path.join(self.dst_dir, artifact), "r") as fp:
+            with open(os.path.join(self.path, artifact), "r") as fp:
                 data = json.load(fp)
             if "kind" in data:
                 kube_order[data["kind"].lower()] = artifact
@@ -43,5 +43,5 @@ class KubernetesProvider(Provider):
             if not kube_order[artifact]:
                 continue
         
-            k8s_file = os.path.join(self.dst_dir, kube_order[artifact])
+            k8s_file = os.path.join(self.path, kube_order[artifact])
             self._callK8s(k8s_file)
