@@ -14,7 +14,8 @@ class KubernetesProvider(Provider):
     def init(self):
         if self.container:
             self.kubectl = "/host/usr/bin/kubectl"
-            os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
+            if not os.path.exists("/etc/kubernetes"):
+                os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
 
     def _callK8s(self, path):
         cmd = [self.kubectl, "create", "-f", path]
