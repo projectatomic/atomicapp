@@ -8,7 +8,7 @@ import re
 import pprint
 from collections import OrderedDict
 
-from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS
+from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE
 
 import utils
 
@@ -96,6 +96,8 @@ class Params(object):
         if not data:
             raise Exception("No data answers data given")
 
+        use_default = False
+
         if type(data) == dict:
             logger.debug("Data given %s" % data)
         elif os.path.exists(data):
@@ -104,12 +106,14 @@ class Params(object):
                 if os.path.isfile(os.path.join(data, ANSWERS_FILE)):
                     data = os.path.isfile(os.path.join(data, ANSWERS_FILE))
                 else:
-                    logger.warning("No answers file found.")
-                    data = DEFAULT_ANSWERS
+                    use_default = True
 
             if os.path.isfile(data):
                 data = anymarkup.parse_file(data)
         else:
+            use_default = True
+
+        if use_default:
             logger.warning("No answers file found.")
             data = DEFAULT_ANSWERS
 
@@ -117,6 +121,10 @@ class Params(object):
             self.answers_data = self._update(self.answers_data, data)
         else:
             self.answers_data = data
+
+        if use_default:
+            self.writeAnswers(os.path.join(self.target_path, ANSWERS_FILE_SAMPLE))
+
         return self.answers_data
 
     def get(self, component = None):
@@ -220,7 +228,7 @@ class Params(object):
         self.answers_data[component][param] = value
 
     def writeAnswers(self, path):
-        anymarkup.serialize_file(self.answers_data, path, format='yaml')
+        anymarkup.serialize_file(self.answers_data, path, format='ini')
 
     def _update(self, old_dict, new_dict):
         for key, val in new_dict.iteritems():
