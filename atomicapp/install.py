@@ -23,11 +23,10 @@ class Install():
     def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, **kwargs):
         run_path = os.path.dirname(os.path.realpath(__file__))
         self.dryrun = dryrun
-        recursive = not nodeps
 
         app = APP #FIXME
 
-        self.params = Params(recursive, update, target_path)
+        self.params = Params(nodeps, update, target_path)
         self.utils = utils.Utils(self.params)
 
         if os.path.exists(app):
@@ -96,15 +95,25 @@ class Install():
         if not self.params.mainfile_data:
             self.params.loadMainfile(mainfile_path)
 
-        if self.params.recursive:
-            self._installDependencies()
+        values = {}
+        if not self.params.nodeps:
+            logger.info("Installing dependencies for %s" % self.params.app_id)
+            values = self._installDependencies()
 
-        return self.params.app_id
+        logger.debug(values)
+        self.params.loadAnswers(values)
+        logger.debug(self.params.answers_data)
+        self.params.writeAnswersSample()
+
+        return values
 
     def _installDependencies(self):
+        values = {}
         for component, graph_item in self.params.mainfile_data["graph"].iteritems():
             if not self.utils.isExternal(graph_item):
+                values[component] = self.params.getValues(component, skip_asking = True)
                 logger.debug("Component %s is part of the app" % component)
+                logger.debug("Values: %s" % values)
                 continue
             else:
                 logger.info("Component %s is external dependency" % component)
@@ -114,8 +123,10 @@ class Install():
             logger.debug("Component path: %s" % component_path)
             if not component == self.params.app_id and (not os.path.isdir(component_path) or self.params.update): #not self.params.app_path or  ???
                 logger.info("Pulling %s" % image_name)
-                component_app = Install(self.answers_file, image_name, self.params.recursive, self.params.update, component_path, self.dryrun)
-                component = component_app.install()
+                component_app = Install(self.answers_file, image_name, self.params.nodeps, self.params.update, component_path, self.dryrun)
+                values = self.params._update(values, component_app.install())
                 logger.info("Component installed into %s" % component_path)
             else:
                 logger.info("Component %s already exists at %s - remove the directory or use --update option" % (component, component_path))
+
+        return values

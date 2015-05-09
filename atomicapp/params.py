@@ -19,8 +19,8 @@ class Params(object):
     answers_data = None
     params_data = None
     mainfile_data = None
-    target_path = None
-    recursive = True
+    __target_path = None
+    nodeps = False
     app_id = None
     app_path = None
     __provider = DEFAULT_PROVIDER
@@ -44,9 +44,20 @@ class Params(object):
             return config["provider"]
         return self.__provider
 
-    def __init__(self, recursive=True, update=False, target_path=None):
+    @property
+    def target_path(self):
+        return self.__target_path
+
+    @target_path.setter
+    def target_path(self, path):
+        if not os.path.isdir(path):
+            os.makedirs(path)
+
+        self.__target_path = path
+
+    def __init__(self, nodeps=False, update=False, target_path=None):
         self.target_path = target_path
-        self.recursive = self._isTrue(recursive)
+        self.nodeps = self._isTrue(nodeps)
         self.update = self._isTrue(update)
         self.override = self._isTrue(False)
 
@@ -123,26 +134,26 @@ class Params(object):
             self.answers_data = data
 
         if use_default:
-            self.writeAnswers(os.path.join(self.target_path, ANSWERS_FILE_SAMPLE))
+            self.writeAnswersSample()
 
         return self.answers_data
 
-    def get(self, component = None):
+    def get(self, component = None, global_base = True):
         params = None
         if component:
-            params = self._mergeParamsComponent(component)
+            params = self._mergeParamsComponent(component, global_base = global_base)
         else:
             params = self._mergeParamsComponent()#self._mergeParams()
 
         return params
 
-    def getValues(self, component = GLOBAL_CONF):
-        params = self.get(component)
+    def getValues(self, component = GLOBAL_CONF, skip_asking = False):
+        params = self.get(component, not skip_asking)
 
-        a = self._getComponentValues(params)
-        for n, p  in a.iteritems():
+        values = self._getComponentValues(params, skip_asking)
+        for n, p  in values.iteritems():
             self._updateAnswers(component, n, p)
-        return a
+        return values
 
 
     def _mergeGlobalParams(self):
@@ -154,8 +165,8 @@ class Params(object):
                 config = self.answers_data
         return config
 
-    def _mergeParamsComponent(self, component=GLOBAL_CONF):
-        component_config = self._mergeParamsComponent() if not component == GLOBAL_CONF else {}
+    def _mergeParamsComponent(self, component=GLOBAL_CONF, global_base = True):
+        component_config = self._mergeParamsComponent() if not component == GLOBAL_CONF and global_base else {}
         if component==GLOBAL_CONF:
             if self.mainfile_data and PARAMS_KEY in self.mainfile_data:
                 component_config = self._update(component_config, self.mainfile_data[PARAMS_KEY])
@@ -167,15 +178,16 @@ class Params(object):
             component_config = self._update(component_config, self.answers_data[component])
         return component_config
 
-    def _getValue(self, param, name):
+    def _getValue(self, param, name, skip_asking = False):
         value = None
+        logger.debug("Skip asking: %s" % skip_asking)
         if type(param) == dict:
             if "default" in param:
                 value = param["default"]
-            if (self.ask or not value) and "description" in param: #FIXME
+            if not skip_asking and (self.ask or not value) and "description" in param: #FIXME
                 logger.debug("Ask for %s: %s" % (name, param["description"]))
                 value = self._askFor(name, param)
-            elif not value:
+            elif not skip_asking and not value:
                 logger.debug("Skipping %s" % name)
                 value = param
         else:
@@ -183,10 +195,10 @@ class Params(object):
 
         return value
 
-    def _getComponentValues(self, data):
+    def _getComponentValues(self, data, skip_asking = False):
         result = {}
         for name, p in data.iteritems():
-            value = self._getValue(p, name)
+            value = self._getValue(p, name, skip_asking)
             result[name] = value
         return result
 
@@ -229,6 +241,11 @@ class Params(object):
 
     def writeAnswers(self, path):
         anymarkup.serialize_file(self.answers_data, path, format='ini')
+
+    def writeAnswersSample(self):
+        path = os.path.join(self.target_path, ANSWERS_FILE_SAMPLE)
+        logger.info("Writing answers file template to %s" % path)
+        self.writeAnswers(path)
 
     def _update(self, old_dict, new_dict):
         for key, val in new_dict.iteritems():
