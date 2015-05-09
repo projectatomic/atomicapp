@@ -44,6 +44,10 @@ class Run():
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
 
+        if os.environ and "IMAGE" in os.environ:
+            self.app_path = APP
+            APP = os.environ["IMAGE"]
+
         if APP and os.path.exists(APP):
             self.app_path = APP
         else:
