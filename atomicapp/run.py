@@ -10,6 +10,7 @@ from params import Params
 from utils import Utils
 from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, PARAMS_FILE
 from plugin import Plugin
+from install import Install
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,9 @@ class Run():
         if APP and os.path.exists(APP):
             self.app_path = APP
         else:
-            raise Exception("App path %s does not exist." % APP)
+            self.app_path = os.getcwd()
+            install = Install(answers, APP, dryrun = dryrun, target_path = self.app_path)
+            install.install()
 
         self.params = Params(target_path=self.app_path)
         if "ask" in kwargs:
