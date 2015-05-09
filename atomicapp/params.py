@@ -26,6 +26,7 @@ class Params(object):
     __provider = DEFAULT_PROVIDER
     __app = None
     ask = False
+    write_sample_answers = False
 
     @property
     def app(self):
@@ -107,7 +108,6 @@ class Params(object):
         if not data:
             raise Exception("No data answers data given")
 
-        use_default = False
 
         if type(data) == dict:
             logger.debug("Data given %s" % data)
@@ -117,24 +117,20 @@ class Params(object):
                 if os.path.isfile(os.path.join(data, ANSWERS_FILE)):
                     data = os.path.isfile(os.path.join(data, ANSWERS_FILE))
                 else:
-                    use_default = True
+                    self.write_sample_answers = True
 
             if os.path.isfile(data):
                 data = anymarkup.parse_file(data)
         else:
-            use_default = True
+            self.write_sample_answers = True
 
-        if use_default:
-            logger.warning("No answers file found.")
+        if  self.write_sample_answers:
             data = DEFAULT_ANSWERS
 
         if self.answers_data:
             self.answers_data = self._update(self.answers_data, data)
         else:
             self.answers_data = data
-
-        if use_default:
-            self.writeAnswersSample()
 
         return self.answers_data
 

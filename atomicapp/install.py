@@ -70,9 +70,7 @@ class Install():
         self.utils.checkArtifacts()
     
     def install(self):
-
-        if not self.params.loadAnswers(self.answers_file):
-            logger.info("No %s file found, using defaults" % ANSWERS_FILE)
+        self.params.loadAnswers(self.answers_file)
 
         if self.params.app_path and not self.params.target_path == self.params.app_path:
             logger.info("Copying content of directory %s to %s" % (self.params.app_path, self.params.target_path))
@@ -103,7 +101,9 @@ class Install():
         logger.debug(values)
         self.params.loadAnswers(values)
         logger.debug(self.params.answers_data)
-        self.params.writeAnswersSample()
+        if self.params.write_sample_answers:
+            print("blah")
+            self.params.writeAnswersSample()
 
         return values
 
@@ -123,7 +123,7 @@ class Install():
             logger.debug("Component path: %s" % component_path)
             if not component == self.params.app_id and (not os.path.isdir(component_path) or self.params.update): #not self.params.app_path or  ???
                 logger.info("Pulling %s" % image_name)
-                component_app = Install(self.answers_file, image_name, self.params.nodeps, self.params.update, component_path, self.dryrun)
+                component_app = Install(self.params.answers_data, image_name, self.params.nodeps, self.params.update, component_path, self.dryrun)
                 values = self.params._update(values, component_app.install())
                 logger.info("Component installed into %s" % component_path)
             else:
