@@ -171,12 +171,13 @@ class Params(object):
             component_config = self._update(component_config, config)
 
         if component in self.answers_data:
-            component_config = self._update(component_config, self.answers_data[component])
+            tmp_clean_answers = self._cleanNullValues(self.answers_data[component])
+            component_config = self._update(component_config, tmp_clean_answers)
         return component_config
 
     def _getValue(self, param, name, skip_asking = False):
         value = None
-        logger.debug("Skip asking: %s" % skip_asking)
+
         if type(param) == dict:
             if "default" in param:
                 value = param["default"]
@@ -221,6 +222,14 @@ class Params(object):
                         repeat = True
 
         return value
+
+    def _cleanNullValues(self, data):
+        result = {}
+        for name, value in data.iteritems():
+            if value:
+                result[name] = value
+
+        return result
 
     def _updateAnswers(self, component, param, value):
         if not component in self.answers_data:
