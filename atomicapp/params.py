@@ -51,6 +51,8 @@ class Params(object):
 
     @target_path.setter
     def target_path(self, path):
+        if not path:
+            path = os.getcwd()
         if not os.path.isdir(path):
             os.makedirs(path)
 
