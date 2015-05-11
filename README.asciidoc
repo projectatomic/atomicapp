@@ -24,13 +24,6 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 alias atomicapp="`pwd`/atomicapp/cli/main.py"
 ```
 
-=== Create
-```
-atomicapp [--dry-run] create --schema PATH|URL APP_NAME
-```
-
-Constructs directory structure and fills Atomicfile with application name and id.
-
 === Build
 ```
 atomicapp [--dry-run] build [TAG]
@@ -43,7 +36,8 @@ Calls Docker build to package up the application and tags the resulting image.
 atomicapp [--dry-run] [-a answers.conf] install|run [--recursive] [--update] [--path PATH] APP|PATH 
 ```
 
-Pulls the application and it's dependencies. If the last argument is existing path, it looks for Atomicfile there instead of pulling anything.
+Pulls the application and it's dependencies. If the last argument is
+existing path, it looks for `Nulecule` file there instead of pulling anything.
 
 * `--recursive yes|no` Pull whole dependency tree
 * `--update` Overwrite any existing files
