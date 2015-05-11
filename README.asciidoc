@@ -19,7 +19,7 @@ python setup.py install
 If you want to do some changes to the code, I suggest to do:
 
 ```
-cd atomicapp-run
+cd atomicapp
 export PYTHONPATH=$PWD/atomicapp:$PYTHONPATH
 alias atomicapp="$PWD/atomicapp/cli/main.py"
 ```
