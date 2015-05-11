@@ -1,11 +1,15 @@
-# ContainerApp
-ContainerApp tool is a reference implementation of [Container Application Specification](https://github.com/aweiteka/atomicapp-spec). It can be used to bootstrap container application and to install and run them.
+= Atomicapp 
+Atomicapp is a reference implementation of the Nulecule Specification. It can be used to bootstrap container application and to install and run them.
 
-Example applications consist of [MariaDB](https://github.com/vpavlin/atomicapp-mariadb) and [Wordpress](https://github.com/vpavlin/atomicapp-wordpress) applications, where Wordpress depends on MariaDB.
+== Introduction
 
-## How To
+Please take a look at the https://gitbub.com/projectatomic/nulecule[Nulecule Specification]. If you are interested in taking a look at some well documented examples, feel free to browse thru https://github.com/projectatomic/atomicapp-examples/[Atomicapp].
 
-### Install this project
+== How To
+
+First of all, cone the github repository: `git clone https://github.com/projectatomic/atomicapp`.
+
+=== Install this project
 Simply run
 
 ```
@@ -20,36 +24,38 @@ export PYTHONPATH=$PWD/atomicapp:$PYTHONPATH
 alias atomicapp="$PWD/atomicapp/cli/main.py"
 ```
 
-### Create
+=== Create
 ```
 atomicapp [--dry-run] create --schema PATH|URL APP_NAME
 ```
 
 Constructs directory structure and fills Atomicfile with application name and id.
-### Build
+
+=== Build
 ```
 atomicapp [--dry-run] build [TAG]
 ```
+
 Calls Docker build to package up the application and tags the resulting image.
-### Install and Run
+
+=== Install and Run
 ```
 atomicapp [--dry-run] [-a answers.conf] install|run [--recursive] [--update] [--path PATH] APP|PATH 
 ```
+
 Pulls the application and it's dependencies. If the last argument is existing path, it looks for Atomicfile there instead of pulling anything.
+
 * `--recursive yes|no` Pull whole dependency tree
 * `--update` Overwrite any existing files
 * `--path PATH` Unpack the application into given directory instead of current directory
 
 Action `run` performs `install` prior it's own tasks are executed. When `run` is selected, providers' code is invoked and containers are deployed.
 
-## Providers
+== Providers
 
 Providers represent various deployment targets. They are based on yapsy plugin system and can be added by implementing interface explained in [Providers](providers/README.md)
 
-## Examples
+== Dependencies
 
-### Mariadb App
-
-### Wordpress App
-
-
+As of Version 0.0.1 Atomicapp uses https://docs.python.org/2/[Python
+2.7.5] and https://github.com/bkabrda/anymarkup[Anymarkup].
