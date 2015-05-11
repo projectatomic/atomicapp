@@ -1,7 +1,7 @@
 from atomicapp.plugin import Provider
 
 from collections import OrderedDict
-import os, json, subprocess
+import os, anymarkup, subprocess
 
 import logging
 
@@ -34,7 +34,7 @@ class KubernetesProvider(Provider):
         for artifact in self.artifacts:
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
-                data = json.load(fp)
+                data = anymarkup.parse(fp)
             if "kind" in data:
                 kube_order[data["kind"].lower()] = artifact
             else:
