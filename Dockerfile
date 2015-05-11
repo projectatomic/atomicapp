@@ -1,4 +1,4 @@
-FROM centos
+FROM centos:centos7
 
 MAINTAINER Vaclav Pavlin <vpavlin@redhat.com>
 
@@ -15,11 +15,11 @@ WORKDIR /opt/atomicapp
 
 RUN python setup.py install
 
-WORKDIR /application-entity
-VOLUME /application-entity/answers.conf
+WORKDIR /atomicapp
+VOLUME /atomicapp
 
-LABEL RUN docker run -it --rm --privileged --net=host -v ${PWD}:/atomicapp -v /run:/run -v /:/host -v ${PWD}/answers.conf:/application-entity/answers.conf --name NAME -e NAME=NAME -e IMAGE=IMAGE IMAGE atomicapp -v run /atomicapp
-LABEL INSTALL docker run --rm -it --privileged -v /run:/run -v ${PWD}:/atomicapp -v /:/host -v ${PWD}/answers.conf:/application-entity/answers.conf -e IMAGE=IMAGE -e NAME=NAME --name NAME IMAGE atomicapp -v install --path /atomicapp /application-entity
+LABEL RUN docker run -it --rm --privileged --net=host -v ${PWD}:/atomicapp -v /run:/run -v /:/host --name NAME -e NAME=NAME -e IMAGE=IMAGE IMAGE -v run /atomicapp
+LABEL INSTALL docker run --rm -it --privileged -v /run:/run -v ${PWD}:/atomicapp -e IMAGE=IMAGE -e NAME=NAME --name NAME IMAGE -v install --destination /atomicapp /application-entity
 
-CMD atomicapp -h
+ENTRYPOINT ["/usr/bin/atomicapp"]
 
