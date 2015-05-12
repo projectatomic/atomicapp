@@ -1,4 +1,5 @@
-= Atomicapp 
+= Atomicapp
+
 Atomicapp is a reference implementation of the Nulecule Specification. It can be used to bootstrap container application and to install and run them.
 
 == Introduction
