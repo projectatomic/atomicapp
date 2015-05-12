@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os,sys
 import distutils.dir_util
+import random, string
 
 import subprocess
 
@@ -47,8 +48,10 @@ class Install():
 
     def _copyFromContainer(self, image):
         image = self.utils.getImageURI(image)
-        name = self.utils.getComponentName(image)
 
+        name = "%s-%s" % (self.utils.getComponentName(image), ''.join(random.sample(string.letters, 6)))
+        logger.debug("Creating a container with name %s" % name)
+        
         create = ["docker", "create", "--name", name, image, "nop"]
         subprocess.call(create)
         cp = ["docker", "cp", "%s:/%s" % (name, utils.APP_ENT_PATH), self.utils.tmpdir]
