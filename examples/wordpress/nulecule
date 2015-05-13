@@ -26,8 +26,11 @@ graph:
     artifacts:
       docker:
         - file://graph/docker/label_run
-      openshift:
+      kubernetes:
         - file://graph/kubernetes/wordpress-pod.json
         - file://graph/kubernetes/wordpress-service.json
+      openshift:
+        - inherit:
+            - kubernetes
 
         
