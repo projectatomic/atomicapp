@@ -36,4 +36,4 @@ class DockerProvider(Provider):
             if self.dryrun:
                 logger.info("Pretending to run:\n\t %s" % " ".join(cmd))
             else:
-                subprocess.call(cmd)
+                subprocess.check_call(cmd)
