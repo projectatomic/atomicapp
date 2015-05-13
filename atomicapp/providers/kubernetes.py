@@ -19,15 +19,10 @@ class KubernetesProvider(Provider):
 
     def _callK8s(self, path):
         cmd = [self.kubectl, "create", "-f", path]
-        print("Calling: %s" % " ".join(cmd))
+        logger.info("Calling: %s" % " ".join(cmd))
 
-        if self.dryrun:
-            return True
-        else:
-            if subprocess.call(cmd) == 0:
-                return True
-        
-        return False
+        if not self.dryrun:
+            subprocess.check_call(cmd) == 0
 
     def deploy(self):
         kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
