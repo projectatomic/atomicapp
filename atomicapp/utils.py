@@ -94,6 +94,7 @@ class Utils(object):
         if not self.params.update:
             check_cmd = ["docker", "images", "-q", image]
             id = subprocess.check_output(check_cmd)
+            logger.debug("Output of docker images cmd: %s" % id)
             if len(id) != 0:
                 logger.debug("Image %s already present with id %s. Use --update to re-pull." % (image, id.strip()))
                 return
@@ -133,20 +134,40 @@ class Utils(object):
 
         return None
 
-    def checkArtifacts(self):
-        for component in self.params.mainfile_data["graph"].keys():
-            artifacts = self.getArtifacts(component)
-            if not artifacts:
-                logger.debug("No artifacts for %s" % component)
+    def _checkInherit(self, component, inherit_list, checked_providers):
+        for inherit_provider in inherit_list:
+            if not inherit_provider in checked_providers:
+                logger.debug("Checking %s because of 'inherit'" % inherit_provider)
+                checked_providers += self.checkArtifacts(component, inherit_provider)
+
+    def checkArtifacts(self, component, check_provider = None):
+        checked_providers = []
+        artifacts = self.getArtifacts(component)
+        if not artifacts:
+            logger.debug("No artifacts for %s" % component)
+            return []
+
+        for provider, artifact_list in artifacts.iteritems():
+            if (check_provider and not provider == check_provider) or provider in checked_providers:
                 continue
 
-            for provider, artifact_list in artifacts.iteritems():
-                logger.debug("Provider: %s" % provider)
-                for artifact in artifact_list:
-                    path = os.path.join(self.params.target_path, self.sanitizePath(artifact))
-                    if os.path.isfile(path):
-                        logger.debug("Artifact %s: OK" % artifact)
-                    else:
-                        raise Exception("Missing artifact %s (%s)" % (artifact, path))
+            logger.debug("Provider: %s" % provider)
+            for artifact in artifact_list:
+                if "inherit" in artifact:
+                    self._checkInherit(component, artifact["inherit"], checked_providers)
+                    continue
+                path = os.path.join(self.params.target_path, self.sanitizePath(artifact))
+                if os.path.isfile(path):
+                    logger.debug("Artifact %s: OK" % artifact)
+                else:
+                    raise Exception("Missing artifact %s (%s)" % (artifact, path))
+            checked_providers.append(provider)
 
-            logger.info("Artifacts for %s present for these providers: %s" % (component, ", ".join(artifacts.keys())))
+        return checked_providers
+
+    def checkAllArtifacts(self):
+        for component in self.params.mainfile_data["graph"].keys():
+
+            checked_providers = self.checkArtifacts(component)
+            logger.info("Artifacts for %s present for these providers: %s" % (component, ", ".join(checked_providers)))
+

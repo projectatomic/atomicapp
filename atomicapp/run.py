@@ -98,17 +98,22 @@ class Run():
 
         return output
 
-    def _processComponent(self, component, graph_item):
-        logger.debug("Processing component %s" % component)
-        
-        data = None
+    def _processArtifacts(self, component, provider):
         artifacts = self.utils.getArtifacts(component)
         artifact_provider_list = []
-        if not self.params.provider in artifacts:
+        if not provider in artifacts:
             raise Exception("Data for provider \"%s\" are not part of this app" % self.params.provider)
-        
+
         dst_dir = os.path.join(self.utils.tmpdir, component)
-        for artifact in artifacts[self.params.provider]:
+        data = None
+
+        for artifact in artifacts[provider]:
+            if "inherit" in artifact:
+                logger.debug("Inheriting from %s" % artifact["inherit"])
+                for item in artifact["inherit"]:
+                    inherited_artifacts, _ = self._processArtifacts(component, item)
+                    artifact_provider_list += inherited_artifacts
+                continue
             artifact_path = self.utils.sanitizePath(artifact)
             with open(os.path.join(self.app_path, artifact_path), "r") as fp:
                 data = fp.read()
@@ -126,8 +131,14 @@ class Run():
 
             artifact_provider_list.append(artifact_path)
 
+        return artifact_provider_list, dst_dir
+
+    def _processComponent(self, component, graph_item):
+        logger.debug("Processing component %s" % component)
+
+        artifact_list, dst_dir = self._processArtifacts(component, self.params.provider)
         provider_class = self.plugin.getProvider(self.params.provider)
-        provider = provider_class(self.params.getValues(component), artifact_provider_list, dst_dir, self.dryrun)
+        provider = provider_class(self.params.getValues(component), artifact_list, dst_dir, self.dryrun)
         if provider:
             logger.info("Using provider %s for component %s" % (self.params.provider, component))
         else:
@@ -139,7 +150,7 @@ class Run():
         self.params.loadMainfile(os.path.join(self.params.target_path, MAIN_FILE))
         self.params.loadAnswers(self.answers_file)
 
-        self.utils.checkArtifacts()
+        self.utils.checkAllArtifacts()
         config = self.params.get()
         if "provider" in config:
             self.provider = config["provider"]

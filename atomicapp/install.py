@@ -34,7 +34,7 @@ class Install():
             app = self.utils.loadApp(app)
         else:
             logger.info("App name is %s, will be populated to %s" % (app, target_path))
-            
+
         if not target_path:
             if self.params.app_path:
                 self.params.target_path = self.params.app_path
@@ -48,7 +48,7 @@ class Install():
     def _copyFromContainer(self, image):
         image = self.utils.getImageURI(image)
         name = self.utils.getComponentName(image)
-        
+
         create = ["docker", "create", "--name", name, image, "nop"]
         subprocess.call(create)
         cp = ["docker", "cp", "%s:/%s" % (name, utils.APP_ENT_PATH), self.utils.tmpdir]
@@ -63,12 +63,12 @@ class Install():
         logger.info("Copying app %s" % self.utils.getComponentName(self.params.app))
         if not src:
             src = os.path.join(self.utils.tmpdir, APP_ENT_PATH)
-            
+
         if not dst:
             dst = self.params.target_path
         distutils.dir_util.copy_tree(src, dst, update=(not self.params.update))
-        self.utils.checkArtifacts()
-    
+        self.utils.checkAllArtifacts()
+
     def install(self):
         self.params.loadAnswers(self.answers_file)
 
@@ -77,7 +77,7 @@ class Install():
             self._populateApp(src=self.params.app_path)
 
         mainfile_path = os.path.join(self.params.target_path, MAIN_FILE)
-        
+
         if not self.params.app_path and (self.params.update or not os.path.exists(self.utils.getComponentDir(self.params.app))):
             self.utils.pullApp(self.params.app)
             self._copyFromContainer(self.params.app)
@@ -85,11 +85,11 @@ class Install():
             logger.debug("%s path for pulled image: %s" % (MAIN_FILE, mainfile_path))
             self.params.loadMainfile(mainfile_path)
             logger.debug("App ID: %s" % self.params.app_id)
-       
+
             self._populateApp()
         else:
             logger.info("Component data exist in %s, skipping population..." % self.utils.getComponentDir(self.params.app))
-       
+
         if not self.params.mainfile_data:
             self.params.loadMainfile(mainfile_path)
 
