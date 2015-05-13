@@ -34,6 +34,7 @@ class KubernetesProvider(Provider):
         for artifact in self.artifacts:
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
+                logger.debug(os.path.join(self.path, artifact))
                 data = anymarkup.parse(fp)
             if "kind" in data:
                 kube_order[data["kind"].lower()] = artifact
