@@ -56,7 +56,7 @@ class Plugin():
             if f.endswith(".py"):
                 module_name = os.path.basename(f).rsplit('.', 1)[0]
                 try:
-                    f_module = imp.load_source("atomicapp.providers.%s" % module_name, os.path.join(providers_dir, f))
+                    f_module = imp.load_source(module_name, os.path.join(providers_dir, f))
                 except (IOError, OSError, ImportError) as ex:
                     logger.warning("can't load module '%s': %s", f, repr(ex))
                     continue
