@@ -47,6 +47,7 @@ class Run():
         if os.environ and "IMAGE" in os.environ:
             self.app_path = APP
             APP = os.environ["IMAGE"]
+            del os.environ["IMAGE"]
 
         if APP and os.path.exists(APP):
             self.app_path = APP
