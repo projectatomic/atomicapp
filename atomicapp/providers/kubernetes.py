@@ -12,7 +12,7 @@ class KubernetesProvider(Provider):
 
     kubectl = "kubectl"
     def init(self):
-        if self.container:
+        if not self.dryrun and self.container:
             self.kubectl = "/host/usr/bin/kubectl"
             if not os.path.exists("/etc/kubernetes"):
                 os.symlink("/host/etc/kubernetes", "/etc/kubernetes")

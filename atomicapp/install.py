@@ -118,8 +118,8 @@ class Install():
                 logger.debug("Component %s is part of the app" % component)
                 logger.debug("Values: %s" % values)
                 continue
-            else:
-                logger.info("Component %s is external dependency" % component)
+
+            logger.info("Component %s is external dependency" % component)
 
             image_name = self.utils.getSourceImage(graph_item)
             component_path = self.utils.getExternalAppDir(component)
