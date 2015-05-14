@@ -2,7 +2,7 @@ import logging
 
 def set_logging(name="atomicapp", level=logging.DEBUG):
     # create logger
-    logger = logging.getLogger(name)
+    logger = logging.getLogger()
     logger.handlers = []
     logger.setLevel(level)
 
