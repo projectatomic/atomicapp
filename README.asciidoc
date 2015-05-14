@@ -8,7 +8,7 @@ Please take a look at the https://gitbub.com/projectatomic/nulecule[Nulecule Spe
 
 == How To
 
-First of all, cone the github repository: `git clone https://github.com/projectatomic/atomicapp`.
+First of all, clone the github repository: `git clone https://github.com/projectatomic/atomicapp`.
 
 === Install this project
 Simply run
