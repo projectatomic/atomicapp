@@ -22,7 +22,7 @@ class DockerProvider(Provider):
                 server = line.split(":")[1]
 
         if client > server:
-            raise Exception("Docker version in app image (%s) is higher than the one on host (%s). Pleas update your host." % (client, server))
+            raise Exception("Docker version in app image (%s) is higher than the one on host (%s). Please update your host." % (client, server))
 
     def deploy(self):
         for artifact in self.artifacts:
