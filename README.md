@@ -1,8 +1,8 @@
-= Atomicapp
+# Atomicapp
 
-Atomicapp is a reference implementation of the https://github.com/projectatomic/nulecule[Nulecule Specification]. It can be used to bootstrap container applications and to install and run them. Atomicapp is designed to be run in a container context. Examples using this tool may be found in the https://github.com/projectatomic/nulecule/tree/master/examples[Nulecule examples directory].
+Atomicapp is a reference implementation of the [Nulecule Specification](https://github.com/projectatomic/nulecule). It can be used to bootstrap container applications and to install and run them. Atomicapp is designed to be run in a container context. Examples using this tool may be found in the [Nulecule examples directory](https://github.com/projectatomic/nulecule/tree/master/examples).
 
-== Getting Started
+## Getting Started
 
 Atomicapp is packaged as a container. End-users typically do not install the software from source. Instead use the atomicapp container as the `FROM` line in a Dockerfile and package your application on top. For example:
 
@@ -15,13 +15,13 @@ ADD /nulecule /Dockerfile README.md /application-entity/
 ADD /artifacts /application-entity/artifacts
 ```
 
-For more information see the https://github.com/projectatomic/nulecule/blob/master/docs/getting-started.md[Nulecule getting started guide].
+For more information see the [Nulecule getting started guide](https://github.com/projectatomic/nulecule/blob/master/docs/getting-started.md).
 
-== Developers
+## Developers
 
 First of all, clone the github repository: `git clone https://github.com/projectatomic/atomicapp`.
 
-=== Install this project
+### Install this project
 Simply run
 
 ```
@@ -36,14 +36,14 @@ export PYTHONPATH=`pwd`:$PYTHONPATH
 alias atomicapp="`pwd`/atomicapp/cli/main.py"
 ```
 
-=== Build
+### Build
 ```
 atomicapp [--dry-run] build [TAG]
 ```
 
 Calls Docker build to package up the application and tags the resulting image.
 
-=== Install and Run
+### Install and Run
 ```
 atomicapp [--dry-run] [-a answers.conf] install|run [--recursive] [--update] [--destination DST_PATH] APP|PATH
 ```
@@ -59,16 +59,15 @@ existing path, it looks for `Nulecule` file there instead of pulling anything.
 
 Action `run` performs `install` prior it's own tasks are executed if `APP` is given. When `run` is selected, providers' code is invoked and containers are deployed.
 
-== Providers
+## Providers
 
 Providers represent various deployment targets. They can be added by placing a `provider_name.py` file implementing interface explained in providers/README.md[Providers] into `providers/` directory.
 
-== Dependencies
+## Dependencies
 
-As of Version 0.0.1 Atomicapp uses https://docs.python.org/2/[Python
-2.7.5] and https://github.com/bkabrda/anymarkup[Anymarkup].
+As of Version 0.0.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup).
 
-= Copyright
+# Copyright
 
 Copyright (C) 2015 Red Hat Inc.
 
