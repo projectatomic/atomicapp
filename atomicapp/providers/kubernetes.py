@@ -39,6 +39,6 @@ class KubernetesProvider(Provider):
         for artifact in kube_order:
             if not kube_order[artifact]:
                 continue
-        
+
             k8s_file = os.path.join(self.path, kube_order[artifact])
             self._callK8s(k8s_file)

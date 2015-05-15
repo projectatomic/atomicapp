@@ -39,7 +39,7 @@ class Install():
         if not target_path:
             if self.params.app_path:
                 self.params.target_path = self.params.app_path
-            else: 
+            else:
                 self.params.target_path = os.getcwd()
 
         self.params.app = app
@@ -51,7 +51,7 @@ class Install():
 
         name = "%s-%s" % (self.utils.getComponentName(image), ''.join(random.sample(string.letters, 6)))
         logger.debug("Creating a container with name %s" % name)
-        
+
         create = ["docker", "create", "--name", name, image, "nop"]
         subprocess.call(create)
         cp = ["docker", "cp", "%s:/%s" % (name, utils.APP_ENT_PATH), self.utils.tmpdir]

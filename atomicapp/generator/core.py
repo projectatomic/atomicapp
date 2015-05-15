@@ -77,7 +77,7 @@ class Core():
         logger.debug("%s \nvs\n%s" % (result.keys(), nulecule.keys()))
         remove_after = set()
         for element, content in nulecule.iteritems():
-            
+
             names = []
             value = None
             if "name" in content:
@@ -90,7 +90,7 @@ class Core():
                         names.append(element)
             else:
                 names.append(element)
-            
+
             for name in names:
                 logger.debug("Name: %s, Element: %s, Data: %s" % (name,element,data))
                 if not name in result:
@@ -143,7 +143,7 @@ class Core():
         for element, content in contents.iteritems():
 
             local_path = "%s.%s" % (path, element)
-            
+
             name = self._getName(element, content, local_path, ask_if_null)
             if not ask_if_null and not name:
                 continue
@@ -178,7 +178,7 @@ class Core():
                     logger.debug(value)
                 else:
                     value = content["value"]
-            if value:        
+            if value:
                 result[name] = value
         if result == {}:
             result = None
@@ -221,7 +221,7 @@ class Core():
         logger.debug(name)
 
         return name
-  
+
     def _generateValue(self, element):
         if element == "root.id":
             return self.app_id

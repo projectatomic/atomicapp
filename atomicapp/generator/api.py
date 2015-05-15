@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 class API():
     def __init__(self, app, schema = SCHEMA_URL):
         self.core = Core(app)
-        self.params = self.core.params 
+        self.params = self.core.params
 
     def getMethods(self):
         methods = dir(self.core)
@@ -29,10 +29,10 @@ class API():
                 logger.debug(m)
 
         return output
-                
+
     def call(self, method, kwargs):
         method_handler = getattr(self.core, method)
-        
+
         if kwargs:
             kwargs = anymarkup.parse(kwargs)
         else:
@@ -42,4 +42,4 @@ class API():
             method_handler(**kwargs)
 
 
-    
+

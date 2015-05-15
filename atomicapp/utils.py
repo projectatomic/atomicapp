@@ -76,7 +76,7 @@ class Utils(object):
             return graph_item["name"].split(":")[0]
         else:
             raise ValueError
-    
+
     def getComponentImageName(self, graph_item):
         if type(graph_item) is str or type(graph_item) is unicode:
             return graph_item
@@ -92,11 +92,11 @@ class Utils(object):
     def getImageURI(self, image):
         config = self.params.get()
         logger.debug(config)
-        
+
         if "registry" in config:
             logger.info("Adding registry %s for %s" % (config["registry"], image))
             image = os.path.join(config["registry"], image)
-        
+
         return image
 
     def pullApp(self, image):

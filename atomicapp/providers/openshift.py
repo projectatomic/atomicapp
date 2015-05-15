@@ -25,7 +25,7 @@ class OpenshiftProvider(Provider):
         else:
             if subprocess.call(cmd) == 0:
                 return True
-        
+
         return False
 
     def deploy(self):

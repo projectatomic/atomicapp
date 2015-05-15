@@ -50,14 +50,14 @@ class CLI():
         parser_create.add_argument("NAME", help="App name")
         parser_create.set_defaults(func=cli_create)
 
-    
+
         parser_run = subparsers.add_parser("run")
         self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
         parser_run.add_argument("--write-answers", dest="answers_output", help="A file which will contain anwsers provided in interactive mode")
         parser_run.add_argument("--ask", default=False, action="store_true", help="Ask for params even if the defaul value is provided")
         parser_run.add_argument("APP", help="Path to the directory where the image is installed.")
         parser_run.set_defaults(func=cli_run)
-    
+
         parser_install = subparsers.add_parser("install")
 
         parser_install.add_argument("--no-deps", dest="nodeps", default=False, action="store_true", help="Skip pulling dependencies of the app")
@@ -65,7 +65,7 @@ class CLI():
         parser_install.add_argument("--destination", dest="target_path", default=None, help="Destination directory for install")
         parser_install.add_argument("APP",  help="Application to run. This is a container image or a path that contains the metadata describing the whole application.")
         parser_install.set_defaults(func=cli_install)
-    
+
         parser_build = subparsers.add_parser("build")
         parser_build.add_argument("TAG", nargs="?", default=None, help="Name of the image containing your app")
         parser_build.set_defaults(func=cli_build)
@@ -92,7 +92,7 @@ class CLI():
             if True or args.verbose:
                 raise
             else:
-                logger.error("Exception caught: %s", repr(ex))   
+                logger.error("Exception caught: %s", repr(ex))
 
 
 
