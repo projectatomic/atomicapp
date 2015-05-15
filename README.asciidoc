@@ -1,12 +1,23 @@
 = Atomicapp
 
-Atomicapp is a reference implementation of the Nulecule Specification. It can be used to bootstrap container application and to install and run them.
+Atomicapp is a reference implementation of the https://github.com/projectatomic/nulecule[Nulecule Specification]. It can be used to bootstrap container applications and to install and run them. Atomicapp is designed to be run in a container context. Examples using this tool may be found in the https://github.com/projectatomic/nulecule/tree/master/examples[Nulecule examples directory].
 
-== Introduction
+== Getting Started
 
-Please take a look at the https://gitbub.com/projectatomic/nulecule[Nulecule Specification]. If you are interested in taking a look at some well documented examples, feel free to browse thru https://github.com/projectatomic/atomicapp-examples/[Atomicapp].
+Atomicapp is packaged as a container. End-users typically do not install the software from source. Instead use the atomicapp container as the `FROM` line in a Dockerfile and package your application on top. For example:
 
-== How To
+```
+FROM projectatomic/atomicapp
+
+MAINTAINER Your Name <you@example.com>
+
+ADD /nulecule /Dockerfile README.md /application-entity/
+ADD /artifacts /application-entity/artifacts
+```
+
+For more information see the https://github.com/projectatomic/nulecule/blob/master/docs/getting-started.md[Nulecule getting started guide].
+
+== Developers
 
 First of all, clone the github repository: `git clone https://github.com/projectatomic/atomicapp`.
 
