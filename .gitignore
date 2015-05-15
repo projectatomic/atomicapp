@@ -57,3 +57,9 @@ docs/_build/
 # PyBuilder
 target/
 
+# misc
+.tags
+tags
+TAGS
+*.swp
+*~
