@@ -10,6 +10,7 @@ import copy
 
 from atomicapp.params import Params
 from atomicapp.constants import SCHEMA_URL
+from atomicapp.utils import isTrue
 
 import logging
 
@@ -150,7 +151,7 @@ class Core():
             print("Filling %s" % name)
             if ask_if_null and not content["required"]:
                 skip = self.params._askFor("Element %s not required, do you want to skip it?" % name, {"description": "Type y or n", "default": "Y"})
-                if self.params._isTrue(skip):
+                if isTrue(skip):
                     continue
             #logger.debug("Key: %s, value %s" % (element, content["value"]))
 

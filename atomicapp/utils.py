@@ -9,7 +9,17 @@ import logging
 
 from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR
 
+__all__ = ('isTrue', 'Utils')
+
 logger = logging.getLogger(__name__)
+
+
+true_values = ('true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure')
+
+
+def isTrue(val):
+    return str(val).lower() in true_values
+
 
 class Utils(object):
 
