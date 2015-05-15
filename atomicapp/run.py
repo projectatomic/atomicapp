@@ -14,9 +14,6 @@ from install import Install
 
 logger = logging.getLogger(__name__)
 
-def isTrue(val):
-    logger.debug("Value: %s" % val)
-    return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
 
 class Run():
     debug = False

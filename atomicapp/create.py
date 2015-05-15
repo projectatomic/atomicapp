@@ -10,6 +10,7 @@ import anymarkup
 import logging
 
 from params import Params
+from utils import isTrue
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +137,7 @@ class Create():
             print("Filling %s" % name)
             if not content["required"]:
                 skip = self.params._askFor("Element %s not required, do you want to skip it?" % name, {"description": "Type y or n", "default": "Y"})
-                if self.params._isTrue(skip):
+                if isTrue(skip):
                     continue
             #logger.debug("Key: %s, value %s" % (element, content["value"]))
 

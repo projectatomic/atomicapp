@@ -12,6 +12,7 @@ from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSW
 
 import utils
 
+from utils import isTrue
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +61,9 @@ class Params(object):
 
     def __init__(self, nodeps=False, update=False, target_path=None):
         self.target_path = target_path
-        self.nodeps = self._isTrue(nodeps)
-        self.update = self._isTrue(update)
-        self.override = self._isTrue(False)
+        self.nodeps = isTrue(nodeps)
+        self.update = isTrue(update)
+        self.override = isTrue(False)
 
     def loadParams(self, data = {}):
         if type(data) == dict:
@@ -270,7 +271,3 @@ class Params(object):
                 old_dict[key] = new_dict[key]
         return old_dict
 
-    def _isTrue(self, val):
-        return True if str(val).lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure'] else False
-
-    
