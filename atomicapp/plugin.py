@@ -48,10 +48,10 @@ class Plugin():
         run_path = os.path.dirname(os.path.realpath(__file__))
         providers_dir = os.path.join(run_path, "providers")
         logger.debug("Loading providers from %s" % providers_dir)
-        
+
         plugin_classes = {}
         plugin_class = globals()["Provider"]
-        
+
         for f in os.listdir(providers_dir):
             if f.endswith(".py"):
                 module_name = os.path.basename(f).rsplit('.', 1)[0]
@@ -60,7 +60,7 @@ class Plugin():
                 except (IOError, OSError, ImportError) as ex:
                     logger.warning("can't load module '%s': %s", f, repr(ex))
                     continue
-                
+
                 for name in dir(f_module):
                     binding = getattr(f_module, name, None)
                     try:
@@ -74,7 +74,7 @@ class Plugin():
                         is_sub = False
                     if binding and is_sub and plugin_class.__name__ != binding.__name__:
                         plugin_classes[binding.key] = binding
-                
+
         self.plugins = plugin_classes
 
     def getProvider(self, provider_key):

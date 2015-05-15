@@ -28,19 +28,19 @@ class Create():
         self.dryrun = dryrun
         self.schema_path = schema
 
-        if not self.schema_path: 
+        if not self.schema_path:
             self.schema_path = SCHEMA_URL
 
         self.params = Params()
         self.params.app = self.app_id
 
-    def _loadSchema(self):    
+    def _loadSchema(self):
         if not os.path.isfile(self.schema_path):
             response = urllib2.urlopen(self.schema_path)
             with open(os.path.basename(self.schema_path), "w") as fp:
                 fp.write(response.read())
                 self.schema_path = os.path.basename(self.schema_path)
-        
+
         with open(self.schema_path, "r") as fp:
             self.schema = json.load(fp)
 
@@ -50,7 +50,7 @@ class Create():
             self._writeFromSchema(self.schema["elements"])
         else:
             print("Corrupted schema, couldn't create app")
-    
+
     def build(self, tag):
         if not tag:
             tag = self.app_id
@@ -126,7 +126,7 @@ class Create():
         logger.debug(name)
 
         return name
-    
+
     def _generateContents(self, contents, path="root"):
         result = {}
         for element, content in contents.iteritems():

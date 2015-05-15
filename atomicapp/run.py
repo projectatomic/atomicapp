@@ -118,9 +118,9 @@ class Run():
 
             logger.debug("Templating artifact %s/%s" % (self.app_path, artifact_path))
             data = self._applyTemplate(data, component)
-        
+
             artifact_dst = os.path.join(dst_dir, artifact_path)
-            
+
             if not os.path.isdir(os.path.dirname(artifact_dst)):
                 os.makedirs(os.path.dirname(artifact_dst))
             with open(artifact_dst, "w") as fp:
@@ -162,6 +162,6 @@ class Run():
 
         return None
 
-    
+
 
 

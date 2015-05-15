@@ -9,7 +9,7 @@ class DockerProvider(Provider):
     key = "docker"
 
     def init(self):
-        
+
         cmd_check = ["docker", "version"]
         docker_version = subprocess.check_output(cmd_check).split("\n")
 
