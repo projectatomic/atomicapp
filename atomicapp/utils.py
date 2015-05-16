@@ -7,7 +7,7 @@ import tempfile
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR
+from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR, WORKDIR
 
 __all__ = ('isTrue', 'Utils')
 
@@ -24,6 +24,17 @@ def isTrue(val):
 class Utils(object):
 
     __tmpdir = None
+    __workdir = None
+
+    @property
+    def workdir(self):
+        if not self.__workdir:
+            self.__workdir = os.path.join(self.params.target_path, WORKDIR)
+            logger.debug(self.__workdir)
+            if not os.path.isdir(self.__workdir):
+                os.mkdir(self.__workdir)
+
+        return self.__workdir
 
     @property
     def tmpdir(self):
@@ -33,8 +44,10 @@ class Utils(object):
 
         return self.__tmpdir
 
-    def __init__(self, params):
+    def __init__(self, params, workdir = None):
         self.params = params
+        if workdir:
+            self.__workdir = workdir
 
     def loadApp(self, app_path):
         self.params.app_path = app_path

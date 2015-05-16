@@ -81,7 +81,7 @@ class Install():
 
         mainfile_path = os.path.join(self.params.target_path, MAIN_FILE)
 
-        if not self.params.app_path and (self.params.update or not os.path.exists(self.utils.getComponentDir(self.params.app))):
+        if not self.params.app_path and (self.params.update or not os.path.exists(mainfile_path)):
             self.utils.pullApp(self.params.app)
             self._copyFromContainer(self.params.app)
             mainfile_path = os.path.join(self.utils.getTmpAppDir(), MAIN_FILE)
@@ -123,8 +123,9 @@ class Install():
 
             image_name = self.utils.getSourceImage(graph_item)
             component_path = self.utils.getExternalAppDir(component)
+            mainfile_component_path = os.path.join(component_path, MAIN_FILE)
             logger.debug("Component path: %s" % component_path)
-            if not component == self.params.app_id and (not os.path.isdir(component_path) or self.params.update): #not self.params.app_path or  ???
+            if not os.path.isfile(mainfile_component_path) or self.params.update:
                 logger.info("Pulling %s" % image_name)
                 component_app = Install(self.params.answers_data, image_name, self.params.nodeps, self.params.update, component_path, self.dryrun)
                 values = self.params._update(values, component_app.install())

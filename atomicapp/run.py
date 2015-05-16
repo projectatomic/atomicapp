@@ -57,7 +57,14 @@ class Run():
         if "ask" in kwargs:
             self.params.ask = kwargs["ask"]
 
-        self.utils = Utils(self.params)
+        workdir = None
+        if "workdir" in kwargs:
+            workdir = kwargs["workdir"]
+
+        self.utils = Utils(self.params, workdir)
+        if not "workdir" in kwargs:
+            kwargs["workdir"] = self.utils.workdir
+
 
         self.answers_file = answers
         self.plugin = Plugin()
@@ -102,7 +109,7 @@ class Run():
         if not provider in artifacts:
             raise Exception("Data for provider \"%s\" are not part of this app" % self.params.provider)
 
-        dst_dir = os.path.join(self.utils.tmpdir, component)
+        dst_dir = os.path.join(self.utils.workdir, component)
         data = None
 
         for artifact in artifacts[provider]:
