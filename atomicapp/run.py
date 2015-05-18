@@ -9,7 +9,7 @@ import logging
 from params import Params
 from utils import Utils
 from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, PARAMS_FILE
-from plugin import Plugin
+from plugin import Plugin, ProviderFailedException
 from install import Install
 
 logger = logging.getLogger(__name__)
@@ -141,8 +141,13 @@ class Run():
             logger.info("Using provider %s for component %s" % (self.params.provider, component))
         else:
             raise Exception("Something is broken - couldn't get the provider")
-        provider.init()
-        provider.deploy()
+
+        try:
+            provider.init()
+            provider.deploy()
+        except ProviderFailedException as ex:
+            logger.error(ex)
+            sys.exit(1)
 
     def run(self):
         self.params.loadMainfile(os.path.join(self.params.target_path, MAIN_FILE))

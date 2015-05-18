@@ -38,6 +38,9 @@ class Provider():
     def __repr__(self):
         return "Plugin(key='%s')" % self.key
 
+class ProviderFailedException(Exception):
+    """Error during provider execution"""
+
 
 class Plugin():
     plugins = []

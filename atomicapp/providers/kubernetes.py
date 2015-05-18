@@ -1,4 +1,4 @@
-from atomicapp.plugin import Provider
+from atomicapp.plugin import Provider, ProviderFailedException
 
 from collections import OrderedDict
 import os, anymarkup, subprocess
@@ -12,10 +12,14 @@ class KubernetesProvider(Provider):
 
     kubectl = "kubectl"
     def init(self):
-        if not self.dryrun and self.container:
-            self.kubectl = "/host/usr/bin/kubectl"
-            if not os.path.exists("/etc/kubernetes"):
-                os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
+        if not self.dryrun:
+            if self.container:
+                self.kubectl = "/host/usr/bin/kubectl"
+                if not os.path.exists("/etc/kubernetes"):
+                    os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
+
+            if not os.access(self.kubectl, os.X_OK):
+                raise ProviderFailedException("Command kubectl not found")
 
     def _callK8s(self, path):
         cmd = [self.kubectl, "create", "-f", path]
@@ -34,7 +38,7 @@ class KubernetesProvider(Provider):
             if "kind" in data:
                 kube_order[data["kind"].lower()] = artifact
             else:
-                logger.info("Malformed kube file")
+                raise ProviderFailedException("Malformed kube file")
 
         for artifact in kube_order:
             if not kube_order[artifact]:
