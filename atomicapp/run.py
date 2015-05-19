@@ -33,10 +33,11 @@ class Run():
     answers_output = None
     kwargs = None
 
-    def __init__(self, answers, APP, dryrun = False, debug = False, **kwargs):
+    def __init__(self, answers, APP, dryrun = False, debug = False, stop = False, **kwargs):
 
         self.debug = debug
         self.dryrun = dryrun
+        self.stop = stop
         self.kwargs = kwargs
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
