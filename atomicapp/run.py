@@ -107,13 +107,14 @@ class Run(object):
     def _processArtifacts(self, component, provider):
         artifacts = self.utils.getArtifacts(component)
         artifact_provider_list = []
-        if not provider in artifacts:
-            raise Exception("Data for provider \"%s\" are not part of this app" % self.params.provider)
+        logger.debug(provider)
+        if not str(provider) in artifacts:
+            raise Exception("Data for provider \"%s\" are not part of this app" % provider)
 
         dst_dir = os.path.join(self.utils.workdir, component)
         data = None
 
-        for artifact in artifacts[provider]:
+        for artifact in artifacts[str(provider)]:
             if "inherit" in artifact:
                 logger.debug("Inheriting from %s", artifact["inherit"])
                 for item in artifact["inherit"]:
@@ -121,19 +122,14 @@ class Run(object):
                     artifact_provider_list += inherited_artifacts
                 continue
             artifact_path = self.utils.sanitizePath(artifact)
-            with open(os.path.join(self.app_path, artifact_path), "r") as fp:
-                data = fp.read()
+            data = provider.loadArtifact(os.path.join(self.app_path, artifact_path))
 
             logger.debug("Templating artifact %s/%s", self.app_path, artifact_path)
             data = self._applyTemplate(data, component)
 
             artifact_dst = os.path.join(dst_dir, artifact_path)
 
-            if not os.path.isdir(os.path.dirname(artifact_dst)):
-                os.makedirs(os.path.dirname(artifact_dst))
-            with open(artifact_dst, "w") as fp:
-                logger.debug("Writing artifact to %s", artifact_dst)
-                fp.write(data)
+            provider.saveArtifact(artifact_dst, data)
 
             artifact_provider_list.append(artifact_path)
 
@@ -142,9 +138,10 @@ class Run(object):
     def _processComponent(self, component, graph_item):
         logger.debug("Processing component %s", component)
 
-        artifact_list, dst_dir = self._processArtifacts(component, self.params.provider)
         provider_class = self.plugin.getProvider(self.params.provider)
-        provider = provider_class(self.params.getValues(component), artifact_list, dst_dir, self.dryrun)
+        dst_dir = os.path.join(self.utils.tmpdir, component) #FIXME this should be .workdir
+        provider = provider_class(self.params.getValues(component), dst_dir, self.dryrun)
+        provider.artifacts, dst_dir = self._processArtifacts(component, provider)
         if provider:
             logger.info("Using provider %s for component %s", self.params.provider, component)
         else:
