@@ -13,6 +13,7 @@ MAIN_FILE="nulecule"
 PARAMS_FILE="params.conf"
 ANSWERS_FILE="answers.conf"
 ANSWERS_FILE_SAMPLE="answers.conf.sample"
+WORKDIR=".workdir"
 
 DEFAULT_PROVIDER="kubernetes"
 DEFAULT_ANSWERS={"general":{"provider":DEFAULT_PROVIDER}}
