@@ -78,8 +78,8 @@ class OpenShiftProvider(Provider):
             with open(artifact_path, "r") as fp:
                 data = anymarkup.parse(fp, force_types=None)
             if "kind" in data:
-#                if data["kind"].lower() == "template":
-#                    artifact = self._processTemplate(artifact_path)
+                if data["kind"].lower() == "template":
+                    artifact = self._processTemplate(artifact_path)
                 kube_order[data["kind"].lower()] = artifact
             else:
                 raise ProviderFailedException("Malformed artifact file")
