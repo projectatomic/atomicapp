@@ -67,6 +67,11 @@ Providers represent various deployment targets. They can be added by placing a `
 
 As of Version 0.0.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup).
 
+##Communication channels
+
+* IRC: #nulecule (On Freenode)
+* Mailing List: [container-tools@redhat.com](https://www.redhat.com/mailman/listinfo/container-tools)
+
 # Copyright
 
 Copyright (C) 2015 Red Hat Inc.
