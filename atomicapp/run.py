@@ -153,7 +153,7 @@ class Run(object):
         logger.debug("Processing component %s", component)
 
         provider_class = self.plugin.getProvider(self.params.provider)
-        dst_dir = os.path.join(self.utils.tmpdir, component) #FIXME this should be .workdir
+        dst_dir = os.path.join(self.utils.workdir, component) 
         provider = provider_class(self.params.getValues(component), dst_dir, self.dryrun)
         if provider:
             logger.info("Using provider %s for component %s", self.params.provider, component)
