@@ -12,6 +12,8 @@ import anymarkup #FIXME
 from atomicapp import set_logging
 from atomicapp.constants import ANSWERS_FILE, MAIN_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
 
+logger = logging.getLogger(__name__)
+
 def cli_install(args):
     install = Install(**vars(args))
     install.install()
