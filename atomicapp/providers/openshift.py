@@ -18,9 +18,9 @@ class OpenshiftProvider(Provider):
 
     def _callK8s(self, path):
         cmd = ["kubectl", "create", "-f", path, "--api-version=v1beta1"]
-        print("Calling: %s" % " ".join(cmd))
 
         if self.dryrun:
+            logger.info("DRY-RUN: %s", " ".join(cmd))
             return True
         else:
             if subprocess.call(cmd) == 0:

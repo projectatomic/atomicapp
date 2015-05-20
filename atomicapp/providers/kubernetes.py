@@ -11,21 +11,26 @@ class KubernetesProvider(Provider):
     key = "kubernetes"
 
     kubectl = "kubectl"
+
     def init(self):
-        if not self.dryrun:
-            if self.container:
-                self.kubectl = "/host/usr/bin/kubectl"
-                if not os.path.exists("/etc/kubernetes"):
+        if self.container:
+            self.kubectl = "/host/usr/bin/kubectl"
+            if not os.path.exists("/etc/kubernetes"):
+                if self.dryrun:
+                    logger.info("DRY-RUN: link /etc/kubernetes from /host/etc/kubernetes")
+                else:
                     os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
 
+        if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
                 raise ProviderFailedException("Command kubectl not found")
 
     def _callK8s(self, path):
         cmd = [self.kubectl, "create", "-f", path]
-        logger.info("Calling: %s", " ".join(cmd))
 
-        if not self.dryrun:
+        if self.dryrun:
+            logger.info("DRY-RUN: %s", " ".join(cmd))
+        else:
             subprocess.check_call(cmd)
 
     def deploy(self):
