@@ -72,6 +72,10 @@ As of Version 0.0.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) an
 * IRC: #nulecule (On Freenode)
 * Mailing List: [container-tools@redhat.com](https://www.redhat.com/mailman/listinfo/container-tools)
 
+# The Badges
+
+[![Code Health](https://landscape.io/github/projectatomic/atomicapp/master/landscape.svg?style=flat)](https://landscape.io/github/projectatomic/atomicapp/master)
+
 # Copyright
 
 Copyright (C) 2015 Red Hat Inc.
