@@ -8,14 +8,14 @@ import logging
 
 from params import Params
 from utils import Utils
-from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, PARAMS_FILE
+from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE
 from plugin import Plugin, ProviderFailedException
 from install import Install
 
 logger = logging.getLogger(__name__)
 
 
-class Run():
+class Run(object):
     debug = False
     dryrun = False
     params = None
@@ -86,7 +86,7 @@ class Run():
     def _applyTemplate(self, data, component):
         template = Template(data)
         config = self.params.getValues(component)
-        logger.debug("Config: %s " % config)
+        logger.debug("Config: %s ", config)
 
         output = None
         while not output:
@@ -95,8 +95,8 @@ class Run():
                 output = template.substitute(config)
             except KeyError as ex:
                 name = ex.args[0]
-                logger.debug("Artifact contains unknown parameter %s, asking for it" % name)
-                config[name] = self.params._askFor(name, {"description": "Missing parameter '%s', provide the value or fix your %s" % (name, MAIN_FILE)})
+                logger.debug("Artifact contains unknown parameter %s, asking for it", name)
+                config[name] = self.params.askFor(name, {"description": "Missing parameter '%s', provide the value or fix your %s" % (name, MAIN_FILE)})
                 if not len(config[name]):
                     raise Exception("Artifact contains unknown parameter %s" % name)
                 self.params.loadAnswers({component: {name: config[name]}})
@@ -114,7 +114,7 @@ class Run():
 
         for artifact in artifacts[provider]:
             if "inherit" in artifact:
-                logger.debug("Inheriting from %s" % artifact["inherit"])
+                logger.debug("Inheriting from %s", artifact["inherit"])
                 for item in artifact["inherit"]:
                     inherited_artifacts, _ = self._processArtifacts(component, item)
                     artifact_provider_list += inherited_artifacts
@@ -123,7 +123,7 @@ class Run():
             with open(os.path.join(self.app_path, artifact_path), "r") as fp:
                 data = fp.read()
 
-            logger.debug("Templating artifact %s/%s" % (self.app_path, artifact_path))
+            logger.debug("Templating artifact %s/%s", self.app_path, artifact_path)
             data = self._applyTemplate(data, component)
 
             artifact_dst = os.path.join(dst_dir, artifact_path)
@@ -131,7 +131,7 @@ class Run():
             if not os.path.isdir(os.path.dirname(artifact_dst)):
                 os.makedirs(os.path.dirname(artifact_dst))
             with open(artifact_dst, "w") as fp:
-                logger.debug("Writing artifact to %s" % artifact_dst)
+                logger.debug("Writing artifact to %s", artifact_dst)
                 fp.write(data)
 
             artifact_provider_list.append(artifact_path)
@@ -139,13 +139,13 @@ class Run():
         return artifact_provider_list, dst_dir
 
     def _processComponent(self, component, graph_item):
-        logger.debug("Processing component %s" % component)
+        logger.debug("Processing component %s", component)
 
         artifact_list, dst_dir = self._processArtifacts(component, self.params.provider)
         provider_class = self.plugin.getProvider(self.params.provider)
         provider = provider_class(self.params.getValues(component), artifact_list, dst_dir, self.dryrun)
         if provider:
-            logger.info("Using provider %s for component %s" % (self.params.provider, component))
+            logger.info("Using provider %s for component %s", self.params.provider, component)
         else:
             raise Exception("Something is broken - couldn't get the provider")
 

@@ -5,13 +5,9 @@ import os
 import logging
 import collections
 import re
-import pprint
-from collections import OrderedDict
 import copy
 
 from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE
-
-import utils
 
 from utils import isTrue
 
@@ -66,17 +62,17 @@ class Params(object):
         self.update = isTrue(update)
         self.override = isTrue(False)
 
-    def loadParams(self, data = {}):
+    def loadParams(self, data = None):
         if type(data) == dict:
-            logger.debug("Data given: %s" % data)
+            logger.debug("Data given: %s", data)
         elif os.path.exists(data):
-            logger.debug("Path given, loading %s" % data)
+            logger.debug("Path given, loading %s", data)
             data = anymarkup.parse_file(data)
         else:
             raise Exception("Given params are broken: %s" % data)
 
         if "specversion" in data:
-            logger.debug("Params part of %s" % MAIN_FILE)
+            logger.debug("Params part of %s", MAIN_FILE)
             tmp = {}
             tmp[GLOBAL_CONF] = data[PARAMS_KEY]
             data = tmp
@@ -95,7 +91,7 @@ class Params(object):
             raise Exception("%s not found: %s" % (MAIN_FILE, path))
 
         self.mainfile_data = anymarkup.parse_file(path)
-        logger.debug("Setting app id to %s" % self.mainfile_data["id"])
+        logger.debug("Setting app id to %s", self.mainfile_data["id"])
         if "id" in self.mainfile_data:
             self.app_id = self.mainfile_data["id"]
         else:
@@ -108,15 +104,15 @@ class Params(object):
 
         return self.mainfile_data
 
-    def loadAnswers(self, data = {}):
+    def loadAnswers(self, data = None):
         if not data:
-            raise Exception("No data answers data given")
+            logger.info("No answers data given")
 
 
         if type(data) == dict:
-            logger.debug("Data given %s" % data)
+            logger.debug("Data given %s", data)
         elif os.path.exists(data):
-            logger.debug("Path to answers file given, loading %s" % data)
+            logger.debug("Path to answers file given, loading %s", data)
             if os.path.isdir(data):
                 if os.path.isfile(os.path.join(data, ANSWERS_FILE)):
                     data = os.path.isfile(os.path.join(data, ANSWERS_FILE))
@@ -186,10 +182,10 @@ class Params(object):
             if "default" in param:
                 value = param["default"]
             if not skip_asking and (self.ask or not value) and "description" in param: #FIXME
-                logger.debug("Ask for %s: %s" % (name, param["description"]))
-                value = self._askFor(name, param)
+                logger.debug("Ask for %s: %s", name, param["description"])
+                value = self.askFor(name, param)
             elif not skip_asking and not value:
-                logger.debug("Skipping %s" % name)
+                logger.debug("Skipping %s", name)
                 value = param
         else:
             value = param
@@ -202,30 +198,6 @@ class Params(object):
             value = self._getValue(p, name, skip_asking)
             result[name] = value
         return result
-
-    def _askFor(self, what, info):
-        repeat = True
-        desc = info["description"]
-        const_text = ""
-        constraints = None
-        if "constraints" in info:
-            constraints = info["constraints"]
-        while repeat:
-            repeat = False
-            if "default" in info:
-                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
-                if len(value) == 0:
-                    value = info["default"]
-            else:
-                value = raw_input("%s (%s): " % (what, desc))
-            if constraints:
-                for constraint in constraints:
-                    logger.debug("Checking pattern: %s" % constraint["allowed_pattern"])
-                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
-                        logger.error(constraint["description"])
-                        repeat = True
-
-        return value
 
     def _cleanNullValues(self, data):
         result = {}
@@ -240,7 +212,7 @@ class Params(object):
             self.answers_data[component] = {}
 
         if component != GLOBAL_CONF and param in self.answers_data[GLOBAL_CONF] and value == self.answers_data[GLOBAL_CONF][param]:
-            logger.debug("Param %s already in %s with value %s" % (param, GLOBAL_CONF, value))
+            logger.debug("Param %s already in %s with value %s", param, GLOBAL_CONF, value)
             return
 
         if not param in self.answers_data[component]:
@@ -248,12 +220,35 @@ class Params(object):
 
         self.answers_data[component][param] = value
 
+    def askFor(self, what, info):
+        repeat = True
+        desc = info["description"]
+        constraints = None
+        if "constraints" in info:
+            constraints = info["constraints"]
+        while repeat:
+            repeat = False
+            if "default" in info:
+                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
+                if len(value) == 0:
+                    value = info["default"]
+            else:
+                value = raw_input("%s (%s): " % (what, desc))
+            if constraints:
+                for constraint in constraints:
+                    logger.debug("Checking pattern: %s", constraint["allowed_pattern"])
+                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
+                        logger.error(constraint["description"])
+                        repeat = True
+
+        return value
+
     def writeAnswers(self, path):
         anymarkup.serialize_file(self.answers_data, path, format='ini')
 
     def writeAnswersSample(self):
         path = os.path.join(self.target_path, ANSWERS_FILE_SAMPLE)
-        logger.info("Writing answers file template to %s" % path)
+        logger.info("Writing answers file template to %s", path)
         self.writeAnswers(path)
 
     def _update(self, old_dict, new_dict):

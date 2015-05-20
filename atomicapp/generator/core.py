@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys
-import subprocess
-import urllib2
-import collections
+import os
 import anymarkup
 import copy
 
@@ -16,7 +13,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Core():
+class Core(object):
     def __init__(self, app, schema = SCHEMA_URL):
         self.params = Params()
         logger.debug(os.path.exists(app))
@@ -28,17 +25,17 @@ class Core():
         self.params.loadSchema(schema)
 
     def addComponent(self, name, data):
-        logger.debug("Adding %s with %s" % (name, data))
+        logger.debug("Adding %s with %s", name, data)
         parent, component = self._findObject("graph.component")
 
         logger.debug(component["description"])
         logger.debug({name: self._generateContents(component["value"], "root.graph.component")})
 
     def addMetadataItem(self, name, data):
-        logger.debug("Adding %s with %s" % (name, data))
+        logger.debug("Adding %s with %s", name, data)
 
     def addArtifact(self, component, provider, data):
-        logger.debug("Adding artifact to %s:%s with %s" % (component, provider, data))
+        logger.debug("Adding artifact to %s:%s with %s", component, provider, data)
         #parent, component = self._findObject("graph.component.artifacts.provider")
 
         #logger.debug(self._generateContents(component["value"], "root.graph.component.artifacts.provider", data))
@@ -52,12 +49,12 @@ class Core():
             if provider in self.params.mainfile_data["graph"][component]["artifacts"]:
                 self.params.mainfile_data["graph"][component]["artifacts"][provider].append(data["artifact"])
         else:
-            logger.error("Component %s does not exist" % component)
+            logger.error("Component %s does not exist", component)
 
         logger.debug(self.params.mainfile_data)
 
     def addParam(self, component, name, data):
-        logger.debug("Adding %s with %s" % (name, data))
+        logger.debug("Adding %s with %s", name, data)
 
 
     def loadMainfileToSchema(self):
@@ -74,7 +71,7 @@ class Core():
 
 
     def fillNulecule(self, nulecule, result, data):
-        logger.debug("%s \nvs\n%s" % (result.keys(), nulecule.keys()))
+        logger.debug("%s \nvs\n%s", result.keys(), nulecule.keys())
         remove_after = set()
         for element, content in nulecule.iteritems():
 
@@ -84,7 +81,7 @@ class Core():
                 if not content["name"] or content["type"] == "list":
                     if data:
                         for nc_item, nc_content in data.iteritems():
-                            logger.debug("Next name: %s" % nc_item)
+                            logger.debug("Next name: %s", nc_item)
                             names.append(nc_item)
                     else:
                         names.append(element)
@@ -92,9 +89,9 @@ class Core():
                 names.append(element)
 
             for name in names:
-                logger.debug("Name: %s, Element: %s, Data: %s" % (name,element,data))
+                logger.debug("Name: %s, Element: %s, Data: %s", name,element,data)
                 if not name in result:
-                    logger.debug("Setting name %s -> %s" % (element, name))
+                    logger.debug("Setting name %s -> %s", element, name)
                     result[name] = copy.deepcopy(content)
                     result[name]["name"] = name
 
@@ -105,7 +102,7 @@ class Core():
                     result[name]["value"] = data[name] if data and name in data else None
 
             if not element in names and element in result:
-                logger.debug("Removing %s" % element)
+                logger.debug("Removing %s", element)
                 remove_after.add(element)
 
         for element in remove_after:
@@ -153,7 +150,7 @@ class Core():
                 skip = self.params._askFor("Element %s not required, do you want to skip it?" % name, {"description": "Type y or n", "default": "Y"})
                 if isTrue(skip):
                     continue
-            #logger.debug("Key: %s, value %s" % (element, content["value"]))
+            #logger.debug("Key: %s, value %s", element, content["value"])
 
             if content["type"] == "object":
                 value = self._generateContents(content["value"], local_path, data, ask_if_null)

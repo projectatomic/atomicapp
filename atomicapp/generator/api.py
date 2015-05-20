@@ -1,21 +1,17 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys
-import subprocess
-import urllib2
-import collections
+import os
 import anymarkup
 
-from atomicapp.constants import SCHEMA_URL
 from core import Core
 
 import logging
 
 logger = logging.getLogger(__name__)
 
-class API():
-    def __init__(self, app, schema = SCHEMA_URL):
+class API(object):
+    def __init__(self, app):
         self.core = Core(app)
         self.params = self.core.params
 
@@ -38,7 +34,7 @@ class API():
         else:
             kwargs = {}
         if method_handler:
-            logger.debug("Calling method %s with args\n%s" % (method, kwargs))
+            logger.debug("Calling method %s with args\n%s", method, kwargs)
             method_handler(**kwargs)
 
 

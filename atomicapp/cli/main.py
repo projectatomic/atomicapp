@@ -3,8 +3,7 @@
 from atomicapp.run import Run
 from atomicapp.install import Install
 from atomicapp.create import Create
-from atomicapp import params
-import os, sys, json
+import os, json
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
@@ -12,6 +11,8 @@ import anymarkup #FIXME
 
 from atomicapp import set_logging
 from atomicapp.constants import ANSWERS_FILE, MAIN_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
+
+logger = logging.getLogger(__name__)
 
 def cli_install(args):
     install = Install(**vars(args))
@@ -89,7 +90,7 @@ class CLI():
         except KeyboardInterrupt:
             pass
         except Exception as ex:
-            if True or args.verbose:
+            if args.verbose:
                 raise
             else:
                 logger.error("Exception caught: %s", repr(ex))

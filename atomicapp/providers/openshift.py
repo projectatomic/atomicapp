@@ -31,6 +31,6 @@ class OpenshiftProvider(Provider):
     def deploy(self):
         for artifact in self.artifacts:
             artifact_path = os.path.join(self.path, artifact)
-            logger.debug("Do something about %s" % artifact_path)
+            logger.debug("Do something about %s", artifact_path)
 
-        logger.info("Files %s merged into imaginary template file and pushed to Openshift..." % ", ".join(self.artifacts))
+        logger.info("Files %s merged into imaginary template file and pushed to Openshift...", ", ".join(self.artifacts))

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys
+import os
 import json, subprocess
 import urllib2
 import collections
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 ANSWERS_FILE="answers.conf"
 PARAMS_FILE="params.conf"
 SCHEMA_URL="https://raw.githubusercontent.com/projectatomic/nulecule/master/spec/0.0.1-alpha/schema.json"
-class Create():
+class Create(object):
     name = None
     app_id = None
     dryrun = False
@@ -77,7 +77,7 @@ class Create():
                     self._writeFromSchema(element["contents"])
                     os.chdir("..")
                 else:
-                    logger.debug("No value for directory %s" % element["name"])
+                    logger.debug("No value for directory %s", element["name"])
             elif element["type"] == "file":
                 with open(value, "w") as fp:
                     logger.debug(element)
@@ -117,7 +117,7 @@ class Create():
         elif not content["name"]:
             name = self._generateValue(path)
             if not name:
-                name = self.params._askFor(element, content)
+                name = self.params.askFor(element, content)
         elif type(content["name"]) is list:
             name = self._pickOne(element, content, content["name"])
         else:
@@ -136,10 +136,10 @@ class Create():
 
             print("Filling %s" % name)
             if not content["required"]:
-                skip = self.params._askFor("Element %s not required, do you want to skip it?" % name, {"description": "Type y or n", "default": "Y"})
+                skip = self.params.askFor("Element %s not required, do you want to skip it?" % name, {"description": "Type y or n", "default": "Y"})
                 if isTrue(skip):
                     continue
-            #logger.debug("Key: %s, value %s" % (element, content["value"]))
+            #logger.debug("Key: %s, value %s", element, content["value"])
 
             if content["type"] == "object":
                 result[name] = self._generateContents(content["value"], local_path)
@@ -147,7 +147,7 @@ class Create():
 
                 tmp_results = []
                 while True:
-                    value = self.params._askFor(content["value"].keys()[0], content["value"][content["value"].keys()[0]])
+                    value = self.params.askFor(content["value"].keys()[0], content["value"][content["value"].keys()[0]])
                     if len(value) == 0:
                         break
                     tmp_results.append(value)
@@ -158,7 +158,7 @@ class Create():
                     logger.debug(local_path)
                     value = self._generateValue(local_path)
                     if not value:
-                        value = self.params._askFor(element, content)
+                        value = self.params.askFor(element, content)
                     logger.debug(value)
                 else:
                     value = content["value"]
