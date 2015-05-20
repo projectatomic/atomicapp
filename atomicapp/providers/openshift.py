@@ -33,10 +33,11 @@ class OpenShiftProvider(Provider):
 
     def _callCli(self, path):
         cmd = [self.cli, "--config=%s" % self.config_file, "create", "-f", path]
-        logger.info("Calling: %s" % " ".join(cmd))
 
         if not self.dryrun:
-            subprocess.check_call(cmd) == 0
+            logger.info("Calling: %s", " ".join(cmd))
+        else:
+            subprocess.check_call(cmd)
 
     def _processTemplate(self, path):
         cmd = [self.cli, "--config=%s" % self.config_file, "process", "-f", path]
@@ -45,8 +46,7 @@ class OpenShiftProvider(Provider):
         output_path = os.path.join(self.path, name)
         if not self.dryrun:
             output = subprocess.check_output(cmd)
-            print(output)
-            logger.debug("Writing processed template to %s" % output_path)
+            logger.debug("Writing processed template to %s", output_path)
             with open(output_path, "w") as fp:
                 fp.write(output)
         return output_path
