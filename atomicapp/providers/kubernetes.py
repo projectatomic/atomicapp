@@ -23,7 +23,7 @@ class KubernetesProvider(Provider):
 
     def _callK8s(self, path):
         cmd = [self.kubectl, "create", "-f", path]
-        logger.info("Calling: %s" % " ".join(cmd))
+        logger.info("Calling: %s", " ".join(cmd))
 
         if not self.dryrun:
             subprocess.check_call(cmd)

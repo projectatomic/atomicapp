@@ -77,7 +77,7 @@ class Create(object):
                     self._writeFromSchema(element["contents"])
                     os.chdir("..")
                 else:
-                    logger.debug("No value for directory %s" % element["name"])
+                    logger.debug("No value for directory %s", element["name"])
             elif element["type"] == "file":
                 with open(value, "w") as fp:
                     logger.debug(element)
@@ -139,7 +139,7 @@ class Create(object):
                 skip = self.params.askFor("Element %s not required, do you want to skip it?" % name, {"description": "Type y or n", "default": "Y"})
                 if isTrue(skip):
                     continue
-            #logger.debug("Key: %s, value %s" % (element, content["value"]))
+            #logger.debug("Key: %s, value %s", element, content["value"])
 
             if content["type"] == "object":
                 result[name] = self._generateContents(content["value"], local_path)

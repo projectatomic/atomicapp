@@ -34,7 +34,7 @@ class API(object):
         else:
             kwargs = {}
         if method_handler:
-            logger.debug("Calling method %s with args\n%s" % (method, kwargs))
+            logger.debug("Calling method %s with args\n%s", method, kwargs)
             method_handler(**kwargs)
 
 

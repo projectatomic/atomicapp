@@ -50,7 +50,7 @@ class Plugin(object):
     def load_plugins(self):
         run_path = os.path.dirname(os.path.realpath(__file__))
         providers_dir = os.path.join(run_path, "providers")
-        logger.debug("Loading providers from %s" % providers_dir)
+        logger.debug("Loading providers from %s", providers_dir)
 
         plugin_classes = {}
         plugin_class = globals()["Provider"]
@@ -84,5 +84,5 @@ class Plugin(object):
         for key, provider in self.plugins.iteritems():
             logger.debug(key)
             if key == provider_key:
-                logger.debug("Found provider %s" % (provider))
+                logger.debug("Found provider %s", provider)
                 return provider
