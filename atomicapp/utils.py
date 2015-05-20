@@ -7,7 +7,7 @@ import tempfile
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR, WORKDIR
+from constants import PARAMS_FILE, GRAPH_DIR, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR, WORKDIR
 
 __all__ = ('isTrue', 'Utils')
 
@@ -116,10 +116,10 @@ class Utils(object):
         image = self.getImageURI(image)
         if not self.params.update:
             check_cmd = ["docker", "images", "-q", image]
-            id = subprocess.check_output(check_cmd)
-            logger.debug("Output of docker images cmd: %s" % id)
-            if len(id) != 0:
-                logger.debug("Image %s already present with id %s. Use --update to re-pull." % (image, id.strip()))
+            image_id = subprocess.check_output(check_cmd)
+            logger.debug("Output of docker images cmd: %s" % image_id)
+            if len(image_id) != 0:
+                logger.debug("Image %s already present with id %s. Use --update to re-pull." % (image, image_id.strip()))
                 return
 
         pull = ["docker", "pull", image]

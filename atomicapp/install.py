@@ -1,29 +1,28 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os,sys
+import os
 import distutils.dir_util
 import random, string
 
 import subprocess
 
 import logging
-from pprint import pprint
 
 from params import Params
 import utils
-from constants import APP_ENT_PATH, ANSWERS_FILE, MAIN_FILE, DEFAULT_PROVIDER
+from constants import APP_ENT_PATH, ANSWERS_FILE, MAIN_FILE
 
 logger = logging.getLogger(__name__)
 
-class Install():
+class Install(object):
     dryrun = False
     params = None
     answers_file = None
 
     def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, **kwargs):
-        run_path = os.path.dirname(os.path.realpath(__file__))
         self.dryrun = dryrun
+        self.kwargs = kwargs
 
         app = APP #FIXME
 
@@ -105,7 +104,6 @@ class Install():
         self.params.loadAnswers(values)
         logger.debug(self.params.answers_data)
         if self.params.write_sample_answers:
-            print("blah")
             self.params.writeAnswersSample()
 
         return values

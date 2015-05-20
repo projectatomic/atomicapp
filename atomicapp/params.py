@@ -5,13 +5,9 @@ import os
 import logging
 import collections
 import re
-import pprint
-from collections import OrderedDict
 import copy
 
 from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE
-
-import utils
 
 from utils import isTrue
 
@@ -66,7 +62,7 @@ class Params(object):
         self.update = isTrue(update)
         self.override = isTrue(False)
 
-    def loadParams(self, data = {}):
+    def loadParams(self, data = None):
         if type(data) == dict:
             logger.debug("Data given: %s" % data)
         elif os.path.exists(data):
@@ -108,9 +104,9 @@ class Params(object):
 
         return self.mainfile_data
 
-    def loadAnswers(self, data = {}):
+    def loadAnswers(self, data = None):
         if not data:
-            raise Exception("No data answers data given")
+            logger.info("No answers data given")
 
 
         if type(data) == dict:
@@ -187,7 +183,7 @@ class Params(object):
                 value = param["default"]
             if not skip_asking and (self.ask or not value) and "description" in param: #FIXME
                 logger.debug("Ask for %s: %s" % (name, param["description"]))
-                value = self._askFor(name, param)
+                value = self.askFor(name, param)
             elif not skip_asking and not value:
                 logger.debug("Skipping %s" % name)
                 value = param
@@ -202,30 +198,6 @@ class Params(object):
             value = self._getValue(p, name, skip_asking)
             result[name] = value
         return result
-
-    def _askFor(self, what, info):
-        repeat = True
-        desc = info["description"]
-        const_text = ""
-        constraints = None
-        if "constraints" in info:
-            constraints = info["constraints"]
-        while repeat:
-            repeat = False
-            if "default" in info:
-                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
-                if len(value) == 0:
-                    value = info["default"]
-            else:
-                value = raw_input("%s (%s): " % (what, desc))
-            if constraints:
-                for constraint in constraints:
-                    logger.debug("Checking pattern: %s" % constraint["allowed_pattern"])
-                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
-                        logger.error(constraint["description"])
-                        repeat = True
-
-        return value
 
     def _cleanNullValues(self, data):
         result = {}
@@ -247,6 +219,29 @@ class Params(object):
             self.answers_data[component][param] = None
 
         self.answers_data[component][param] = value
+
+    def askFor(self, what, info):
+        repeat = True
+        desc = info["description"]
+        constraints = None
+        if "constraints" in info:
+            constraints = info["constraints"]
+        while repeat:
+            repeat = False
+            if "default" in info:
+                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
+                if len(value) == 0:
+                    value = info["default"]
+            else:
+                value = raw_input("%s (%s): " % (what, desc))
+            if constraints:
+                for constraint in constraints:
+                    logger.debug("Checking pattern: %s" % constraint["allowed_pattern"])
+                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
+                        logger.error(constraint["description"])
+                        repeat = True
+
+        return value
 
     def writeAnswers(self, path):
         anymarkup.serialize_file(self.answers_data, path, format='ini')

@@ -26,7 +26,7 @@ class KubernetesProvider(Provider):
         logger.info("Calling: %s" % " ".join(cmd))
 
         if not self.dryrun:
-            subprocess.check_call(cmd) == 0
+            subprocess.check_call(cmd)
 
     def deploy(self):
         kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME

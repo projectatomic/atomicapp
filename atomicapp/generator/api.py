@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-import os, sys
-import subprocess
-import urllib2
-import collections
+import os
 import anymarkup
 
 from atomicapp.constants import SCHEMA_URL
@@ -14,8 +11,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class API():
-    def __init__(self, app, schema = SCHEMA_URL):
+class API(object):
+    def __init__(self, app):
         self.core = Core(app)
         self.params = self.core.params
 

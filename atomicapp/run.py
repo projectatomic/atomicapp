@@ -8,14 +8,14 @@ import logging
 
 from params import Params
 from utils import Utils
-from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, PARAMS_FILE
+from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE
 from plugin import Plugin, ProviderFailedException
 from install import Install
 
 logger = logging.getLogger(__name__)
 
 
-class Run():
+class Run(object):
     debug = False
     dryrun = False
     params = None
@@ -96,7 +96,7 @@ class Run():
             except KeyError as ex:
                 name = ex.args[0]
                 logger.debug("Artifact contains unknown parameter %s, asking for it" % name)
-                config[name] = self.params._askFor(name, {"description": "Missing parameter '%s', provide the value or fix your %s" % (name, MAIN_FILE)})
+                config[name] = self.params.askFor(name, {"description": "Missing parameter '%s', provide the value or fix your %s" % (name, MAIN_FILE)})
                 if not len(config[name]):
                     raise Exception("Artifact contains unknown parameter %s" % name)
                 self.params.loadAnswers({component: {name: config[name]}})

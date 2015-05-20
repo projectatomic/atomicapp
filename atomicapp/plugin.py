@@ -2,7 +2,7 @@
 # Based on https://github.com/DBuildService/dock/blob/master/dock/plugin.py
 
 from __future__ import print_function
-import os,sys
+import os
 
 import imp
 
@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class Provider():
+class Provider(object):
     key = None
 
     config = None
@@ -30,7 +30,7 @@ class Provider():
         logger.warning("This is default 'init()' method, consider implementing provider specific one.")
 
     def deploy(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def __str__(self):
         return "%s" % self.key
@@ -42,7 +42,7 @@ class ProviderFailedException(Exception):
     """Error during provider execution"""
 
 
-class Plugin():
+class Plugin(object):
     plugins = []
     def __init__(self, ):
         pass
