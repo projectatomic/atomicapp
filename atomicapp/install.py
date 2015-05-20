@@ -11,7 +11,7 @@ import logging
 
 from params import Params
 import utils
-from constants import APP_ENT_PATH, ANSWERS_FILE, MAIN_FILE
+from constants import APP_ENT_PATH, MAIN_FILE
 
 logger = logging.getLogger(__name__)
 

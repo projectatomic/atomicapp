@@ -4,7 +4,6 @@ from __future__ import print_function
 import os
 import anymarkup
 
-from atomicapp.constants import SCHEMA_URL
 from core import Core
 
 import logging
