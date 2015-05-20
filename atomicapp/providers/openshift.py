@@ -1,9 +1,6 @@
 from atomicapp.plugin import Provider
 
-from collections import OrderedDict
-
 import os, subprocess
-import anymarkup
 import logging
 
 logger = logging.getLogger(__name__)
