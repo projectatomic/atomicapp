@@ -29,7 +29,7 @@ class KubernetesProvider(Provider):
         cmd = [self.kubectl, "create", "-f", path]
 
         if self.dryrun:
-            logger.info("DRY-RUN: %s" % " ".join(cmd))
+            logger.info("DRY-RUN: %s", " ".join(cmd))
         else:
             subprocess.check_call(cmd)
 

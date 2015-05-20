@@ -57,7 +57,7 @@ class Create(object):
 
         cmd = ["docker", "build", "-t", tag, "."]
         if self.dryrun:
-            logger.info("DRY-RUN: %s" % " ".join(cmd))
+            logger.info("DRY-RUN: %s", " ".join(cmd))
         else:
             subprocess.call(cmd)
 
