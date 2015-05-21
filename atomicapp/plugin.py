@@ -34,7 +34,7 @@ class Provider(object):
             self.container = True
 
     def init(self):
-        logger.warning("This is default 'init()' method, consider implementing provider specific one.")
+        raise NotImplementedError()
 
     def deploy(self):
         raise NotImplementedError()
