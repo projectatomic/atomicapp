@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import anymarkup
 import os
 import logging
