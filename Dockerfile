@@ -13,7 +13,7 @@ ADD requirements.txt /opt/atomicapp/
 
 WORKDIR /opt/atomicapp
 
-RUN python setup.py install
+RUN pip install .
 
 WORKDIR /atomicapp
 VOLUME /atomicapp
