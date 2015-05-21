@@ -76,7 +76,6 @@ class Core(object):
         for element, content in nulecule.iteritems():
 
             names = []
-            value = None
             if "name" in content:
                 if not content["name"] or content["type"] == "list":
                     if data:

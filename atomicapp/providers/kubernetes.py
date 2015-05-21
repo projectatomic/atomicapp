@@ -56,9 +56,11 @@ class KubernetesProvider(Provider):
         data = anymarkup.parse_file(path)
         name = data["metadata"]["name"]
         cmd = [self.kubectl, "resize", "rc", name, "--replicas=4" ]
-        logger.info("Calling: %s" % " ".join(cmd))
-            if not self.dryrun:
-                subprocess.check_call(cmd)
+
+        if self.dryrun:
+            logger.info("DRY-RUN: %s", " ".join(cmd))
+        else:
+            subprocess.check_call(cmd)
 
     def deploy(self):
         self.prepareOrder()
@@ -83,6 +85,7 @@ class KubernetesProvider(Provider):
                 self._resetReplicas(path)
 
             cmd = [self.kubectl, "delete", "-f", path]
-            logger.info("Calling: %s" % " ".join(cmd))
-            if not self.dryrun:
+            if self.dryrun:
+                logger.info("DRY-RUN: %s", " ".join(cmd))
+            else:
                 subprocess.check_call(cmd)

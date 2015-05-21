@@ -3,7 +3,7 @@
 from atomicapp.run import Run
 from atomicapp.install import Install
 from atomicapp.create import Create
-import os, json
+import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
