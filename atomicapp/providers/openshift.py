@@ -1,13 +1,9 @@
 from atomicapp.plugin import Provider, ProviderFailedException
 
-<<<<<<< HEAD
-import os, subprocess
-=======
 from collections import OrderedDict
 import os, anymarkup, subprocess
 from distutils.spawn import find_executable
 
->>>>>>> Implement simple working openshift provider
 import logging
 
 logger = logging.getLogger(__name__)
