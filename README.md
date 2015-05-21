@@ -25,7 +25,7 @@ First of all, clone the github repository: `git clone https://github.com/project
 Simply run
 
 ```
-python setup.py install
+pip install .
 ```
 
 If you want to do some changes to the code, I suggest to do:
