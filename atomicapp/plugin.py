@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Based on https://github.com/DBuildService/dock/blob/master/dock/plugin.py
 
 from __future__ import print_function
