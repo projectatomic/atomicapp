@@ -88,7 +88,7 @@ class Install(object):
 
             self._populateApp()
         else:
-            logger.info("Component data exist in %s, skipping population...", self.utils.getComponentDir(self.params.app))
+            logger.info("Component data exist in %s, skipping population...", self.params.target_path)
 
         if not self.params.mainfile_data:
             self.params.loadMainfile(mainfile_path)
@@ -108,7 +108,11 @@ class Install(object):
 
     def _installDependencies(self):
         values = {}
-        for component, graph_item in self.params.mainfile_data["graph"].iteritems():
+        for graph_item in self.params.mainfile_data["graph"]:
+            component = graph_item.get("name")
+            if not component:
+                raise ValueError("Component name missing in graph")
+
             if not self.utils.isExternal(graph_item):
                 values[component] = self.params.getValues(component, skip_asking = True)
                 logger.debug("Component %s is part of the app", component)

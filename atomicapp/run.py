@@ -84,7 +84,11 @@ class Run(object):
         if not "graph" in self.params.mainfile_data:
             raise Exception("Graph not specified in %s" % MAIN_FILE)
 
-        for component, graph_item in self.params.mainfile_data["graph"].iteritems():
+        for graph_item in self.params.mainfile_data["graph"]:
+            component = graph_item.get("name")
+            if not component:
+                raise ValueError("Component name missing in graph")
+
             if self.utils.isExternal(graph_item):
                 self.kwargs["image"] = self.utils.getSourceImage(graph_item)
                 component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug, self.stop, **self.kwargs)

@@ -149,11 +149,17 @@ class Utils(object):
             return path[7:]
 
     def getArtifacts(self, component):
-        if component in self.params.mainfile_data["graph"]:
-            if "artifacts" in self.params.mainfile_data["graph"][component]:
-                return self.params.mainfile_data["graph"][component]["artifacts"]
+        graph_item = self.getComponent(component)
+        if "artifacts" in graph_item:
+            return graph_item["artifacts"]
 
         return None
+
+    def getComponent(self, component):
+        for graph_item in self.params.mainfile_data["graph"]:
+            name = graph_item.get("name")
+            if name is component:
+                return graph_item
 
     def _checkInherit(self, component, inherit_list, checked_providers):
         for inherit_provider in inherit_list:
@@ -187,7 +193,10 @@ class Utils(object):
         return checked_providers
 
     def checkAllArtifacts(self):
-        for component in self.params.mainfile_data["graph"].keys():
+        for graph_item in self.params.mainfile_data["graph"]:
+            component = graph_item.get("name")
+            if not component:
+                raise ValueError("Component name missing in graph")
 
             checked_providers = self.checkArtifacts(component)
             logger.info("Artifacts for %s present for these providers: %s", component, ", ".join(checked_providers))
