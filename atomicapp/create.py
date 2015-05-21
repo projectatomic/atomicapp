@@ -11,12 +11,10 @@ import logging
 
 from params import Params
 from utils import isTrue
+from constants import SCHEMA_URL
 
 logger = logging.getLogger(__name__)
 
-ANSWERS_FILE="answers.conf"
-PARAMS_FILE="params.conf"
-SCHEMA_URL="https://raw.githubusercontent.com/projectatomic/nulecule/master/spec/0.0.1-alpha/schema.json"
 class Create(object):
     name = None
     app_id = None
