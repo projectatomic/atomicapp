@@ -7,7 +7,7 @@ import tempfile
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR, WORKDIR
+from constants import PARAMS_FILE, GRAPH_DIR, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR, WORKDIR, __NULECULESPECVERSION__
 
 __all__ = ('isTrue', 'Utils')
 
@@ -194,3 +194,15 @@ class Utils(object):
             checked_providers = self.checkArtifacts(component)
             logger.info("Artifacts for %s present for these providers: %s", component, ", ".join(checked_providers))
 
+    def checkSpecVersion(self):
+        if not self.params.mainfile_data:
+            raise ValueError("Could not access %s data" % MAIN_FILE)
+
+        if "specversion" not in self.params.mainfile_data:
+            raise ValueError("Data corrupted: couldn't find specversion in %s" % MAIN_FILE)
+
+        if self.params.mainfile_data["specversion"] == __NULECULESPECVERSION__:
+            logger.info("Version check successful: specversion == %s", __NULECULESPECVERSION__)
+        else:
+            logger.error("Your version in %s file (%s) does not match supported version (%s)", MAIN_FILE, self.params.mainfile_data["specversion"], __NULECULESPECVERSION__)
+            raise Exception("Spec version check failed")

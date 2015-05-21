@@ -171,6 +171,7 @@ class Run(object):
 
     def run(self):
         self.params.loadMainfile(os.path.join(self.params.target_path, MAIN_FILE))
+        self.utils.checkSpecVersion()
         self.params.loadAnswers(self.answers_file)
 
         self.utils.checkAllArtifacts()
