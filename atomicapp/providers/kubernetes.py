@@ -60,6 +60,16 @@ class KubernetesProvider(Provider):
             if not self.dryrun:
                 subprocess.check_call(cmd)
 
+    def deploy(self):
+        self.prepareOrder()
+
+        for artifact in self.kube_order:
+            if not self.kube_order[artifact]:
+                continue
+
+            k8s_file = os.path.join(self.path, self.kube_order[artifact])
+            self._callK8s(k8s_file)
+
     def undeploy(self):
         self.prepareOrder()
 
