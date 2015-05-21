@@ -3,6 +3,7 @@
 from __future__ import print_function
 import os,sys
 from string import Template
+import copy
 
 import logging
 
@@ -39,6 +40,7 @@ class Run(object):
         self.dryrun = dryrun
         self.stop = stop
         self.kwargs = kwargs
+        
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
 
@@ -46,11 +48,20 @@ class Run(object):
             self.app_path = APP
             APP = os.environ["IMAGE"]
             del os.environ["IMAGE"]
+        elif "image" in kwargs:
+            logger.warning("Setting image to %s" % kwargs["image"])
+
+            self.app_path = APP
+            APP = kwargs["image"]
+            del kwargs["image"]
+
+        self.kwargs = kwargs
 
         if APP and os.path.exists(APP):
             self.app_path = APP
         else:
-            self.app_path = os.getcwd()
+            if not self.app_path:
+                self.app_path = os.getcwd()
             install = Install(answers, APP, dryrun = dryrun, target_path = self.app_path)
             install.install()
 
@@ -77,6 +88,7 @@ class Run(object):
 
         for component, graph_item in self.params.mainfile_data["graph"].iteritems():
             if self.utils.isExternal(graph_item):
+                self.kwargs["image"] = self.utils.getSourceImage(graph_item)
                 component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug, **self.kwargs)
                 ret = component_run.run()
                 if self.answers_output:
@@ -104,36 +116,34 @@ class Run(object):
 
         return output
 
-    def _processArtifacts(self, component, provider):
+    def _processArtifacts(self, component, provider, provider_name = None):
+        if not provider_name:
+            provider_name = str(provider)
+
         artifacts = self.utils.getArtifacts(component)
         artifact_provider_list = []
-        if not provider in artifacts:
-            raise Exception("Data for provider \"%s\" are not part of this app" % self.params.provider)
+        if not provider_name in artifacts:
+            raise Exception("Data for provider \"%s\" are not part of this app" % provider_name)
 
         dst_dir = os.path.join(self.utils.workdir, component)
         data = None
 
-        for artifact in artifacts[provider]:
+        for artifact in artifacts[provider_name]:
             if "inherit" in artifact:
                 logger.debug("Inheriting from %s", artifact["inherit"])
                 for item in artifact["inherit"]:
-                    inherited_artifacts, _ = self._processArtifacts(component, item)
+                    inherited_artifacts, _ = self._processArtifacts(component, provider, item)
                     artifact_provider_list += inherited_artifacts
                 continue
             artifact_path = self.utils.sanitizePath(artifact)
-            with open(os.path.join(self.app_path, artifact_path), "r") as fp:
-                data = fp.read()
+            data = provider.loadArtifact(os.path.join(self.app_path, artifact_path))
 
             logger.debug("Templating artifact %s/%s", self.app_path, artifact_path)
             data = self._applyTemplate(data, component)
 
             artifact_dst = os.path.join(dst_dir, artifact_path)
 
-            if not os.path.isdir(os.path.dirname(artifact_dst)):
-                os.makedirs(os.path.dirname(artifact_dst))
-            with open(artifact_dst, "w") as fp:
-                logger.debug("Writing artifact to %s", artifact_dst)
-                fp.write(data)
+            provider.saveArtifact(artifact_dst, data)
 
             artifact_provider_list.append(artifact_path)
 
@@ -142,13 +152,15 @@ class Run(object):
     def _processComponent(self, component, graph_item):
         logger.debug("Processing component %s", component)
 
-        artifact_list, dst_dir = self._processArtifacts(component, self.params.provider)
         provider_class = self.plugin.getProvider(self.params.provider)
-        provider = provider_class(self.params.getValues(component), artifact_list, dst_dir, self.dryrun)
+        dst_dir = os.path.join(self.utils.workdir, component) 
+        provider = provider_class(self.params.getValues(component), dst_dir, self.dryrun)
         if provider:
             logger.info("Using provider %s for component %s", self.params.provider, component)
         else:
             raise Exception("Something is broken - couldn't get the provider")
+
+        provider.artifacts, dst_dir = self._processArtifacts(component, provider)
 
         try:
             provider.init()
