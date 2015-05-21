@@ -102,6 +102,7 @@ class CLI():
                 raise
             else:
                 logger.error("Exception caught: %s", repr(ex))
+                logger.error("Run the command again with -v option to get more information.")
 
 
 
