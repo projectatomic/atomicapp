@@ -87,7 +87,7 @@ class Run(object):
         for component, graph_item in self.params.mainfile_data["graph"].iteritems():
             if self.utils.isExternal(graph_item):
                 self.kwargs["image"] = self.utils.getSourceImage(graph_item)
-                component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug, **self.kwargs)
+                component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug, self.stop, **self.kwargs)
                 ret = component_run.run()
                 if self.answers_output:
                     self.params.loadAnswers(ret)
@@ -162,7 +162,10 @@ class Run(object):
 
         try:
             provider.init()
-            provider.deploy()
+            if self.stop:
+                provider.undeploy()
+            else:
+                provider.deploy()
         except ProviderFailedException as ex:
             logger.error(ex)
             sys.exit(1)

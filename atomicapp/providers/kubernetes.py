@@ -45,17 +45,10 @@ class KubernetesProvider(Provider):
             else:
                 raise ProviderFailedException("Malformed kube file")
 
-        for artifact in self.kube_order:
-            if not self.kube_order[artifact]:
-                continue
-
-            k8s_file = os.path.join(self.path, self.kube_order[artifact])
-            self._callK8s(k8s_file)
-
     def _resetReplicas(self, path):
         data = anymarkup.parse_file(path)
-        name = data["metadata"]["name"]
-        cmd = [self.kubectl, "resize", "rc", name, "--replicas=4" ]
+        name = data["id"]
+        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0" ]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -63,6 +56,7 @@ class KubernetesProvider(Provider):
             subprocess.check_call(cmd)
 
     def deploy(self):
+        logger.info("Deploying to Kubernetes")
         self.prepareOrder()
 
         for artifact in self.kube_order:
@@ -73,6 +67,7 @@ class KubernetesProvider(Provider):
             self._callK8s(k8s_file)
 
     def undeploy(self):
+        logger.info("Undeploying from Kubernetes")
         self.prepareOrder()
 
         for kind, artifact in self.kube_order.iteritems():
