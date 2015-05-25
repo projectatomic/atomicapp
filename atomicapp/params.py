@@ -20,7 +20,6 @@ class Params(object):
     app_id = None
     app_path = None
     __provider = DEFAULT_PROVIDER
-    __namespace = DEFAULT_NAMESPACE
     __app = None
     ask = False
     write_sample_answers = False
@@ -42,12 +41,6 @@ class Params(object):
             return config["provider"]
         return self.__provider
 
-    @property
-    def namespace(self):
-        config = self.get()
-        if "namespace" in config:
-            return config["namespace"]
-        return self.__namespace
 
     @property
     def target_path(self):

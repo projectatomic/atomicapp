@@ -15,6 +15,9 @@ class KubernetesProvider(Provider):
     kubectl = "/usr/bin/kubectl"
 
     def init(self):
+        if self.config.get("namespace"):
+            self.namespace = self.config.get("namespace");
+
         if self.container:
             self.kubectl = "/host/usr/bin/kubectl"
             if not os.path.exists("/etc/kubernetes"):
