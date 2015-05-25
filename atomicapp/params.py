@@ -5,7 +5,7 @@ import collections
 import re
 import copy
 
-from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE
+from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE, DEFAULT_NAMESPACE
 
 from utils import isTrue
 
@@ -20,6 +20,7 @@ class Params(object):
     app_id = None
     app_path = None
     __provider = DEFAULT_PROVIDER
+    __namespace = DEFAULT_NAMESPACE
     __app = None
     ask = False
     write_sample_answers = False
@@ -40,6 +41,13 @@ class Params(object):
         if "provider" in config:
             return config["provider"]
         return self.__provider
+
+    @property
+    def namespace(self):
+        config = self.get()
+        if "namespace" in config:
+            return config["namespace"]
+        return self.__namespace
 
     @property
     def target_path(self):

@@ -159,6 +159,9 @@ class Run(object):
             raise Exception("Something is broken - couldn't get the provider")
 
         provider.artifacts, dst_dir = self._processArtifacts(component, provider)
+        if self.params.provider == "kubernetes":
+            provider.set_ns(self.params.namespace)
+
 
         try:
             provider.init()

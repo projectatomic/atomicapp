@@ -9,9 +9,10 @@ logger = logging.getLogger(__name__)
 
 class KubernetesProvider(Provider):
     key = "kubernetes"
+    namespace = "default"
 
     kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
-    kubectl = "kubectl"
+    kubectl = "/usr/bin/kubectl"
 
     def init(self):
         if self.container:
@@ -24,10 +25,10 @@ class KubernetesProvider(Provider):
 
         if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
-                raise ProviderFailedException("Command kubectl not found")
+                raise ProviderFailedException("Command: "+self.kubectl+" not found")
 
     def _callK8s(self, path):
-        cmd = [self.kubectl, "create", "-f", path]
+        cmd = [self.kubectl, "create", "-f", path, "--namespace", self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -45,10 +46,17 @@ class KubernetesProvider(Provider):
             else:
                 raise ProviderFailedException("Malformed kube file")
 
+        for artifact in self.kube_order:
+            if not self.kube_order[artifact]:
+                continue
+
+            k8s_file = os.path.join(self.path, self.kube_order[artifact])
+            self._callK8s(k8s_file)
+
     def _resetReplicas(self, path):
         data = anymarkup.parse_file(path)
-        name = data["id"]
-        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0" ]
+        name = data["metadata"]["name"]
+        cmd = [self.kubectl, "resize", "rc", name, "--replicas=4", "--namespace", self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -79,7 +87,7 @@ class KubernetesProvider(Provider):
             if kind in ["ReplicationController", "rc", "replicationcontroller"]:
                 self._resetReplicas(path)
 
-            cmd = [self.kubectl, "delete", "-f", path]
+            cmd = [self.kubectl, "delete", "-f", path, "--namespace", self.namespace]
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
             else:
