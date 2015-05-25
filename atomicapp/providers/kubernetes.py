@@ -47,7 +47,7 @@ class KubernetesProvider(Provider):
 
     def _resetReplicas(self, path):
         data = anymarkup.parse_file(path)
-        name = data["metadata"]["name"]
+        name = data["id"]
         cmd = [self.kubectl, "resize", "rc", name, "--replicas=0" ]
 
         if self.dryrun:
