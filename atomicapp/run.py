@@ -162,7 +162,10 @@ class Run(object):
 
         try:
             provider.init()
-            provider.deploy()
+            if self.stop:
+                provider.undeploy()
+            else:
+                provider.deploy()
         except ProviderFailedException as ex:
             logger.error(ex)
             sys.exit(1)
