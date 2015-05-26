@@ -14,4 +14,6 @@ ANSWERS_FILE_SAMPLE="answers.conf.sample"
 WORKDIR=".workdir"
 
 DEFAULT_PROVIDER="kubernetes"
-DEFAULT_ANSWERS={"general":{"provider":DEFAULT_PROVIDER}}
+DEFAULT_NAMESPACE="default"
+DEFAULT_ANSWERS={"general":{"provider":DEFAULT_PROVIDER,"namespace":DEFAULT_NAMESPACE}}
+

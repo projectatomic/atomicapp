@@ -9,12 +9,17 @@ logger = logging.getLogger(__name__)
 
 class KubernetesProvider(Provider):
     key = "kubernetes"
+    namespace = "default"
 
     kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
-    kubectl = "kubectl"
+    kubectl = "/usr/bin/kubectl"
 
     def init(self):
         logger.debug("Given config: %s", self.config)
+        if self.config.get("namespace"):
+            self.namespace = self.config.get("namespace");
+
+        logger.info("Using namespace %s", self.namespace)
         if self.container:
             self.kubectl = "/host/usr/bin/kubectl"
             if not os.path.exists("/etc/kubernetes"):
@@ -25,10 +30,10 @@ class KubernetesProvider(Provider):
 
         if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
-                raise ProviderFailedException("Command kubectl not found")
+                raise ProviderFailedException("Command: "+self.kubectl+" not found")
 
     def _callK8s(self, path):
-        cmd = [self.kubectl, "create", "-f", path]
+        cmd = [self.kubectl, "create", "-f", path, "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -49,7 +54,7 @@ class KubernetesProvider(Provider):
     def _resetReplicas(self, path):
         data = anymarkup.parse_file(path)
         name = data["id"]
-        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0" ]
+        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0", "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -80,7 +85,7 @@ class KubernetesProvider(Provider):
             if kind in ["ReplicationController", "rc", "replicationcontroller"]:
                 self._resetReplicas(path)
 
-            cmd = [self.kubectl, "delete", "-f", path]
+            cmd = [self.kubectl, "delete", "-f", path, "--namespace=%s" % self.namespace]
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
             else:
