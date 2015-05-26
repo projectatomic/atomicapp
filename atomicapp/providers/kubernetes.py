@@ -18,6 +18,7 @@ class KubernetesProvider(Provider):
         if self.config.get("namespace"):
             self.namespace = self.config.get("namespace");
 
+        logger.info("Using namespace %s", self.namespace)
         if self.container:
             self.kubectl = "/host/usr/bin/kubectl"
             if not os.path.exists("/etc/kubernetes"):
@@ -31,7 +32,7 @@ class KubernetesProvider(Provider):
                 raise ProviderFailedException("Command: "+self.kubectl+" not found")
 
     def _callK8s(self, path):
-        cmd = [self.kubectl, "create", "-f", path, "--namespace", self.namespace]
+        cmd = [self.kubectl, "create", "-f", path, "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -49,17 +50,10 @@ class KubernetesProvider(Provider):
             else:
                 raise ProviderFailedException("Malformed kube file")
 
-        for artifact in self.kube_order:
-            if not self.kube_order[artifact]:
-                continue
-
-            k8s_file = os.path.join(self.path, self.kube_order[artifact])
-            self._callK8s(k8s_file)
-
     def _resetReplicas(self, path):
         data = anymarkup.parse_file(path)
-        name = data["metadata"]["name"]
-        cmd = [self.kubectl, "resize", "rc", name, "--replicas=4", "--namespace", self.namespace]
+        name = data["id"]
+        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0", "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -90,7 +84,7 @@ class KubernetesProvider(Provider):
             if kind in ["ReplicationController", "rc", "replicationcontroller"]:
                 self._resetReplicas(path)
 
-            cmd = [self.kubectl, "delete", "-f", path, "--namespace", self.namespace]
+            cmd = [self.kubectl, "delete", "-f", path, "--namespace=%s" % self.namespace]
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
             else:

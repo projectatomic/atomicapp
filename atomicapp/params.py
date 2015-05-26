@@ -5,7 +5,7 @@ import collections
 import re
 import copy
 
-from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE, DEFAULT_NAMESPACE
+from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE
 
 from utils import isTrue
 
@@ -40,7 +40,6 @@ class Params(object):
         if "provider" in config:
             return config["provider"]
         return self.__provider
-
 
     @property
     def target_path(self):
