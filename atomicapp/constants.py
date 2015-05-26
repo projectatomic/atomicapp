@@ -1,5 +1,5 @@
-__ATOMICAPPVERSION__ = '0.0.1-alpha'
-__NULECULESPECVERSION__ = '0.0.1-alpha'
+__ATOMICAPPVERSION__ = '0.1.0'
+__NULECULESPECVERSION__ = '0.0.2'
 
 GRAPH_DIR="graph"
 EXTERNAL_APP_DIR="external"
@@ -15,6 +15,3 @@ WORKDIR=".workdir"
 
 DEFAULT_PROVIDER="kubernetes"
 DEFAULT_ANSWERS={"general":{"provider":DEFAULT_PROVIDER}}
-
-SCHEMA_URL="https://raw.githubusercontent.com/projectatomic/nulecule/master/spec/0.0.1-alpha/schema.json"
-

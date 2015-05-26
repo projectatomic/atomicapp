@@ -2,31 +2,19 @@
 
 from atomicapp.run import Run
 from atomicapp.install import Install
-from atomicapp.create import Create
 import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
-import anymarkup #FIXME
 
 from atomicapp import set_logging
-from atomicapp.constants import ANSWERS_FILE, MAIN_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
+from atomicapp.constants import ANSWERS_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
 
 logger = logging.getLogger(__name__)
 
 def cli_install(args):
     install = Install(**vars(args))
     install.install()
-
-def cli_create(args):
-    ac = Create(args.NAME, args.schema, args.dryrun)
-    ac.create()
-
-def cli_build(args):
-    if os.path.isfile(os.path.join(os.getcwd(), MAIN_FILE)):
-        data = anymarkup.parse_file(os.path.join(os.getcwd(), MAIN_FILE))
-        ac = Create(data["id"], args.dryrun)
-        ac.build(args.TAG)
 
 def cli_run(args):
     ae = Run(**vars(args))
@@ -51,12 +39,6 @@ class CLI():
 
         subparsers = self.parser.add_subparsers(dest="action")
 
-        parser_create = subparsers.add_parser("create")
-        parser_create.add_argument("--schema", default=None, help="Schema for the app spec")
-        parser_create.add_argument("NAME", help="App name")
-        parser_create.set_defaults(func=cli_create)
-
-
         parser_run = subparsers.add_parser("run")
         parser_run.add_argument("--write-answers", dest="answers_output", help="A file which will contain anwsers provided in interactive mode")
         parser_run.add_argument("--ask", default=False, action="store_true", help="Ask for params even if the defaul value is provided")
@@ -74,10 +56,6 @@ class CLI():
         parser_stop = subparsers.add_parser("stop")
         parser_stop.add_argument("APP", help="Path to the directory where the atomicapp is installed or an image containing atomicapp which should be stopped.")
         parser_stop.set_defaults(func=cli_stop)
-
-        parser_build = subparsers.add_parser("build")
-        parser_build.add_argument("TAG", nargs="?", default=None, help="Name of the image containing your app")
-        parser_build.set_defaults(func=cli_build)
 
     def run(self):
         self.set_arguments()

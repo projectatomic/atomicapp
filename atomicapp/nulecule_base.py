@@ -1,17 +1,16 @@
 import anymarkup
 import os
 import logging
-import collections
-import re
 import copy
+import subprocess
 
-from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE
+from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE, __NULECULESPECVERSION__
 
-from utils import isTrue
+from utils import Utils
 
 logger = logging.getLogger(__name__)
 
-class Params(object):
+class Nulecule_Base(object):
     answers_data = None
     params_data = None
     mainfile_data = None
@@ -56,9 +55,9 @@ class Params(object):
 
     def __init__(self, nodeps=False, update=False, target_path=None):
         self.target_path = target_path
-        self.nodeps = isTrue(nodeps)
-        self.update = isTrue(update)
-        self.override = isTrue(False)
+        self.nodeps = Utils.isTrue(nodeps)
+        self.update = Utils.isTrue(update)
+        self.override = Utils.isTrue(False)
 
     def loadParams(self, data = None):
         if type(data) == dict:
@@ -72,13 +71,13 @@ class Params(object):
         if "specversion" in data:
             logger.debug("Params part of %s", MAIN_FILE)
             tmp = {}
-            tmp[GLOBAL_CONF] = data[PARAMS_KEY]
+            tmp[GLOBAL_CONF] = self.fromListToDict(data[PARAMS_KEY])
             data = tmp
         else:
             logger.debug("Params in separate file")
 
         if self.params_data:
-                self.params_data = self._update(self.params_data, data)
+            self.params_data = Utils.update(self.params_data, data)
         else:
             self.params_data = data
 
@@ -126,7 +125,7 @@ class Params(object):
             data = copy.deepcopy(DEFAULT_ANSWERS)
 
         if self.answers_data:
-            self.answers_data = self._update(self.answers_data, data)
+            self.answers_data = Utils.update(self.answers_data, data)
         else:
             self.answers_data = data
 
@@ -149,28 +148,20 @@ class Params(object):
             self._updateAnswers(component, n, p)
         return values
 
-
-    def _mergeGlobalParams(self):
-        config = self.params_data
-        if self.answers_data:
-            if config:
-                config = self._update(config, self.answers_data)
-            else:
-                config = self.answers_data
-        return config
-
     def _mergeParamsComponent(self, component=GLOBAL_CONF, global_base = True):
         component_config = self._mergeParamsComponent() if not component == GLOBAL_CONF and global_base else {}
         if component==GLOBAL_CONF:
             if self.mainfile_data and PARAMS_KEY in self.mainfile_data:
-                component_config = self._update(component_config, self.mainfile_data[PARAMS_KEY])
-        elif component in self.mainfile_data["graph"] and PARAMS_KEY in self.mainfile_data["graph"][component]:
-            config = self.mainfile_data["graph"][component][PARAMS_KEY]
-            component_config = self._update(component_config, config)
+                component_config = Utils.update(component_config, self.mainfile_data[PARAMS_KEY])
+        else:
+            graph_item = self.getComponent(component)
+            if graph_item and PARAMS_KEY in graph_item:
+                config = self.fromListToDict(graph_item[PARAMS_KEY])
+                component_config = Utils.update(component_config, config)
 
         if component in self.answers_data:
             tmp_clean_answers = self._cleanNullValues(self.answers_data[component])
-            component_config = self._update(component_config, tmp_clean_answers)
+            component_config = Utils.update(component_config, tmp_clean_answers)
         return component_config
 
     def _getValue(self, param, name, skip_asking = False):
@@ -181,7 +172,7 @@ class Params(object):
                 value = param["default"]
             if not skip_asking and (self.ask or not value) and "description" in param: #FIXME
                 logger.debug("Ask for %s: %s", name, param["description"])
-                value = self.askFor(name, param)
+                value = Utils.askFor(name, param)
             elif not skip_asking and not value:
                 logger.debug("Skipping %s", name)
                 value = param
@@ -218,29 +209,7 @@ class Params(object):
 
         self.answers_data[component][param] = value
 
-    def askFor(self, what, info):
-        repeat = True
-        desc = info["description"]
-        constraints = None
-        if "constraints" in info:
-            constraints = info["constraints"]
-        while repeat:
-            repeat = False
-            if "default" in info:
-                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
-                if len(value) == 0:
-                    value = info["default"]
-            else:
-                value = raw_input("%s (%s): " % (what, desc))
-            if constraints:
-                for constraint in constraints:
-                    logger.debug("Checking pattern: %s", constraint["allowed_pattern"])
-                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
-                        logger.error(constraint["description"])
-                        repeat = True
-
-        return value
-
+    
     def writeAnswers(self, path):
         anymarkup.serialize_file(self.answers_data, path, format='ini')
 
@@ -249,19 +218,116 @@ class Params(object):
         logger.info("Writing answers file template to %s", path)
         self.writeAnswers(path)
 
-    def _update(self, old_dict, new_dict):
-        for key, val in new_dict.iteritems():
-            if isinstance(val, collections.Mapping):
-                tmp = self._update(old_dict.get(key, { }), val)
-                old_dict[key] = tmp
-            elif isinstance(val, list) and key in old_dict:
-                res = (old_dict[key] + val)
-                if isinstance(val[0], collections.Mapping):
-                    old_dict[key] = [dict(y) for y in set(tuple(x.items()) for x in res)]
+ 
+    def getComponent(self, component):
+        return self.getItem(self.mainfile_data["graph"], component)
+
+    def getItem(self, items, key):
+        for item in items:
+            name = item.get("name")
+            if name is key:
+                return item
+
+    def getArtifacts(self, component):
+        graph_item = self.getComponent(component)
+        if "artifacts" in graph_item:
+            return graph_item["artifacts"]
+
+        return None
+    
+    def checkArtifacts(self, component, check_provider = None):
+        checked_providers = []
+        artifacts = self.getArtifacts(component)
+        if not artifacts:
+            logger.debug("No artifacts for %s", component)
+            return []
+
+        for provider, artifact_list in artifacts.iteritems():
+            if (check_provider and not provider == check_provider) or provider in checked_providers:
+                continue
+
+            logger.debug("Provider: %s", provider)
+            for artifact in artifact_list:
+                if "inherit" in artifact:
+                    self._checkInherit(component, artifact["inherit"], checked_providers)
+                    continue
+                path = os.path.join(self.target_path, Utils.sanitizePath(artifact))
+                if os.path.isfile(path):
+                    logger.debug("Artifact %s: OK", artifact)
                 else:
-                    old_dict[key] = list(set(res))
+                    raise Exception("Missing artifact %s (%s)" % (artifact, path))
+            checked_providers.append(provider)
+
+        return checked_providers
+
+    def checkAllArtifacts(self):
+        for graph_item in self.mainfile_data["graph"]:
+            component = graph_item.get("name")
+            if not component:
+                raise ValueError("Component name missing in graph")
+
+            checked_providers = self.checkArtifacts(component)
+            logger.info("Artifacts for %s present for these providers: %s", component, ", ".join(checked_providers))
+
+    def _checkInherit(self, component, inherit_list, checked_providers):
+        for inherit_provider in inherit_list:
+            if inherit_provider not in checked_providers:
+                logger.debug("Checking %s because of 'inherit'", inherit_provider)
+                checked_providers += self.checkArtifacts(component, inherit_provider)
+
+    def checkSpecVersion(self):
+        if not self.mainfile_data:
+            raise ValueError("Could not access %s data" % MAIN_FILE)
+
+        if "specversion" not in self.mainfile_data:
+            raise ValueError("Data corrupted: couldn't find specversion in %s" % MAIN_FILE)
+
+        if self.mainfile_data["specversion"] == __NULECULESPECVERSION__:
+            logger.debug("Version check successful: specversion == %s", __NULECULESPECVERSION__)
+        else:
+            logger.error("Your version in %s file (%s) does not match supported version (%s)", 
+                    MAIN_FILE, self.mainfile_data["specversion"], __NULECULESPECVERSION__)
+            raise Exception("Spec version check failed")
+
+
+    def getImageURI(self, image):
+        config = self.get()
+        logger.debug(config)
+
+        if "registry" in config:
+            logger.info("Adding registry %s for %s", config["registry"], image)
+            image = os.path.join(config["registry"], image)
+
+        return image
+
+    def pullApp(self, image = None, update = None):
+        if not image:
+            image = self.app
+        if not update:
+            update = self.update
+
+        image = self.getImageURI(image)
+        if not update:
+            check_cmd = ["docker", "images", "-q", image]
+            image_id = subprocess.check_output(check_cmd)
+            logger.debug("Output of docker images cmd: %s", image_id)
+            if len(image_id) != 0:
+                logger.debug("Image %s already present with id %s. Use --update to re-pull.", image, image_id.strip())
+                return
+
+        pull = ["docker", "pull", image]
+        if subprocess.call(pull) != 0:
+            raise Exception("Couldn't pull %s" % image)
+
+
+    def fromListToDict(self, llist):
+        result = {}
+        for item in llist:
+            if "name" in item:
+                result[item.get("name")] = item
             else:
-#                print("%s %s %s" % (old_dict, val, new_dict))
-                old_dict[key] = new_dict[key]
-        return old_dict
+                logger.warning("Attribute 'name' missing in %s", item)
+
+        return result
+
 
