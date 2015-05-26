@@ -30,7 +30,7 @@ class OpenShiftProvider(Provider):
     def _callCli(self, path):
         cmd = [self.cli, "--config=%s" % self.config_file, "create", "-f", path]
 
-        if not self.dryrun:
+        if self.dryrun:
             logger.info("Calling: %s", " ".join(cmd))
         else:
             subprocess.check_call(cmd)
