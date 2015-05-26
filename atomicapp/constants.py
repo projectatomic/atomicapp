@@ -7,7 +7,7 @@ GLOBAL_CONF="general"
 APP_ENT_PATH="application-entity"
 
 PARAMS_KEY="params"
-MAIN_FILE="nulecule"
+MAIN_FILE="Nulecule"
 PARAMS_FILE="params.conf"
 ANSWERS_FILE="answers.conf"
 ANSWERS_FILE_SAMPLE="answers.conf.sample"
