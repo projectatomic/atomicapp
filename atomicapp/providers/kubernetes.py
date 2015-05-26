@@ -14,6 +14,7 @@ class KubernetesProvider(Provider):
     kubectl = "kubectl"
 
     def init(self):
+        logger.debug("Given config: %s", self.config)
         if self.container:
             self.kubectl = "/host/usr/bin/kubectl"
             if not os.path.exists("/etc/kubernetes"):

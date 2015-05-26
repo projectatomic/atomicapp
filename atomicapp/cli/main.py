@@ -2,7 +2,6 @@
 
 from atomicapp.run import Run
 from atomicapp.install import Install
-from atomicapp.create import Create
 import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
@@ -17,10 +16,6 @@ logger = logging.getLogger(__name__)
 def cli_install(args):
     install = Install(**vars(args))
     install.install()
-
-def cli_create(args):
-    ac = Create(args.NAME, args.schema, args.dryrun)
-    ac.create()
 
 def cli_build(args):
     if os.path.isfile(os.path.join(os.getcwd(), MAIN_FILE)):
@@ -50,12 +45,6 @@ class CLI():
         self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
 
         subparsers = self.parser.add_subparsers(dest="action")
-
-        parser_create = subparsers.add_parser("create")
-        parser_create.add_argument("--schema", default=None, help="Schema for the app spec")
-        parser_create.add_argument("NAME", help="App name")
-        parser_create.set_defaults(func=cli_create)
-
 
         parser_run = subparsers.add_parser("run")
         parser_run.add_argument("--write-answers", dest="answers_output", help="A file which will contain anwsers provided in interactive mode")
