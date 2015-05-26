@@ -80,7 +80,6 @@ class Install(object):
         if not dst:
             dst = self.nulecule_base.target_path
         distutils.dir_util.copy_tree(src, dst, update=(not self.nulecule_base.update))
-        self.nulecule_base.checkAllArtifacts()
 
     def install(self):
         self.nulecule_base.loadAnswers(self.answers_file)
@@ -105,6 +104,9 @@ class Install(object):
 
         if not self.nulecule_base.mainfile_data:
             self.nulecule_base.loadMainfile(mainfile_path)
+
+        self.nulecule_base.checkSpecVersion()
+        self.nulecule_base.checkAllArtifacts()
 
         values = {}
         if not self.nulecule_base.nodeps:
