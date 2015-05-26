@@ -77,7 +77,7 @@ class Nulecule_Base(object):
             logger.debug("Params in separate file")
 
         if self.params_data:
-                self.params_data = Utils.update(self.params_data, data)
+            self.params_data = Utils.update(self.params_data, data)
         else:
             self.params_data = data
 

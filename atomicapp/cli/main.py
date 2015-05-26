@@ -17,12 +17,6 @@ def cli_install(args):
     install = Install(**vars(args))
     install.install()
 
-def cli_build(args):
-    if os.path.isfile(os.path.join(os.getcwd(), MAIN_FILE)):
-        data = anymarkup.parse_file(os.path.join(os.getcwd(), MAIN_FILE))
-        ac = Create(data["id"], args.dryrun)
-        ac.build(args.TAG)
-
 def cli_run(args):
     ae = Run(**vars(args))
     ae.run()
@@ -63,10 +57,6 @@ class CLI():
         parser_stop = subparsers.add_parser("stop")
         parser_stop.add_argument("APP", help="Path to the directory where the atomicapp is installed or an image containing atomicapp which should be stopped.")
         parser_stop.set_defaults(func=cli_stop)
-
-        parser_build = subparsers.add_parser("build")
-        parser_build.add_argument("TAG", nargs="?", default=None, help="Name of the image containing your app")
-        parser_build.set_defaults(func=cli_build)
 
     def run(self):
         self.set_arguments()

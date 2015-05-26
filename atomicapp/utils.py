@@ -6,7 +6,7 @@ import collections
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, __NULECULESPECVERSION__
+from constants import PARAMS_FILE, APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, __NULECULESPECVERSION__
 
 __all__ = ('Utils')
 
@@ -142,7 +142,6 @@ class Utils(object):
                 else:
                     old_dict[key] = list(set(res))
             else:
-#                print("%s %s %s" % (old_dict, val, new_dict))
                 old_dict[key] = new_dict[key]
         return old_dict
 
