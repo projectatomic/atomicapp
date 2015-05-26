@@ -6,7 +6,7 @@ import collections
 
 import logging
 
-from constants import PARAMS_FILE, APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, __NULECULESPECVERSION__
+from constants import APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR
 
 __all__ = ('Utils')
 

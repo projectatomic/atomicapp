@@ -6,10 +6,9 @@ import os
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
-import anymarkup #FIXME
 
 from atomicapp import set_logging
-from atomicapp.constants import ANSWERS_FILE, MAIN_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
+from atomicapp.constants import ANSWERS_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
 
 logger = logging.getLogger(__name__)
 
