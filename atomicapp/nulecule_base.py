@@ -1,8 +1,6 @@
 import anymarkup
 import os
 import logging
-import collections
-import re
 import copy
 import subprocess
 
@@ -79,7 +77,7 @@ class Nulecule_Base(object):
             logger.debug("Params in separate file")
 
         if self.params_data:
-                self.params_data = self._update(self.params_data, data)
+                self.params_data = Utils.update(self.params_data, data)
         else:
             self.params_data = data
 
@@ -127,7 +125,7 @@ class Nulecule_Base(object):
             data = copy.deepcopy(DEFAULT_ANSWERS)
 
         if self.answers_data:
-            self.answers_data = self._update(self.answers_data, data)
+            self.answers_data = Utils.update(self.answers_data, data)
         else:
             self.answers_data = data
 
@@ -154,18 +152,16 @@ class Nulecule_Base(object):
         component_config = self._mergeParamsComponent() if not component == GLOBAL_CONF and global_base else {}
         if component==GLOBAL_CONF:
             if self.mainfile_data and PARAMS_KEY in self.mainfile_data:
-                component_config = self._update(component_config, self.mainfile_data[PARAMS_KEY])
+                component_config = Utils.update(component_config, self.mainfile_data[PARAMS_KEY])
         else:
             graph_item = self.getComponent(component)
             if graph_item and PARAMS_KEY in graph_item:
                 config = self.fromListToDict(graph_item[PARAMS_KEY])
-                logger.warning(config)
-                component_config = self._update(component_config, config)
+                component_config = Utils.update(component_config, config)
 
         if component in self.answers_data:
-            logger.warning("Updating params in component %s with answers", component)
             tmp_clean_answers = self._cleanNullValues(self.answers_data[component])
-            component_config = self._update(component_config, tmp_clean_answers)
+            component_config = Utils.update(component_config, tmp_clean_answers)
         return component_config
 
     def _getValue(self, param, name, skip_asking = False):
@@ -222,22 +218,7 @@ class Nulecule_Base(object):
         logger.info("Writing answers file template to %s", path)
         self.writeAnswers(path)
 
-    def _update(self, old_dict, new_dict):
-        for key, val in new_dict.iteritems():
-            if isinstance(val, collections.Mapping):
-                tmp = self._update(old_dict.get(key, { }), val)
-                old_dict[key] = tmp
-            elif isinstance(val, list) and key in old_dict:
-                res = (old_dict[key] + val)
-                if isinstance(val[0], collections.Mapping):
-                    old_dict[key] = [dict(y) for y in set(tuple(x.items()) for x in res)]
-                else:
-                    old_dict[key] = list(set(res))
-            else:
-#                print("%s %s %s" % (old_dict, val, new_dict))
-                old_dict[key] = new_dict[key]
-        return old_dict
-
+ 
     def getComponent(self, component):
         return self.getItem(self.mainfile_data["graph"], component)
 
@@ -290,7 +271,7 @@ class Nulecule_Base(object):
 
     def _checkInherit(self, component, inherit_list, checked_providers):
         for inherit_provider in inherit_list:
-            if not inherit_provider in checked_providers:
+            if inherit_provider not in checked_providers:
                 logger.debug("Checking %s because of 'inherit'", inherit_provider)
                 checked_providers += self.checkArtifacts(component, inherit_provider)
 
@@ -302,9 +283,10 @@ class Nulecule_Base(object):
             raise ValueError("Data corrupted: couldn't find specversion in %s" % MAIN_FILE)
 
         if self.mainfile_data["specversion"] == __NULECULESPECVERSION__:
-            logger.info("Version check successful: specversion == %s", __NULECULESPECVERSION__)
+            logger.debug("Version check successful: specversion == %s", __NULECULESPECVERSION__)
         else:
-            logger.error("Your version in %s file (%s) does not match supported version (%s)", MAIN_FILE, self.mainfile_data["specversion"], __NULECULESPECVERSION__)
+            logger.error("Your version in %s file (%s) does not match supported version (%s)", 
+                    MAIN_FILE, self.mainfile_data["specversion"], __NULECULESPECVERSION__)
             raise Exception("Spec version check failed")
 
 
@@ -344,7 +326,7 @@ class Nulecule_Base(object):
             if "name" in item:
                 result[item.get("name")] = item
             else:
-                logger.warning("Atribute 'name' missing in %s", item)
+                logger.warning("Attribute 'name' missing in %s", item)
 
         return result
 

@@ -1,11 +1,12 @@
 from __future__ import print_function
 import os
-import subprocess
 import tempfile
+import re
+import collections
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR, WORKDIR, __NULECULESPECVERSION__
+from constants import PARAMS_FILE, GRAPH_DIR, APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, __NULECULESPECVERSION__
 
 __all__ = ('Utils')
 
@@ -46,7 +47,7 @@ class Utils(object):
         return str(val).lower() in true_values
 
     @staticmethod
-    def sanitizeName(self, app):
+    def sanitizeName(app):
         return app.replace("/", "-")
 
     def getExternalAppDir(self, component):
@@ -127,3 +128,21 @@ class Utils(object):
                         repeat = True
 
         return value
+
+    @staticmethod
+    def update(old_dict, new_dict):
+        for key, val in new_dict.iteritems():
+            if isinstance(val, collections.Mapping):
+                tmp = Utils.update(old_dict.get(key, { }), val)
+                old_dict[key] = tmp
+            elif isinstance(val, list) and key in old_dict:
+                res = (old_dict[key] + val)
+                if isinstance(val[0], collections.Mapping):
+                    old_dict[key] = [dict(y) for y in set(tuple(x.items()) for x in res)]
+                else:
+                    old_dict[key] = list(set(res))
+            else:
+#                print("%s %s %s" % (old_dict, val, new_dict))
+                old_dict[key] = new_dict[key]
+        return old_dict
+

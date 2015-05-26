@@ -140,8 +140,9 @@ class Install(object):
             logger.debug("Component path: %s", component_path)
             if not os.path.isfile(mainfile_component_path) or self.nulecule_base.update:
                 logger.info("Pulling %s", image_name)
-                component_app = Install(self.nulecule_base.answers_data, image_name, self.nulecule_base.nodeps, self.nulecule_base.update, component_path, self.dryrun)
-                values = self.nulecule_base._update(values, component_app.install())
+                component_app = Install(self.nulecule_base.answers_data, image_name, self.nulecule_base.nodeps, 
+                                        self.nulecule_base.update, component_path, self.dryrun)
+                values = Utils.update(values, component_app.install())
                 logger.info("Component installed into %s", component_path)
             else:
                 logger.info("Component %s already exists at %s - remove the directory or use --update option", component, component_path)
