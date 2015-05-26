@@ -61,7 +61,7 @@ Action `run` performs `install` prior it's own tasks are executed if `APP` is gi
 
 ## Providers
 
-Providers represent various deployment targets. They can be added by placing a `provider_name.py` file implementing interface explained in providers/README.md[Providers] into `providers/` directory.
+Providers represent various deployment targets. They can be added by placing a file called `provider_name.py` in `providers/`. This file needs to implement the interface explained in (providers/README.md). For a detailed description of all providers available see the [Provider description](Providers.asciidoc).
 
 ## Dependencies
 
