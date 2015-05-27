@@ -11,18 +11,26 @@ logger = logging.getLogger(__name__)
 class OpenShiftProvider(Provider):
     key = "openshift"
 
-    cli = find_executable("osc")
+    cli = "osc" 
     config_file = None
     template_data = None
     def init(self):
-        if not self.dryrun:
-            if self.container:
-                self.cli = "/host/%s" % self.cli
-            if not os.access(self.cli, os.X_OK):
-                raise ProviderFailedException("Command %s not found" % self.cli)
+        self.cli = find_executable(self.cli)
+        if self.container and not self.cli:
+            host_path = []
+            for path in os.environ.get("PATH").split(":"):
+                host_path.append("/host%s" % path)
+            self.cli = find_executable("osc", path=":".join(host_path))
+
+        if not self.cli or not os.access(self.cli, os.X_OK):
+            raise ProviderFailedException("Command %s not found" % self.cli)
+        else:
+            logger.debug("Using %s to run OpenShift commands.", self.cli)
 
         if "openshiftconfig" in self.config:
             self.config_file = self.config["openshiftconfig"]
+        else:
+            logger.warning("Configuration option 'openshiftconfig' not found")
 
         if not self.config_file or not os.access(self.config_file, os.R_OK):
             raise ProviderFailedException("Cannot access configuration file %s" % self.config_file)
@@ -40,12 +48,12 @@ class OpenShiftProvider(Provider):
 
         name = "config-%s" % os.path.basename(path)
         output_path = os.path.join(self.path, name)
-        if not self.dryrun:
+        if self.cli and not self.dryrun:
             output = subprocess.check_output(cmd)
             logger.debug("Writing processed template to %s", output_path)
             with open(output_path, "w") as fp:
                 fp.write(output)
-        return output_path
+        return name
 
     def loadArtifact(self, path):
         data = super(self.__class__, self).loadArtifact(path)
@@ -75,6 +83,7 @@ class OpenShiftProvider(Provider):
                 data = anymarkup.parse(fp, force_types=None)
             if "kind" in data:
                 if data["kind"].lower() == "template":
+                    logger.info("Processing template")
                     artifact = self._processTemplate(artifact_path)
                 kube_order[data["kind"].lower()] = artifact
             else:
