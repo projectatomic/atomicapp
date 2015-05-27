@@ -75,6 +75,7 @@ As of Version 0.0.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) an
 # The Badges
 
 [![Code Health](https://landscape.io/github/projectatomic/atomicapp/master/landscape.svg?style=flat)](https://landscape.io/github/projectatomic/atomicapp/master)
+[![Build Status](https://travis-ci.org/projectatomic/atomicapp.svg?branch=master)](https://travis-ci.org/projectatomic/atomicapp)
 
 # Copyright
 
