@@ -29,5 +29,5 @@ setup(name='atomicapp',
           'console_scripts': ['atomicapp=atomicapp.cli.main:main'],
       },
       packages=find_packages(),
-      install_requires=_install_requirements(),
+      install_requires=['anymarkup>=0.4.1']
 )
