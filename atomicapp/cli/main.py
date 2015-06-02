@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 from atomicapp.run import Run
 from atomicapp.install import Install
