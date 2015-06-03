@@ -101,7 +101,8 @@ class Install(object):
         self.nulecule_base.loadMainfile(tmp_mainfile_path)
         logger.debug("%s path for pulled image: %s", MAIN_FILE, tmp_mainfile_path)
         if current_app_id and current_app_id != self.nulecule_base.app_id:
-            raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." % (current_app_id, self.nulecule_base.app_id))
+            raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." 
+                                        % (current_app_id, self.nulecule_base.app_id))
 
         if self.nulecule_base.update or not os.path.exists(self.nulecule_base.getMainfilePath()):
             if self._fromImage():
