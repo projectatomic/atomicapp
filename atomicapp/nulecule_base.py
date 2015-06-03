@@ -330,4 +330,5 @@ class Nulecule_Base(object):
 
         return result
 
-
+    def getMainfilePath(self):
+        return os.path.join(self.target_path, MAIN_FILE)

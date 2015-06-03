@@ -3,6 +3,7 @@ import os
 import tempfile
 import re
 import collections
+import anymarkup
 
 import logging
 
@@ -144,4 +145,12 @@ class Utils(object):
             else:
                 old_dict[key] = new_dict[key]
         return old_dict
+
+    @staticmethod
+    def getAppId(path):
+        if not os.path.isfile(path):
+            return None
+
+        data = anymarkup.parse_file(path)
+        return data.get("id")
 

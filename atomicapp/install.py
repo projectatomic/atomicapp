@@ -81,29 +81,40 @@ class Install(object):
             dst = self.nulecule_base.target_path
         distutils.dir_util.copy_tree(src, dst, update=(not self.nulecule_base.update))
 
+    def _fromImage(self):
+        return not self.nulecule_base.app_path or self.nulecule_base.target_path == self.nulecule_base.app_path
+
     def install(self):
         self.nulecule_base.loadAnswers(self.answers_file)
 
-        if self.nulecule_base.app_path and not self.nulecule_base.target_path == self.nulecule_base.app_path:
-            logger.info("Copying content of directory %s to %s", self.nulecule_base.app_path, self.nulecule_base.target_path)
-            self._populateApp(src=self.nulecule_base.app_path)
-
-        mainfile_path = os.path.join(self.nulecule_base.target_path, MAIN_FILE)
-
-        if not self.nulecule_base.app_path and (self.nulecule_base.update or not os.path.exists(mainfile_path)):
+        mainfile_dir = self.nulecule_base.app_path
+        if self._fromImage():
             self.nulecule_base.pullApp()
             self._copyFromContainer(self.nulecule_base.app)
-            mainfile_path = os.path.join(self.utils.getTmpAppDir(), MAIN_FILE)
-            logger.debug("%s path for pulled image: %s", MAIN_FILE, mainfile_path)
-            self.nulecule_base.loadMainfile(mainfile_path)
-            logger.debug("App ID: %s", self.nulecule_base.app_id)
+            mainfile_dir = self.utils.getTmpAppDir()
 
-            self._populateApp()
-        else:
-            logger.info("Component data exist in %s, skipping population...", self.nulecule_base.target_path)
+        current_app_id = None
+        if os.path.isfile(self.nulecule_base.getMainfilePath()):
+            current_app_id = Utils.getAppId(self.nulecule_base.getMainfilePath())
 
+        tmp_mainfile_path = os.path.join(mainfile_dir, MAIN_FILE)
+        self.nulecule_base.loadMainfile(tmp_mainfile_path)
+        logger.debug("%s path for pulled image: %s", MAIN_FILE, tmp_mainfile_path)
+        if current_app_id and current_app_id != self.nulecule_base.app_id:
+            raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." % (current_app_id, self.nulecule_base.app_id))
+
+        if self.nulecule_base.update or not os.path.exists(self.nulecule_base.getMainfilePath()):
+            if self._fromImage():
+                self._populateApp()
+            else:
+                logger.info("Copying content of directory %s to %s", self.nulecule_base.app_path, self.nulecule_base.target_path)
+                self._populateApp(src=self.nulecule_base.app_path)
+
+        mainfile_path = os.path.join(self.nulecule_base.target_path, MAIN_FILE)
         if not self.nulecule_base.mainfile_data:
             self.nulecule_base.loadMainfile(mainfile_path)
+
+        logger.debug("App ID: %s", self.nulecule_base.app_id)
 
         self.nulecule_base.checkSpecVersion()
         self.nulecule_base.checkAllArtifacts()
