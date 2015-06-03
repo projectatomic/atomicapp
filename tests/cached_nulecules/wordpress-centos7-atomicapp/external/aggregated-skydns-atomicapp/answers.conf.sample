@@ -1,0 +1,6 @@
+[skydns]
+dns_server = 10.254.0.10
+dns_domain = kube.local
+[general]
+namespace = default
+provider = kubernetes

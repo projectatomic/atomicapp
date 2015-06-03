@@ -1,0 +1,215 @@
+2015-06-01 17:55:03,429 - atomicapp.utils - DEBUG - Using working directory ./.workdir
+2015-06-01 17:55:03,430 - atomicapp.plugin - DEBUG - Loading providers from /root/src/atomicapp/atomicapp/providers
+2015-06-01 17:55:03,434 - atomicapp.nulecule_base - DEBUG - Setting app id to wordpress-atomicapp
+2015-06-01 17:55:03,434 - atomicapp.nulecule_base - DEBUG - Version check successful: specversion == 0.0.2
+2015-06-01 17:55:03,434 - atomicapp.nulecule_base - DEBUG - No artifacts for aggregated-mysql-atomicapp
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - INFO - Artifacts for aggregated-mysql-atomicapp present for these providers: 
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - DEBUG - No artifacts for aggregated-skydns-atomicapp
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - INFO - Artifacts for aggregated-skydns-atomicapp present for these providers: 
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - DEBUG - Provider: kubernetes
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/wordpress-pod.yaml: OK
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/wordpress-service.yaml: OK
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - INFO - Artifacts for wordpress present for these providers: kubernetes
+2015-06-01 17:55:03,435 - atomicapp.utils - DEBUG - {u'source': u'docker://projectatomic/mysql-centos7-atomicapp', u'name': u'aggregated-mysql-atomicapp'}
+2015-06-01 17:55:03,435 - atomicapp.run - WARNING - Setting image to projectatomic/mysql-centos7-atomicapp
+2015-06-01 17:55:03,435 - atomicapp.install - INFO - App name is projectatomic/mysql-centos7-atomicapp, will be populated to ./external/aggregated-mysql-atomicapp
+2015-06-01 17:55:03,435 - atomicapp.nulecule_base - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:03,456 - atomicapp.nulecule_base - DEBUG - Output of docker images cmd: 
+Trying to pull repository docker.io/projectatomic/mysql-centos7-atomicapp ...
+d1061c6c82df: Pulling image (latest) from docker.io/projectatomic/mysql-centos7-atomicapp
+d1061c6c82df: Pulling image (latest) from docker.io/projectatomic/mysql-centos7-atomicapp, endpoint: https://registry-1.docker.io/v1/
+d1061c6c82df: Pulling dependent layers
+6941bfcbbfca: Download complete
+41459f052977: Download complete
+fd44297e2ddb: Download complete
+d6c4e4bfd4d0: Download complete
+997921258f94: Download complete
+b53519b52dd4: Download complete
+7244a82a39e9: Download complete
+0086cfa9fed4: Download complete
+8cf7e524f78c: Download complete
+5dbb1069e495: Download complete
+21176f6e9c49: Download complete
+0585ac974aee: Download complete
+7ddffd0fd07d: Download complete
+cec4eb10c857: Download complete
+4d4301d768e6: Download complete
+1103bf9b70a2: Download complete
+b500e9ff3d4f: Download complete
+390bb5cb9c81: Download complete
+a9b1cb60e8ab: Download complete
+432c3bd2a29c: Download complete
+7823c4d7f5dd: Download complete
+d1061c6c82df: Download complete
+d1061c6c82df: Download complete
+Status: Image is up to date for docker.io/projectatomic/mysql-centos7-atomicapp:latest
+2015-06-01 17:55:11,754 - atomicapp.nulecule_base - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:11,754 - atomicapp.install - DEBUG - Creating a container with name mysql-centos7-atomicapp-IQNXhW
+284a3d0c7f2b3711f69c9ec91eb0dc9458df0b4bb50ade32f826f195a22cbef4
+2015-06-01 17:55:15,728 - atomicapp.utils - INFO - Using temporary directory /tmp/nulecule-OOPp3D
+2015-06-01 17:55:15,728 - atomicapp.install - DEBUG - ['docker', 'cp', u'mysql-centos7-atomicapp-IQNXhW:/application-entity', '/tmp/nulecule-OOPp3D']
+2015-06-01 17:55:16,876 - atomicapp.install - DEBUG - Application entity data copied to /tmp/nulecule-OOPp3D
+mysql-centos7-atomicapp-IQNXhW
+2015-06-01 17:55:19,657 - atomicapp.install - DEBUG - Nulecule path for pulled image: /tmp/nulecule-OOPp3D/application-entity/Nulecule
+2015-06-01 17:55:19,661 - atomicapp.nulecule_base - DEBUG - Setting app id to mysql-atomicapp
+2015-06-01 17:55:19,662 - atomicapp.install - DEBUG - App ID: mysql-atomicapp
+2015-06-01 17:55:19,662 - atomicapp.install - INFO - Copying app mysql-centos7-atomicapp
+2015-06-01 17:55:19,664 - atomicapp.nulecule_base - DEBUG - Version check successful: specversion == 0.0.2
+2015-06-01 17:55:19,664 - atomicapp.nulecule_base - DEBUG - Provider: kubernetes
+2015-06-01 17:55:19,664 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/mysql-pod.yaml: OK
+2015-06-01 17:55:19,664 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/mysql-service.yaml: OK
+2015-06-01 17:55:19,664 - atomicapp.nulecule_base - INFO - Artifacts for mysql-atomicapp present for these providers: kubernetes
+2015-06-01 17:55:19,665 - atomicapp.install - INFO - Installing dependencies for mysql-atomicapp
+2015-06-01 17:55:19,665 - atomicapp.utils - DEBUG - {u'artifacts': {u'kubernetes': [u'file://artifacts/kubernetes/mysql-pod.yaml', u'file://artifacts/kubernetes/mysql-service.yaml']}, u'name': u'mysql-atomicapp'}
+2015-06-01 17:55:19,665 - atomicapp.install - DEBUG - Component mysql-atomicapp is part of the app
+2015-06-01 17:55:19,665 - atomicapp.install - DEBUG - Values: {u'mysql-atomicapp': {}}
+2015-06-01 17:55:19,665 - atomicapp.install - DEBUG - {u'mysql-atomicapp': {}}
+2015-06-01 17:55:19,665 - atomicapp.nulecule_base - DEBUG - Data given {u'mysql-atomicapp': {}}
+2015-06-01 17:55:19,665 - atomicapp.install - DEBUG - {'general': {'namespace': 'default', 'provider': 'kubernetes'}}
+2015-06-01 17:55:19,665 - atomicapp.nulecule_base - INFO - Writing answers file template to ./external/aggregated-mysql-atomicapp/answers.conf.sample
+2015-06-01 17:55:19,666 - atomicapp.plugin - DEBUG - Loading providers from /root/src/atomicapp/atomicapp/providers
+2015-06-01 17:55:19,668 - atomicapp.nulecule_base - DEBUG - Setting app id to mysql-atomicapp
+2015-06-01 17:55:19,668 - atomicapp.nulecule_base - DEBUG - Version check successful: specversion == 0.0.2
+2015-06-01 17:55:19,668 - atomicapp.nulecule_base - DEBUG - Provider: kubernetes
+2015-06-01 17:55:19,668 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/mysql-pod.yaml: OK
+2015-06-01 17:55:19,668 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/mysql-service.yaml: OK
+2015-06-01 17:55:19,668 - atomicapp.nulecule_base - INFO - Artifacts for mysql-atomicapp present for these providers: kubernetes
+2015-06-01 17:55:19,669 - atomicapp.utils - DEBUG - {u'artifacts': {u'kubernetes': [u'file://artifacts/kubernetes/mysql-pod.yaml', u'file://artifacts/kubernetes/mysql-service.yaml']}, u'name': u'mysql-atomicapp'}
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - Processing component mysql-atomicapp
+2015-06-01 17:55:19,670 - atomicapp.plugin - DEBUG - Found provider <class 'kubernetes.KubernetesProvider'>
+2015-06-01 17:55:19,670 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:19,670 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:19,670 - atomicapp.run - INFO - Using provider kubernetes for component mysql-atomicapp
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - Templating artifact ./external/aggregated-mysql-atomicapp/artifacts/kubernetes/mysql-pod.yaml
+2015-06-01 17:55:19,670 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:19,670 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - Config: {'namespace': 'default', 'provider': 'kubernetes'} 
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:19,670 - atomicapp.plugin - DEBUG - Writing artifact to ./.workdir/mysql-atomicapp/artifacts/kubernetes/mysql-pod.yaml
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - Templating artifact ./external/aggregated-mysql-atomicapp/artifacts/kubernetes/mysql-service.yaml
+2015-06-01 17:55:19,670 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:19,670 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - Config: {'namespace': 'default', 'provider': 'kubernetes'} 
+2015-06-01 17:55:19,670 - atomicapp.run - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:19,670 - atomicapp.plugin - DEBUG - Writing artifact to ./.workdir/mysql-atomicapp/artifacts/kubernetes/mysql-service.yaml
+2015-06-01 17:55:19,671 - kubernetes - DEBUG - Given config: {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:19,671 - kubernetes - INFO - Using namespace default
+2015-06-01 17:55:19,671 - kubernetes - INFO - Deploying to Kubernetes
+2015-06-01 17:55:19,671 - kubernetes - DEBUG - ./.workdir/mysql-atomicapp/artifacts/kubernetes/mysql-pod.yaml
+2015-06-01 17:55:19,673 - kubernetes - DEBUG - ./.workdir/mysql-atomicapp/artifacts/kubernetes/mysql-service.yaml
+2015-06-01 17:55:19,675 - kubernetes - INFO - DRY-RUN: /usr/bin/kubectl create -f ./.workdir/mysql-atomicapp/artifacts/kubernetes/mysql-service.yaml --namespace=default
+2015-06-01 17:55:19,675 - kubernetes - INFO - DRY-RUN: /usr/bin/kubectl create -f ./.workdir/mysql-atomicapp/artifacts/kubernetes/mysql-pod.yaml --namespace=default
+2015-06-01 17:55:19,675 - atomicapp.utils - DEBUG - {u'source': u'docker://projectatomic/skydns-atomicapp', u'name': u'aggregated-skydns-atomicapp'}
+2015-06-01 17:55:19,675 - atomicapp.run - WARNING - Setting image to projectatomic/skydns-atomicapp
+2015-06-01 17:55:19,675 - atomicapp.install - INFO - App name is projectatomic/skydns-atomicapp, will be populated to ./external/aggregated-skydns-atomicapp
+2015-06-01 17:55:19,675 - atomicapp.nulecule_base - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:19,693 - atomicapp.nulecule_base - DEBUG - Output of docker images cmd: 
+Trying to pull repository docker.io/projectatomic/skydns-atomicapp ...
+4174891b5c83: Pulling image (latest) from docker.io/projectatomic/skydns-atomicapp
+4174891b5c83: Pulling image (latest) from docker.io/projectatomic/skydns-atomicapp, endpoint: https://registry-1.docker.io/v1/
+4174891b5c83: Pulling dependent layers
+6941bfcbbfca: Download complete
+41459f052977: Download complete
+fd44297e2ddb: Download complete
+d6c4e4bfd4d0: Download complete
+997921258f94: Download complete
+b53519b52dd4: Download complete
+7244a82a39e9: Download complete
+0086cfa9fed4: Download complete
+8cf7e524f78c: Download complete
+5dbb1069e495: Download complete
+21176f6e9c49: Download complete
+0585ac974aee: Download complete
+7ddffd0fd07d: Download complete
+cec4eb10c857: Download complete
+4d4301d768e6: Download complete
+1103bf9b70a2: Download complete
+b500e9ff3d4f: Download complete
+9e93adcb96c2: Download complete
+e6396b0b694c: Download complete
+41be5473655a: Download complete
+8810723baa3c: Download complete
+4174891b5c83: Download complete
+4174891b5c83: Download complete
+Status: Image is up to date for docker.io/projectatomic/skydns-atomicapp:latest
+2015-06-01 17:55:21,093 - atomicapp.nulecule_base - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:21,094 - atomicapp.install - DEBUG - Creating a container with name skydns-atomicapp-FygeYO
+1c16cc38e0c10ea987bb01571f0e4a3ed1dd7b252d67cf357851a85fc6635d16
+2015-06-01 17:55:25,667 - atomicapp.utils - INFO - Using temporary directory /tmp/nulecule-I2iLNZ
+2015-06-01 17:55:25,667 - atomicapp.install - DEBUG - ['docker', 'cp', u'skydns-atomicapp-FygeYO:/application-entity', '/tmp/nulecule-I2iLNZ']
+2015-06-01 17:55:27,229 - atomicapp.install - DEBUG - Application entity data copied to /tmp/nulecule-I2iLNZ
+skydns-atomicapp-FygeYO
+2015-06-01 17:55:31,199 - atomicapp.install - DEBUG - Nulecule path for pulled image: /tmp/nulecule-I2iLNZ/application-entity/Nulecule
+2015-06-01 17:55:31,206 - atomicapp.nulecule_base - DEBUG - Setting app id to skydns-atomicapp
+2015-06-01 17:55:31,206 - atomicapp.install - DEBUG - App ID: skydns-atomicapp
+2015-06-01 17:55:31,206 - atomicapp.install - INFO - Copying app skydns-atomicapp
+2015-06-01 17:55:31,208 - atomicapp.nulecule_base - DEBUG - Version check successful: specversion == 0.0.2
+2015-06-01 17:55:31,208 - atomicapp.nulecule_base - DEBUG - Provider: kubernetes
+2015-06-01 17:55:31,208 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/skydns-replicationcontroller.yaml: OK
+2015-06-01 17:55:31,208 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/skydns-service.yaml: OK
+2015-06-01 17:55:31,208 - atomicapp.nulecule_base - INFO - Artifacts for skydns present for these providers: kubernetes
+2015-06-01 17:55:31,208 - atomicapp.install - INFO - Installing dependencies for skydns-atomicapp
+2015-06-01 17:55:31,208 - atomicapp.utils - DEBUG - {u'artifacts': {u'kubernetes': [u'file://artifacts/kubernetes/skydns-replicationcontroller.yaml', u'file://artifacts/kubernetes/skydns-service.yaml']}, u'params': [{u'default': u'kube.local', u'name': u'dns_domain', u'description': u'Internal DNS domain name. This domain must not be used in your network. Services will be discoverable under <service-name>.<namespace>.<domainname>, e.g. myservice.default.kube.local\n'}, {u'default': u'10.254.0.10', u'name': u'dns_server', u'description': u'IP address of the DNS server. Kubernetes will create a pod with several containers, serving as the DNS server and expose it under this IP address. The IP address must be from the range specified as kube_service_addresses above. And this is the IP address you should use as address of the DNS server in your containers.\n'}], u'name': u'skydns'}
+2015-06-01 17:55:31,208 - atomicapp.install - DEBUG - Component skydns is part of the app
+2015-06-01 17:55:31,208 - atomicapp.install - DEBUG - Values: {u'skydns': {u'dns_server': u'10.254.0.10', u'dns_domain': u'kube.local'}}
+2015-06-01 17:55:31,208 - atomicapp.install - DEBUG - {u'skydns': {u'dns_server': u'10.254.0.10', u'dns_domain': u'kube.local'}}
+2015-06-01 17:55:31,208 - atomicapp.nulecule_base - DEBUG - Data given {u'skydns': {u'dns_server': u'10.254.0.10', u'dns_domain': u'kube.local'}}
+2015-06-01 17:55:31,209 - atomicapp.install - DEBUG - {u'skydns': {u'dns_server': u'10.254.0.10', u'dns_domain': u'kube.local'}, 'general': {'namespace': 'default', 'provider': 'kubernetes'}}
+2015-06-01 17:55:31,209 - atomicapp.nulecule_base - INFO - Writing answers file template to ./external/aggregated-skydns-atomicapp/answers.conf.sample
+2015-06-01 17:55:31,210 - atomicapp.plugin - DEBUG - Loading providers from /root/src/atomicapp/atomicapp/providers
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Setting app id to skydns-atomicapp
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Version check successful: specversion == 0.0.2
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Provider: kubernetes
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/skydns-replicationcontroller.yaml: OK
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Artifact file://artifacts/kubernetes/skydns-service.yaml: OK
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - INFO - Artifacts for skydns present for these providers: kubernetes
+2015-06-01 17:55:31,214 - atomicapp.utils - DEBUG - {u'artifacts': {u'kubernetes': [u'file://artifacts/kubernetes/skydns-replicationcontroller.yaml', u'file://artifacts/kubernetes/skydns-service.yaml']}, u'params': [{u'default': u'kube.local', u'name': u'dns_domain', u'description': u'Internal DNS domain name. This domain must not be used in your network. Services will be discoverable under <service-name>.<namespace>.<domainname>, e.g. myservice.default.kube.local\n'}, {u'default': u'10.254.0.10', u'name': u'dns_server', u'description': u'IP address of the DNS server. Kubernetes will create a pod with several containers, serving as the DNS server and expose it under this IP address. The IP address must be from the range specified as kube_service_addresses above. And this is the IP address you should use as address of the DNS server in your containers.\n'}], u'name': u'skydns'}
+2015-06-01 17:55:31,214 - atomicapp.run - DEBUG - Processing component skydns
+2015-06-01 17:55:31,214 - atomicapp.plugin - DEBUG - Found provider <class 'kubernetes.KubernetesProvider'>
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:31,214 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:31,215 - atomicapp.run - INFO - Using provider kubernetes for component skydns
+2015-06-01 17:55:31,215 - atomicapp.run - DEBUG - Templating artifact ./external/aggregated-skydns-atomicapp/artifacts/kubernetes/skydns-replicationcontroller.yaml
+2015-06-01 17:55:31,215 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:31,215 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:31,215 - atomicapp.run - DEBUG - Config: {u'dns_server': u'10.254.0.10', 'namespace': 'default', u'dns_domain': u'kube.local', 'provider': 'kubernetes'} 
+2015-06-01 17:55:31,215 - atomicapp.run - DEBUG - {u'dns_server': u'10.254.0.10', 'namespace': 'default', u'dns_domain': u'kube.local', 'provider': 'kubernetes'}
+2015-06-01 17:55:31,215 - atomicapp.plugin - DEBUG - Writing artifact to ./.workdir/skydns/artifacts/kubernetes/skydns-replicationcontroller.yaml
+2015-06-01 17:55:31,215 - atomicapp.run - DEBUG - Templating artifact ./external/aggregated-skydns-atomicapp/artifacts/kubernetes/skydns-service.yaml
+2015-06-01 17:55:31,215 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:31,215 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:31,215 - atomicapp.run - DEBUG - Config: {u'dns_server': u'10.254.0.10', 'namespace': 'default', u'dns_domain': u'kube.local', 'provider': 'kubernetes'} 
+2015-06-01 17:55:31,215 - atomicapp.run - DEBUG - {u'dns_server': u'10.254.0.10', 'namespace': 'default', u'dns_domain': u'kube.local', 'provider': 'kubernetes'}
+2015-06-01 17:55:31,215 - atomicapp.plugin - DEBUG - Writing artifact to ./.workdir/skydns/artifacts/kubernetes/skydns-service.yaml
+2015-06-01 17:55:31,215 - kubernetes - DEBUG - Given config: {u'dns_server': u'10.254.0.10', 'namespace': 'default', u'dns_domain': u'kube.local', 'provider': 'kubernetes'}
+2015-06-01 17:55:31,215 - kubernetes - INFO - Using namespace default
+2015-06-01 17:55:31,216 - kubernetes - INFO - Deploying to Kubernetes
+2015-06-01 17:55:31,216 - kubernetes - DEBUG - ./.workdir/skydns/artifacts/kubernetes/skydns-replicationcontroller.yaml
+2015-06-01 17:55:31,223 - kubernetes - DEBUG - ./.workdir/skydns/artifacts/kubernetes/skydns-service.yaml
+2015-06-01 17:55:31,226 - kubernetes - INFO - DRY-RUN: /usr/bin/kubectl create -f ./.workdir/skydns/artifacts/kubernetes/skydns-service.yaml --namespace=default
+2015-06-01 17:55:31,226 - kubernetes - INFO - DRY-RUN: /usr/bin/kubectl create -f ./.workdir/skydns/artifacts/kubernetes/skydns-replicationcontroller.yaml --namespace=default
+2015-06-01 17:55:31,226 - atomicapp.utils - DEBUG - {u'artifacts': {u'kubernetes': [u'file://artifacts/kubernetes/wordpress-pod.yaml', u'file://artifacts/kubernetes/wordpress-service.yaml']}, u'name': u'wordpress'}
+2015-06-01 17:55:31,226 - atomicapp.run - DEBUG - Processing component wordpress
+2015-06-01 17:55:31,226 - atomicapp.plugin - DEBUG - Found provider <class 'kubernetes.KubernetesProvider'>
+2015-06-01 17:55:31,226 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:31,226 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:31,226 - atomicapp.run - INFO - Using provider kubernetes for component wordpress
+2015-06-01 17:55:31,226 - atomicapp.run - DEBUG - Templating artifact .//artifacts/kubernetes/wordpress-pod.yaml
+2015-06-01 17:55:31,227 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:31,227 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:31,227 - atomicapp.run - DEBUG - Config: {'namespace': 'default', 'provider': 'kubernetes'} 
+2015-06-01 17:55:31,227 - atomicapp.run - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:31,227 - atomicapp.plugin - DEBUG - Writing artifact to ./.workdir/wordpress/artifacts/kubernetes/wordpress-pod.yaml
+2015-06-01 17:55:31,227 - atomicapp.run - DEBUG - Templating artifact .//artifacts/kubernetes/wordpress-service.yaml
+2015-06-01 17:55:31,227 - atomicapp.nulecule_base - DEBUG - Param namespace already in general with value default
+2015-06-01 17:55:31,227 - atomicapp.nulecule_base - DEBUG - Param provider already in general with value kubernetes
+2015-06-01 17:55:31,227 - atomicapp.run - DEBUG - Config: {'namespace': 'default', 'provider': 'kubernetes'} 
+2015-06-01 17:55:31,227 - atomicapp.run - DEBUG - {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:31,227 - atomicapp.plugin - DEBUG - Writing artifact to ./.workdir/wordpress/artifacts/kubernetes/wordpress-service.yaml
+2015-06-01 17:55:31,227 - kubernetes - DEBUG - Given config: {'namespace': 'default', 'provider': 'kubernetes'}
+2015-06-01 17:55:31,227 - kubernetes - INFO - Using namespace default
+2015-06-01 17:55:31,227 - kubernetes - INFO - Deploying to Kubernetes
+2015-06-01 17:55:31,227 - kubernetes - DEBUG - ./.workdir/wordpress/artifacts/kubernetes/wordpress-pod.yaml
+2015-06-01 17:55:31,230 - kubernetes - DEBUG - ./.workdir/wordpress/artifacts/kubernetes/wordpress-service.yaml
+2015-06-01 17:55:31,232 - kubernetes - INFO - DRY-RUN: /usr/bin/kubectl create -f ./.workdir/wordpress/artifacts/kubernetes/wordpress-service.yaml --namespace=default
+2015-06-01 17:55:31,232 - kubernetes - INFO - DRY-RUN: /usr/bin/kubectl create -f ./.workdir/wordpress/artifacts/kubernetes/wordpress-pod.yaml --namespace=default
