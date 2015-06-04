@@ -17,6 +17,7 @@ class Install(object):
     dryrun = False
     params = None
     answers_file = None
+    docker_cli = "docker"
 
     def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, **kwargs):
         self.dryrun = dryrun
@@ -24,7 +25,7 @@ class Install(object):
 
         app = APP #FIXME
 
-        self.nulecule_base = Nulecule_Base(nodeps, update, target_path)
+        self.nulecule_base = Nulecule_Base(nodeps, update, target_path, dryrun)
 
         if os.path.exists(app):
             logger.info("App path is %s, will be populated to %s", app, target_path)
@@ -43,6 +44,7 @@ class Install(object):
         self.nulecule_base.app = app
 
         self.answers_file = answers
+        self.docker_cli = Utils.getDockerCli(self.dryrun)
 
     def _loadApp(self, app_path):
         self.nulecule_base.app_path = app_path
@@ -62,14 +64,14 @@ class Install(object):
         name = "%s-%s" % (self.utils.getComponentName(image), ''.join(random.sample(string.letters, 6)))
         logger.debug("Creating a container with name %s", name)
 
-        create = ["docker", "create", "--name", name, image, "nop"]
+        create = [self.docker_cli, "create", "--name", name, image, "nop"]
         subprocess.call(create)
-        cp = ["docker", "cp", "%s:/%s" % (name, APP_ENT_PATH), self.utils.tmpdir]
+        cp = [self.docker_cli, "cp", "%s:/%s" % (name, APP_ENT_PATH), self.utils.tmpdir]
         logger.debug(cp)
         if not subprocess.call(cp):
             logger.debug("Application entity data copied to %s", self.utils.tmpdir)
 
-        rm = ["docker", "rm", name]
+        rm = [self.docker_cli, "rm", name]
         subprocess.call(rm)
 
     def _populateApp(self, src = None, dst = None):
