@@ -3,6 +3,8 @@ import os
 import tempfile
 import re
 import collections
+import anymarkup
+from distutils.spawn import find_executable
 
 import logging
 
@@ -144,4 +146,23 @@ class Utils(object):
             else:
                 old_dict[key] = new_dict[key]
         return old_dict
+
+    @staticmethod
+    def getAppId(path):
+        if not os.path.isfile(path):
+            return None
+
+        data = anymarkup.parse_file(path)
+        return data.get("id")
+
+    @staticmethod
+    def getDockerCli(dryrun = False):
+        cli = find_executable("docker")
+        if not cli:
+            if dryrun:
+                logger.error("Could not find docker client")
+            else:
+                raise Exception("Could not find docker client")
+
+        return cli
 

@@ -63,7 +63,7 @@ class Run(object):
             install = Install(answers, APP, dryrun = dryrun, target_path = self.app_path)
             install.install()
 
-        self.nulecule_base = Nulecule_Base(target_path=self.app_path)
+        self.nulecule_base = Nulecule_Base(target_path=self.app_path, dryrun = dryrun)
         if "ask" in kwargs:
             self.nulecule_base.ask = kwargs["ask"]
 

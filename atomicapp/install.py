@@ -17,6 +17,7 @@ class Install(object):
     dryrun = False
     params = None
     answers_file = None
+    docker_cli = "docker"
 
     def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, **kwargs):
         self.dryrun = dryrun
@@ -24,7 +25,7 @@ class Install(object):
 
         app = APP #FIXME
 
-        self.nulecule_base = Nulecule_Base(nodeps, update, target_path)
+        self.nulecule_base = Nulecule_Base(nodeps, update, target_path, dryrun)
 
         if os.path.exists(app):
             logger.info("App path is %s, will be populated to %s", app, target_path)
@@ -43,6 +44,7 @@ class Install(object):
         self.nulecule_base.app = app
 
         self.answers_file = answers
+        self.docker_cli = Utils.getDockerCli(self.dryrun)
 
     def _loadApp(self, app_path):
         self.nulecule_base.app_path = app_path
@@ -62,14 +64,14 @@ class Install(object):
         name = "%s-%s" % (self.utils.getComponentName(image), ''.join(random.sample(string.letters, 6)))
         logger.debug("Creating a container with name %s", name)
 
-        create = ["docker", "create", "--name", name, image, "nop"]
+        create = [self.docker_cli, "create", "--name", name, image, "nop"]
         subprocess.call(create)
-        cp = ["docker", "cp", "%s:/%s" % (name, APP_ENT_PATH), self.utils.tmpdir]
+        cp = [self.docker_cli, "cp", "%s:/%s" % (name, APP_ENT_PATH), self.utils.tmpdir]
         logger.debug(cp)
         if not subprocess.call(cp):
             logger.debug("Application entity data copied to %s", self.utils.tmpdir)
 
-        rm = ["docker", "rm", name]
+        rm = [self.docker_cli, "rm", name]
         subprocess.call(rm)
 
     def _populateApp(self, src = None, dst = None):
@@ -81,29 +83,45 @@ class Install(object):
             dst = self.nulecule_base.target_path
         distutils.dir_util.copy_tree(src, dst, update=(not self.nulecule_base.update))
 
+    def _fromImage(self):
+        return not self.nulecule_base.app_path or self.nulecule_base.target_path == self.nulecule_base.app_path
+
     def install(self):
         self.nulecule_base.loadAnswers(self.answers_file)
 
-        if self.nulecule_base.app_path and not self.nulecule_base.target_path == self.nulecule_base.app_path:
-            logger.info("Copying content of directory %s to %s", self.nulecule_base.app_path, self.nulecule_base.target_path)
-            self._populateApp(src=self.nulecule_base.app_path)
+        mainfile_dir = self.nulecule_base.app_path
+        if not self.dryrun:
+            if self._fromImage():
+                self.nulecule_base.pullApp()
+                self._copyFromContainer(self.nulecule_base.app)
+                mainfile_dir = self.utils.getTmpAppDir()
+
+            current_app_id = None
+            if os.path.isfile(self.nulecule_base.getMainfilePath()):
+                current_app_id = Utils.getAppId(self.nulecule_base.getMainfilePath())
+
+            if current_app_id:
+                tmp_mainfile_path = os.path.join(mainfile_dir, MAIN_FILE)
+                self.nulecule_base.loadMainfile(tmp_mainfile_path)
+                logger.debug("%s path for pulled image: %s", MAIN_FILE, tmp_mainfile_path)
+                if current_app_id != self.nulecule_base.app_id:
+                    raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." 
+                                                % (current_app_id, self.nulecule_base.app_id))
+        elif self._fromImage():
+            logger.warning("Using DRY-RUN together with install from image may result in unexpected behaviour")
+
+        if self.nulecule_base.update or (not self.dryrun and not os.path.exists(self.nulecule_base.getMainfilePath())):
+            if self._fromImage():
+                self._populateApp()
+            else:
+                logger.info("Copying content of directory %s to %s", self.nulecule_base.app_path, self.nulecule_base.target_path)
+                self._populateApp(src=self.nulecule_base.app_path)
 
         mainfile_path = os.path.join(self.nulecule_base.target_path, MAIN_FILE)
-
-        if not self.nulecule_base.app_path and (self.nulecule_base.update or not os.path.exists(mainfile_path)):
-            self.nulecule_base.pullApp()
-            self._copyFromContainer(self.nulecule_base.app)
-            mainfile_path = os.path.join(self.utils.getTmpAppDir(), MAIN_FILE)
-            logger.debug("%s path for pulled image: %s", MAIN_FILE, mainfile_path)
-            self.nulecule_base.loadMainfile(mainfile_path)
-            logger.debug("App ID: %s", self.nulecule_base.app_id)
-
-            self._populateApp()
-        else:
-            logger.info("Component data exist in %s, skipping population...", self.nulecule_base.target_path)
-
         if not self.nulecule_base.mainfile_data:
             self.nulecule_base.loadMainfile(mainfile_path)
+
+        logger.debug("App ID: %s", self.nulecule_base.app_id)
 
         self.nulecule_base.checkSpecVersion()
         self.nulecule_base.checkAllArtifacts()

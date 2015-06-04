@@ -22,6 +22,7 @@ class Nulecule_Base(object):
     __app = None
     ask = False
     write_sample_answers = False
+    docker_cli = None
 
     @property
     def app(self):
@@ -53,11 +54,13 @@ class Nulecule_Base(object):
 
         self.__target_path = path
 
-    def __init__(self, nodeps=False, update=False, target_path=None):
+    def __init__(self, nodeps=False, update=False, target_path=None, dryrun = False):
         self.target_path = target_path
         self.nodeps = Utils.isTrue(nodeps)
         self.update = Utils.isTrue(update)
         self.override = Utils.isTrue(False)
+        self.dryrun = dryrun
+        self.docker_cli = Utils.getDockerCli(dryrun)
 
     def loadParams(self, data = None):
         if type(data) == dict:
@@ -330,4 +333,5 @@ class Nulecule_Base(object):
 
         return result
 
-
+    def getMainfilePath(self):
+        return os.path.join(self.target_path, MAIN_FILE)
