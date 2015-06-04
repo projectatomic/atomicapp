@@ -88,23 +88,27 @@ class Install(object):
         self.nulecule_base.loadAnswers(self.answers_file)
 
         mainfile_dir = self.nulecule_base.app_path
-        if self._fromImage():
-            self.nulecule_base.pullApp()
-            self._copyFromContainer(self.nulecule_base.app)
-            mainfile_dir = self.utils.getTmpAppDir()
+        if not self.dryrun:
+            if self._fromImage():
+                self.nulecule_base.pullApp()
+                self._copyFromContainer(self.nulecule_base.app)
+                mainfile_dir = self.utils.getTmpAppDir()
 
-        current_app_id = None
-        if os.path.isfile(self.nulecule_base.getMainfilePath()):
-            current_app_id = Utils.getAppId(self.nulecule_base.getMainfilePath())
+            current_app_id = None
+            if os.path.isfile(self.nulecule_base.getMainfilePath()):
+                current_app_id = Utils.getAppId(self.nulecule_base.getMainfilePath())
 
-        tmp_mainfile_path = os.path.join(mainfile_dir, MAIN_FILE)
-        self.nulecule_base.loadMainfile(tmp_mainfile_path)
-        logger.debug("%s path for pulled image: %s", MAIN_FILE, tmp_mainfile_path)
-        if current_app_id and current_app_id != self.nulecule_base.app_id:
-            raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." 
-                                        % (current_app_id, self.nulecule_base.app_id))
+            if current_app_id:
+                tmp_mainfile_path = os.path.join(mainfile_dir, MAIN_FILE)
+                self.nulecule_base.loadMainfile(tmp_mainfile_path)
+                logger.debug("%s path for pulled image: %s", MAIN_FILE, tmp_mainfile_path)
+                if current_app_id != self.nulecule_base.app_id:
+                    raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." 
+                                                % (current_app_id, self.nulecule_base.app_id))
+        elif self._fromImage():
+            logger.warning("Using DRY-RUN together with install from image may result in unexpected behaviour")
 
-        if self.nulecule_base.update or not os.path.exists(self.nulecule_base.getMainfilePath()):
+        if self.nulecule_base.update or (not self.dryrun and not os.path.exists(self.nulecule_base.getMainfilePath())):
             if self._fromImage():
                 self._populateApp()
             else:
