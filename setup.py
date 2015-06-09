@@ -19,7 +19,7 @@ def _install_requirements():
     return requirements
 
 setup(name='atomicapp',
-      version='0.1',
+      version='0.1.6',
       description='A tool to install and run Nulecule apps',
       author='Vaclav Pavlin',
       author_email='vpavlin@redhat.com',

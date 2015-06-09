@@ -21,18 +21,20 @@ class KubernetesProvider(Provider):
 
         logger.info("Using namespace %s", self.namespace)
         if self.container:
-            self.kubectl = self._findKubectl()
+            self.kubectl = self._findKubectl("/host")
             if not os.path.exists("/etc/kubernetes"):
                 if self.dryrun:
                     logger.info("DRY-RUN: link /etc/kubernetes from /host/etc/kubernetes")
                 else:
                     os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
+        else:
+            self.kubectl = self._findKubectl()
 
         if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
                 raise ProviderFailedException("Command: "+self.kubectl+" not found")
 
-    def _findKubectl(self):
+    def _findKubectl(self, prefix=""):
         """
         Determine the path to the kubectl program on the host.
         1) Check the config for a provider_cli in the general section
@@ -44,11 +46,15 @@ class KubernetesProvider(Provider):
 
         test_paths = ['/usr/bin/kubectl', '/usr/local/bin/kubectl']
         if self.config.get("provider_cli"):
-            test_dirs.insert(0, self.config.get("provider_cli")
+            logger.info("caller gave provider_cli: " + self.config.get("provider_cli"))
+            test_paths.insert(0, self.config.get("provider_cli"))
 
         for path in test_paths:
-            kubectl = "/host" + path
+            test_path = prefix + path
+            logger.info("trying kubectl at " + test_path)
+            kubectl = test_path
             if os.access(kubectl, os.X_OK):
+                logger.info("found kubectl at " + test_path)
                 return kubectl
 
         raise "No kubectl found in %s" % ":".join(test_paths)
