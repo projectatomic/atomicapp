@@ -44,6 +44,10 @@ class KubernetesProvider(Provider):
         Use the first valid value found
         """
 
+        if self.dryrun:
+            # Testing env does not have kubectl in it
+            return "/usr/bin/kubectl"
+        
         test_paths = ['/usr/bin/kubectl', '/usr/local/bin/kubectl']
         if self.config.get("provider_cli"):
             logger.info("caller gave provider_cli: " + self.config.get("provider_cli"))
@@ -57,7 +61,7 @@ class KubernetesProvider(Provider):
                 logger.info("found kubectl at " + test_path)
                 return kubectl
 
-        raise "No kubectl found in %s" % ":".join(test_paths)
+        raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths)
 
                              
     def _callK8s(self, path):
