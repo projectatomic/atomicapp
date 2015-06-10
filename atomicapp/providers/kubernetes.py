@@ -61,7 +61,7 @@ class KubernetesProvider(Provider):
                 logger.info("found kubectl at " + test_path)
                 return kubectl
 
-        raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths)
+        raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths))
 
                              
     def _callK8s(self, path):
