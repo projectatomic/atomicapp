@@ -9,12 +9,12 @@ logger = logging.getLogger(__name__)
 
 class KubernetesProvider(Provider):
     key = "kubernetes"
-    namespace = "default"
-
-    kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
-    kubectl = "/usr/bin/kubectl"
 
     def init(self):
+        self.namespace = "default"
+
+        self.kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
+
         logger.debug("Given config: %s", self.config)
         if self.config.get("namespace"):
             self.namespace = self.config.get("namespace");
