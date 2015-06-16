@@ -65,7 +65,7 @@ Providers represent various deployment targets. They can be added by placing a f
 
 ## Dependencies
 
-As of Version 0.0.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup).
+As of Version 0.1.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup).
 
 ##Communication channels
 
