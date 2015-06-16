@@ -1,14 +1,12 @@
 __ATOMICAPPVERSION__ = '0.1.1'
 __NULECULESPECVERSION__ = '0.0.2'
 
-GRAPH_DIR="graph"
 EXTERNAL_APP_DIR="external"
 GLOBAL_CONF="general"
 APP_ENT_PATH="application-entity"
 
 PARAMS_KEY="params"
 MAIN_FILE="Nulecule"
-PARAMS_FILE="params.conf"
 ANSWERS_FILE="answers.conf"
 ANSWERS_FILE_SAMPLE="answers.conf.sample"
 WORKDIR=".workdir"
