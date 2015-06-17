@@ -7,11 +7,11 @@ Atomicapp is a reference implementation of the [Nulecule Specification](https://
 Atomicapp is packaged as a container. End-users typically do not install the software from source. Instead use the atomicapp container as the `FROM` line in a Dockerfile and package your application on top. For example:
 
 ```
-FROM projectatomic/atomicapp
+FROM projectatomic/atomicapp:0.1.1
 
 MAINTAINER Your Name <you@example.com>
 
-ADD /nulecule /Dockerfile README.md /application-entity/
+ADD /Nulecule /Dockerfile README.md /application-entity/
 ADD /artifacts /application-entity/artifacts
 ```
 
