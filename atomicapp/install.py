@@ -2,13 +2,13 @@ from __future__ import print_function
 import os
 import distutils.dir_util
 import random, string
-
+import json
 import subprocess
 
 import logging
 
 from nulecule_base import Nulecule_Base
-from utils import Utils
+from utils import Utils, printStatus, printAnswerFile
 from constants import APP_ENT_PATH, MAIN_FILE
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,7 @@ class Install(object):
         else:
             logger.info("App name is %s, will be populated to %s", app, target_path)
 
+        printStatus("Loading app %s ." % app)
         if not target_path:
             if self.nulecule_base.app_path:
                 self.nulecule_base.target_path = self.nulecule_base.app_path
@@ -65,12 +66,14 @@ class Install(object):
         logger.debug("Creating a container with name %s", name)
 
         create = [self.docker_cli, "create", "--name", name, image, "nop"]
+        logger.debug(" ".join(create))
         subprocess.call(create)
         cp = [self.docker_cli, "cp", "%s:/%s" % (name, APP_ENT_PATH), self.utils.tmpdir]
         logger.debug(cp)
         if not subprocess.call(cp):
             logger.debug("Application entity data copied to %s", self.utils.tmpdir)
 
+        printStatus("Copied app successfully.")
         rm = [self.docker_cli, "rm", name]
         subprocess.call(rm)
 
@@ -87,7 +90,8 @@ class Install(object):
         return not self.nulecule_base.app_path or self.nulecule_base.target_path == self.nulecule_base.app_path
 
     def install(self):
-        self.nulecule_base.loadAnswers(self.answers_file)
+        answerContent = self.nulecule_base.loadAnswers(self.answers_file)
+        printAnswerFile(json.dumps(answerContent))
 
         mainfile_dir = self.nulecule_base.app_path
         if not self.dryrun:
@@ -99,6 +103,7 @@ class Install(object):
             current_app_id = None
             if os.path.isfile(self.nulecule_base.getMainfilePath()):
                 current_app_id = Utils.getAppId(self.nulecule_base.getMainfilePath())
+                printStatus("Loading app_id %s ." % current_app_id)
 
             if current_app_id:
                 tmp_mainfile_path = os.path.join(mainfile_dir, MAIN_FILE)
@@ -124,19 +129,24 @@ class Install(object):
         logger.debug("App ID: %s", self.nulecule_base.app_id)
 
         self.nulecule_base.checkSpecVersion()
+        printStatus("Checking all artifacts")
         self.nulecule_base.checkAllArtifacts()
 
+        printStatus("Loading Nulecule file.")
         values = {}
         if not self.nulecule_base.nodeps:
             logger.info("Installing dependencies for %s", self.nulecule_base.app_id)
             values = self._installDependencies()
+            printStatus("All dependencies installed successfully.")
 
         logger.debug(values)
-        self.nulecule_base.loadAnswers(values)
+        answerContent = self.nulecule_base.loadAnswers(values)
         logger.debug(self.nulecule_base.answers_data)
         if self.nulecule_base.write_sample_answers:
             self.nulecule_base.writeAnswersSample()
 
+        printAnswerFile(json.dumps(answerContent))
+        printStatus("Install Successful.")
         return values
 
     def _installDependencies(self):
@@ -159,12 +169,14 @@ class Install(object):
             mainfile_component_path = os.path.join(component_path, MAIN_FILE)
             logger.debug("Component path: %s", component_path)
             if not os.path.isfile(mainfile_component_path) or self.nulecule_base.update:
-                logger.info("Pulling %s", image_name)
+                printStatus("Pulling %s ..." % image_name)
                 component_app = Install(self.nulecule_base.answers_data, image_name, self.nulecule_base.nodeps, 
                                         self.nulecule_base.update, component_path, self.dryrun)
                 values = Utils.update(values, component_app.install())
-                logger.info("Component installed into %s", component_path)
+                printStatus("Component %s installed successfully."%component)
+                logger.debug("Component installed into %s", component_path)
             else:
+                printStatus("Component %s already installed."%component)
                 logger.info("Component %s already exists at %s - remove the directory or use --update option", component, component_path)
 
         return values

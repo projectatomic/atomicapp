@@ -14,6 +14,21 @@ __all__ = ('Utils')
 
 logger = logging.getLogger(__name__)
 
+#Following Methods(printStatus, printErrorStatus, printAnswerFile) 
+#  are required for Cockpit or thirdparty management tool integration
+#  DONOT change the atomicapp.status.* prefix in the logger method.
+def printStatus(message):
+    logger.info("atomicapp.status.info.message="+str(message))
+
+
+def printErrorStatus(message):
+    logger.info("atomicapp.status.error.message="+str(message))
+
+
+def printAnswerFile(message):
+    logger.info("atomicapp.status.answer.message="+str(message))
+
+
 class Utils(object):
 
     __tmpdir = None
@@ -121,7 +136,11 @@ class Utils(object):
                 if len(value) == 0:
                     value = info["default"]
             else:
-                value = raw_input("%s (%s): " % (what, desc))
+                try:
+                    value = raw_input("%s (%s): " % (what, desc))
+                except EOFError:
+                    raise
+
             if constraints:
                 for constraint in constraints:
                     logger.info("Checking pattern: %s", constraint["allowed_pattern"])
