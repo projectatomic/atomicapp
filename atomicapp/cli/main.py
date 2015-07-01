@@ -2,7 +2,8 @@
 
 from atomicapp.run import Run
 from atomicapp.install import Install
-import os
+import os, sys
+
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
@@ -14,15 +15,15 @@ logger = logging.getLogger(__name__)
 
 def cli_install(args):
     install = Install(**vars(args))
-    install.install()
+    sys.exit(install.install() != None)
 
 def cli_run(args):
     ae = Run(**vars(args))
-    ae.run()
+    sys.exit(ae.run() != None)
 
 def cli_stop(args):
     stop = Run(stop = True, **vars(args))
-    stop.run()
+    sys.exit(stop.run() != None)
 
 class CLI():
     def __init__(self):
