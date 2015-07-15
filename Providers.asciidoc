@@ -1,0 +1,93 @@
+== Providers
+
+This chapter describes how to use and configure the providers included
+with Atomic App. It gives you a short overview of all available
+providers and how to use them.
+
+Not all Atomic Apps must support each provider: one Atomic App may
+only include deployment information for OpenShift3 while another does
+support OpenShift3 and Kubernetes.
+
+=== List of providers
+
+Atomic App 0.1.0 includes three providers: 
+
+* Docker, which is the most simple one
+* Kubernets
+* OpenShift 3
+
+All providers assume that you install and run the Atomic App on a host
+that is part of the backend cluster or runs docker directly. By now we
+do not support remote deployments.
+
+=== Choosing a provider
+
+While deploying an Atomic App you can choose one of the providers by
+setting it in `answers.conf`:
+
+```
+[general]
+provider: openshift
+```
+
+Providers may need additional configuration.
+
+=== Docker Provider
+
+==== features
+
+The Docker provider will simply start a docker container on the host
+the Atomic App is deployed.
+
+==== configuration values
+
+There are no configuration values for the Docker provider.
+
+
+=== Kubernetes Provider
+
+==== features
+
+The Kubernetes Provider supports namespaces, this will deploy an
+application into a given namespace. All components of the applications
+will be created in that namespace.
+
+==== configuration values
+
+.Kubernetes Provider configuration values
+[frame="topbot",grid="none",options="header",cols="3,1,10,5"]
+|====================================================
+|keyword |required |description |default value
+|namespace|no|a namespace to use with each kubectl call|default
+|====================================================
+
+
+=== OpenShift3 Provider
+
+==== features
+
+The OpenShift3 Provider will deploy and run an Atomic App on a
+OpenShift instance provided via a OpenShift configuration file.
+And OpenShift configuration file is written to disk after you have
+logged in, see
+http://lists.openshift.redhat.com/openshift-archives/users/2015-March/msg00014.html[osc
+login announcement]
+
+You need to provide a copy of `.config/openshift/.config` so that the
+provider may use this configuration to deploy and run the Atomic App.
+
+As of 0.1.0 of Atomic App, only
+http://docs.openshift.org/latest/dev_guide/templates.html[OpenShift templates] will be
+preprocessed by Atomic App during the run phase: parameters within a
+template file will be replaced by the
+https://github.com/projectatomic/nulecule/blob/master/spec/0.0.2/README.md#paramsObject[params]
+supplied to Atomic App, names need to match.
+
+==== configuration values
+
+.OpenShift3 Provider configuration values
+[frame="topbot",grid="none",options="header",cols="3,1,10,5"]
+|====================================================
+|keyword |required |description |default value 
+|openshiftconfig|yes|Path to OpenShift config file|none
+|====================================================

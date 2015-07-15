@@ -1,73 +1,75 @@
-#!/usr/bin/env python
-
 from __future__ import print_function
 import os
-import subprocess
 import tempfile
+import re
+import collections
+import anymarkup
+from distutils.spawn import find_executable
 
 import logging
 
-from constants import PARAMS_FILE, GRAPH_DIR, GLOBAL_CONF, APP_ENT_PATH, MAIN_FILE, EXTERNAL_APP_DIR
+from constants import APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR
+
+__all__ = ('Utils')
 
 logger = logging.getLogger(__name__)
 
 class Utils(object):
 
     __tmpdir = None
+    __workdir = None
+    target_path = None
+
+    @property
+    def workdir(self):
+        if not self.__workdir:
+            self.__workdir = os.path.join(self.target_path, WORKDIR)
+            logger.debug("Using working directory %s", self.__workdir)
+            if not os.path.isdir(self.__workdir):
+                os.mkdir(self.__workdir)
+
+        return self.__workdir
 
     @property
     def tmpdir(self):
         if not self.__tmpdir:
-            self.__tmpdir = tempfile.mkdtemp(prefix="appent-%s" % self.getComponentName(self.params.app)) #FIXME include the app name!
-            logger.info("Using temporary directory %s" % self.__tmpdir)
+            self.__tmpdir = tempfile.mkdtemp(prefix="nulecule-") 
+            logger.info("Using temporary directory %s", self.__tmpdir)
 
         return self.__tmpdir
 
-    def __init__(self, params):
-        self.params = params
+    def __init__(self, target_path, workdir = None):
+        self.target_path = target_path
+        if workdir:
+            self.__workdir = workdir
 
-    def loadApp(self, app_path):
-        self.params.app_path = app_path
-        if not os.path.basename(app_path) == MAIN_FILE:
-            app_path = os.path.join(app_path, MAIN_FILE)
-        mainfile_data = self.params.loadMainfile(app_path)
-        app = os.environ["IMAGE"] if "IMAGE" in os.environ else mainfile_data["id"]
-        logger.debug("Setting path to %s" % self.params.app_path)
+    @staticmethod        
+    def isTrue(val):
+        true_values = ('true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure')
+        return str(val).lower() in true_values
 
-        return app
-
-    def sanitizeName(self, app):
+    @staticmethod
+    def sanitizeName(app):
         return app.replace("/", "-")
 
     def getExternalAppDir(self, component):
-        return os.path.join(self.params.target_path, EXTERNAL_APP_DIR, self.getComponentName(component))
-
-    def getComponentDir(self, component):
-        return os.path.join(self.params.target_path, GRAPH_DIR, self.getComponentName(component))
-
-    def getProviderDir(self, component):
-        return os.path.join(self.params.target_path, GRAPH_DIR, component, self.params.provider)
-
-    def getComponentConf(self, component):
-        return os.path.join(self.getComponentDir(component), self.params.provider, PARAMS_FILE)
+        return os.path.join(self.target_path, EXTERNAL_APP_DIR, self.getComponentName(component))
 
     def getTmpAppDir(self):
         return os.path.join(self.tmpdir, APP_ENT_PATH)
 
-    def getGraphDir(self):
-        return os.path.join(self.params.target_path, GRAPH_DIR)
-
     @staticmethod
     def getComponentName(graph_item):
-        #logger.debug("Getting name for %s" % graph_item)
+        #logger.debug("Getting name for %s", graph_item)
         if type(graph_item) is str or type(graph_item) is unicode:
             return os.path.basename(graph_item).split(":")[0]
         elif type(graph_item) is dict:
             return graph_item["name"].split(":")[0]
         else:
             raise ValueError
-    
-    def getComponentImageName(self, graph_item):
+
+    @staticmethod
+    def getComponentImageName(graph_item):
         if type(graph_item) is str or type(graph_item) is unicode:
             return graph_item
         elif type(graph_item) is dict:
@@ -79,30 +81,8 @@ class Utils(object):
         else:
             return None
 
-    def getImageURI(self, image):
-        config = self.params.get()
-        logger.debug(config)
-        
-        if "registry" in config:
-            logger.info("Adding registry %s for %s" % (config["registry"], image))
-            image = os.path.join(config["registry"], image)
-        
-        return image
-
-    def pullApp(self, image):
-        image = self.getImageURI(image)
-        if not self.params.update:
-            check_cmd = ["docker", "images", "-q", image]
-            id = subprocess.check_output(check_cmd)
-            if len(id) != 0:
-                logger.debug("Image %s already present with id %s. Use --update to re-pull." % (image, id.strip()))
-                return
-
-        pull = ["docker", "pull", image]
-        if subprocess.call(pull) != 0:
-            raise Exception("Couldn't pull %s" % image)
-
-    def isExternal(self, graph_item):
+    @staticmethod
+    def isExternal(graph_item):
         logger.debug(graph_item)
         if "artifacts" in graph_item:
             return False
@@ -112,7 +92,8 @@ class Utils(object):
 
         return True
 
-    def getSourceImage(self, graph_item):
+    @staticmethod
+    def getSourceImage(graph_item):
         if not "source" in graph_item:
             return None
 
@@ -126,27 +107,62 @@ class Utils(object):
         if path.startswith("file://"):
             return path[7:]
 
-    def getArtifacts(self, component):
-        if component in self.params.mainfile_data["graph"]:
-            if "artifacts" in self.params.mainfile_data["graph"][component]:
-                return self.params.mainfile_data["graph"][component]["artifacts"]
+    @staticmethod 
+    def askFor(what, info):
+        repeat = True
+        desc = info["description"]
+        constraints = None
+        if "constraints" in info:
+            constraints = info["constraints"]
+        while repeat:
+            repeat = False
+            if "default" in info:
+                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
+                if len(value) == 0:
+                    value = info["default"]
+            else:
+                value = raw_input("%s (%s): " % (what, desc))
+            if constraints:
+                for constraint in constraints:
+                    logger.info("Checking pattern: %s", constraint["allowed_pattern"])
+                    if not re.match("^%s$" % constraint["allowed_pattern"], value):
+                        logger.error(constraint["description"])
+                        repeat = True
 
-        return None
+        return value
 
-    def checkArtifacts(self):
-        for component in self.params.mainfile_data["graph"].keys():
-            artifacts = self.getArtifacts(component)
-            if not artifacts:
-                logger.debug("No artifacts for %s" % component)
-                continue
+    @staticmethod
+    def update(old_dict, new_dict):
+        for key, val in new_dict.iteritems():
+            if isinstance(val, collections.Mapping):
+                tmp = Utils.update(old_dict.get(key, { }), val)
+                old_dict[key] = tmp
+            elif isinstance(val, list) and key in old_dict:
+                res = (old_dict[key] + val)
+                if isinstance(val[0], collections.Mapping):
+                    old_dict[key] = [dict(y) for y in set(tuple(x.items()) for x in res)]
+                else:
+                    old_dict[key] = list(set(res))
+            else:
+                old_dict[key] = new_dict[key]
+        return old_dict
 
-            for provider, artifact_list in artifacts.iteritems():
-                logger.debug("Provider: %s" % provider)
-                for artifact in artifact_list:
-                    path = os.path.join(self.params.target_path, self.sanitizePath(artifact))
-                    if os.path.isfile(path):
-                        logger.debug("Artifact %s: OK" % artifact)
-                    else:
-                        raise Exception("Missing artifact %s (%s)" % (artifact, path))
+    @staticmethod
+    def getAppId(path):
+        if not os.path.isfile(path):
+            return None
 
-            logger.info("Artifacts for %s present for these providers: %s" % (component, ", ".join(artifacts.keys())))
+        data = anymarkup.parse_file(path)
+        return data.get("id")
+
+    @staticmethod
+    def getDockerCli(dryrun = False):
+        cli = find_executable("docker")
+        if not cli:
+            if dryrun:
+                logger.error("Could not find docker client")
+            else:
+                raise Exception("Could not find docker client")
+
+        return cli
+

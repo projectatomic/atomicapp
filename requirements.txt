@@ -1,1 +1,1 @@
-anymarkup
+anymarkup>=0.4.1

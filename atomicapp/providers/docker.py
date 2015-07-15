@@ -1,4 +1,4 @@
-from atomicapp.plugin import Provider
+from atomicapp.plugin import Provider, ProviderFailedException
 import os, subprocess
 
 import logging
@@ -9,9 +9,12 @@ class DockerProvider(Provider):
     key = "docker"
 
     def init(self):
-        
+
         cmd_check = ["docker", "version"]
-        docker_version = subprocess.check_output(cmd_check).split("\n")
+        try:
+            docker_version = subprocess.check_output(cmd_check).split("\n")
+        except Exception as ex:
+            raise ProviderFailedException(ex)
 
         client = ""
         server = ""
@@ -22,7 +25,7 @@ class DockerProvider(Provider):
                 server = line.split(":")[1]
 
         if client > server:
-            raise Exception("Docker version in app image (%s) is higher than the one on host (%s). Pleas update your host." % (client, server))
+            raise ProviderFailedException("Docker version in app image (%s) is higher than the one on host (%s). Please update your host." % (client, server))
 
     def deploy(self):
         for artifact in self.artifacts:
@@ -34,6 +37,6 @@ class DockerProvider(Provider):
             cmd = label_run.split(" ")
 
             if self.dryrun:
-                logger.info("Pretending to run:\n\t %s" % " ".join(cmd))
+                logger.info("DRY-RUN: %s", " ".join(cmd))
             else:
-                subprocess.call(cmd)
+                subprocess.check_call(cmd)
