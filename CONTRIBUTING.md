@@ -24,7 +24,7 @@ Before you submit your pull request consider the following guidelines:
      git checkout -b bug/my-fix-branch master
      ```
 
-* Create your patch, **including appropriate test cases**.
+* Create your patch, **including appropriate test cases**. Do not forget to add a copyright notice to your files, pls read along the line 625 of gpl-3.txt
 * Commit your changes using a descriptive commit message.
 * Push your branch to GitHub:
 
