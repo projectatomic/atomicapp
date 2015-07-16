@@ -6,7 +6,7 @@ import subprocess
 
 from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE, __NULECULESPECVERSION__
 
-from utils import Utils
+from utils import Utils, printStatus, printErrorStatus
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +174,7 @@ class Nulecule_Base(object):
             if "default" in param:
                 value = param["default"]
             if not skip_asking and (self.ask or not value) and "description" in param: #FIXME
+                printErrorStatus("%s is missing in answers.conf ." % (name))
                 logger.debug("Ask for %s: %s", name, param["description"])
                 value = Utils.askFor(name, param)
             elif not skip_asking and not value:
@@ -212,7 +213,7 @@ class Nulecule_Base(object):
 
         self.answers_data[component][param] = value
 
-    
+
     def writeAnswers(self, path):
         anymarkup.serialize_file(self.answers_data, path, format='ini')
 
@@ -256,8 +257,9 @@ class Nulecule_Base(object):
                     continue
                 path = os.path.join(self.target_path, Utils.sanitizePath(artifact))
                 if os.path.isfile(path):
-                    logger.debug("Artifact %s: OK", artifact)
+                    printStatus("Artifact %s: OK." % (artifact))
                 else:
+                    printErrorStatus("Missing artifact %s." % (artifact))
                     raise Exception("Missing artifact %s (%s)" % (artifact, path))
             checked_providers.append(provider)
 
@@ -270,6 +272,7 @@ class Nulecule_Base(object):
                 raise ValueError("Component name missing in graph")
 
             checked_providers = self.checkArtifacts(component)
+            printStatus("All artifacts OK. ")
             logger.info("Artifacts for %s present for these providers: %s", component, ", ".join(checked_providers))
 
     def _checkInherit(self, component, inherit_list, checked_providers):
@@ -319,7 +322,9 @@ class Nulecule_Base(object):
                 return
 
         pull = ["docker", "pull", image]
+        printStatus("Pulling image %s ..." % image)
         if subprocess.call(pull) != 0:
+            printErrorStatus("Couldn't pull %s." % image)
             raise Exception("Couldn't pull %s" % image)
 
 
