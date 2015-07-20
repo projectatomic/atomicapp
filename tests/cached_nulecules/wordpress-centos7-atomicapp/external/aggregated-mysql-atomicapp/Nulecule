@@ -3,7 +3,7 @@ specversion: 0.0.2
 id: mysql-atomicapp
 
 metadata:
-  name: MySQL Atomicapp
+  name: MySQL Atomic App
   appversion: 1.0.0
   description: This is MySQL
 graph:
@@ -12,4 +12,3 @@ graph:
       kubernetes:
         - file://artifacts/kubernetes/mysql-pod.yaml
         - file://artifacts/kubernetes/mysql-service.yaml
-
