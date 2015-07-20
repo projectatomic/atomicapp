@@ -1,10 +1,10 @@
-# Atomicapp
+# Atomic App
 
-Atomicapp is a reference implementation of the [Nulecule Specification](https://github.com/projectatomic/nulecule). It can be used to bootstrap container applications and to install and run them. Atomicapp is designed to be run in a container context. Examples using this tool may be found in the [Nulecule examples directory](https://github.com/projectatomic/nulecule/tree/master/examples).
+Atomic App is a reference implementation of the [Nulecule Specification](https://github.com/projectatomic/nulecule). It can be used to bootstrap container applications and to install and run them. Atomic App is designed to be run in a container context. Examples using this tool may be found in the [Nulecule examples directory](https://github.com/projectatomic/nulecule/tree/master/examples).
 
 ## Getting Started
 
-Atomicapp is packaged as a container. End-users typically do not install the software from source. Instead use the atomicapp container as the `FROM` line in a Dockerfile and package your application on top. For example:
+Atomic App is packaged as a container. End-users typically do not install the software from source. Instead use the atomicapp container as the `FROM` line in a Dockerfile and package your application on top. For example:
 
 ```
 FROM projectatomic/atomicapp:0.1.1
@@ -65,7 +65,7 @@ Providers represent various deployment targets. They can be added by placing a f
 
 ## Dependencies
 
-As of Version 0.1.1 Atomicapp uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup).
+As of Version 0.1.1 Atomic App uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup).
 
 ##Communication channels
 
