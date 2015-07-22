@@ -76,6 +76,7 @@ As of Version 0.1.1 Atomic App uses [Python 2.7.5](https://docs.python.org/2/) a
 
 [![Code Health](https://landscape.io/github/projectatomic/atomicapp/master/landscape.svg?style=flat)](https://landscape.io/github/projectatomic/atomicapp/master)
 [![Build Status](https://travis-ci.org/projectatomic/atomicapp.svg?branch=master)](https://travis-ci.org/projectatomic/atomicapp)
+[![Coverage Status](https://coveralls.io/repos/projectatomic/atomicapp/badge.svg?branch=master&service=github)](https://coveralls.io/github/projectatomic/atomicapp?branch=master)
 
 # Copyright
 
