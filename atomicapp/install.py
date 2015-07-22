@@ -147,7 +147,7 @@ class Install(object):
 
         printAnswerFile(json.dumps(answerContent))
         printStatus("Install Successful.")
-        return values
+        return None
 
     def _installDependencies(self):
         values = {}

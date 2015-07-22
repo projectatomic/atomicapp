@@ -217,6 +217,7 @@ class Nulecule_Base(object):
 
 
     def writeAnswers(self, path):
+        logger.debug("writing %s to %s with format %s", self.answers_data, path , self.answer_file_format)
         anymarkup.serialize_file(self.answers_data, path, format=self.answer_file_format)
 
     def writeAnswersSample(self):
