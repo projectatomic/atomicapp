@@ -9,7 +9,7 @@ from argparse import RawDescriptionHelpFormatter
 import logging
 
 from atomicapp import set_logging
-from atomicapp.constants import ANSWERS_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
+from atomicapp.constants import ANSWERS_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +49,7 @@ class CLI():
         parser_install = subparsers.add_parser("install")
 
         parser_install.add_argument("--no-deps", dest="nodeps", default=False, action="store_true", help="Skip pulling dependencies of the app")
+        parser_install.add_argument("--answers-format", dest="answers_format", default=ANSWERS_FILE_SAMPLE_FORMAT, help="The format for the answers.conf.sample file.Default is 'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'.")
         parser_install.add_argument("-u", "--update", dest="update", default=False, action="store_true", help="Re-pull images and overwrite existing files")
         parser_install.add_argument("--destination", dest="target_path", default=None, help="Destination directory for install")
         parser_install.add_argument("APP",  help="Application to run. This is a container image or a path that contains the metadata describing the whole application.")
