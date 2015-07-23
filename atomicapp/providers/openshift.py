@@ -10,17 +10,22 @@ logger = logging.getLogger(__name__)
 
 class OpenShiftProvider(Provider):
     key = "openshift"
-
-    cli = "osc" 
+    cli_str = "oc"
+    cli = None
     config_file = None
     template_data = None
+
     def init(self):
-        self.cli = find_executable(self.cli)
+        self.cli = find_executable(self.cli_str)
         if self.container and not self.cli:
             host_path = []
             for path in os.environ.get("PATH").split(":"):
                 host_path.append("/host%s" % path)
-            self.cli = find_executable("osc", path=":".join(host_path))
+            self.cli = find_executable(self.cli_str, path=":".join(host_path))
+            if not self.cli:
+                # if run as non-root we need a symlink in the container
+                os.symlink("/host/usr/bin/openshift", "/usr/bin/oc")
+                self.cli = "/usr/bin/oc"
 
         if not self.cli or not os.access(self.cli, os.X_OK):
             raise ProviderFailedException("Command %s not found" % self.cli)
