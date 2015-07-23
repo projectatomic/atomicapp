@@ -4,7 +4,7 @@ import logging
 import copy
 import subprocess
 
-from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE, __NULECULESPECVERSION__
+from constants import MAIN_FILE, GLOBAL_CONF, DEFAULT_PROVIDER, PARAMS_KEY, ANSWERS_FILE, DEFAULT_ANSWERS, ANSWERS_FILE_SAMPLE, __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT
 
 from utils import Utils, printStatus, printErrorStatus
 
@@ -23,6 +23,7 @@ class Nulecule_Base(object):
     ask = False
     write_sample_answers = False
     docker_cli = None
+    answer_file_format = ANSWERS_FILE_SAMPLE_FORMAT
 
     @property
     def app(self):
@@ -54,13 +55,14 @@ class Nulecule_Base(object):
 
         self.__target_path = path
 
-    def __init__(self, nodeps=False, update=False, target_path=None, dryrun = False):
+    def __init__(self, nodeps=False, update=False, target_path=None, dryrun = False, file_format = ANSWERS_FILE_SAMPLE_FORMAT):
         self.target_path = target_path
         self.nodeps = Utils.isTrue(nodeps)
         self.update = Utils.isTrue(update)
         self.override = Utils.isTrue(False)
         self.dryrun = dryrun
         self.docker_cli = Utils.getDockerCli(dryrun)
+        self.answer_file_format = file_format
 
     def loadParams(self, data = None):
         if type(data) == dict:
@@ -215,7 +217,8 @@ class Nulecule_Base(object):
 
 
     def writeAnswers(self, path):
-        anymarkup.serialize_file(self.answers_data, path, format='ini')
+        logger.debug("writing %s to %s with format %s", self.answers_data, path , self.answer_file_format)
+        anymarkup.serialize_file(self.answers_data, path, format=self.answer_file_format)
 
     def writeAnswersSample(self):
         path = os.path.join(self.target_path, ANSWERS_FILE_SAMPLE)

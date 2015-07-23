@@ -21,7 +21,7 @@ __author__ = "goern"
 
 import os, sys, logging
 
-import pytest
+import pytest , json
 
 import atomicapp.cli.main
 
@@ -44,8 +44,15 @@ class TestCLISuite(object):
         atomicapp.cli.main.main()
         sys.argv = saved_args
 
+    def is_json(self, myjson):
+      try:
+        json_object = json.loads(myjson)
+      except ValueError, e:
+        return False
+      return True
+
     # lets test if we can run a simple atomicapp
-    def test_with_helloapache(self):
+    def test_run_with_helloapache(self):
         # prepare the atomicapp command to dry run
         command = [
             "main.py",
@@ -60,6 +67,27 @@ class TestCLISuite(object):
             self.exec_cli(command)
 
         assert exec_info.value.code == 0
+
+    # lets test if we can install a simple atomicapp
+    def test_install_with_helloapache(self):
+        # prepare the atomicapp command to dry run
+        command = [
+            "main.py",
+            "--verbose",
+            "--answers-format=json",
+            "--dry-run",
+            "install",
+            tests_root + 'cached_nulecules/helloapache/'
+        ]
+
+        # run the command and check if it was successful
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        json_data=open(tests_root + "cached_nulecules/helloapache/answers.conf.sample").read()
+
+        assert exec_info.value.code == 0
+        assert self.is_json(json_data)
 
     # test it with the famous WordPress Nulecule
     # wordpress-centos7-atomicapp

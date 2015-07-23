@@ -9,7 +9,7 @@ import logging
 
 from nulecule_base import Nulecule_Base
 from utils import Utils, printStatus, printAnswerFile
-from constants import APP_ENT_PATH, MAIN_FILE
+from constants import APP_ENT_PATH, MAIN_FILE, ANSWERS_FILE_SAMPLE_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +19,13 @@ class Install(object):
     answers_file = None
     docker_cli = "docker"
 
-    def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, **kwargs):
+    def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, answers_format = ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         self.dryrun = dryrun
         self.kwargs = kwargs
 
         app = APP #FIXME
 
-        self.nulecule_base = Nulecule_Base(nodeps, update, target_path, dryrun)
+        self.nulecule_base = Nulecule_Base(nodeps, update, target_path, dryrun, answers_format)
 
         if os.path.exists(app):
             logger.info("App path is %s, will be populated to %s", app, target_path)
@@ -147,7 +147,7 @@ class Install(object):
 
         printAnswerFile(json.dumps(answerContent))
         printStatus("Install Successful.")
-        return values
+        return None
 
     def _installDependencies(self):
         values = {}

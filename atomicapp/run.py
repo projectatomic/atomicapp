@@ -7,7 +7,7 @@ import logging
 
 from nulecule_base import Nulecule_Base
 from utils import Utils, printStatus, printErrorStatus
-from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE
+from constants import GLOBAL_CONF, DEFAULT_PROVIDER, MAIN_FILE, ANSWERS_FILE_SAMPLE_FORMAT
 from plugin import Plugin, ProviderFailedException
 from install import Install
 
@@ -32,7 +32,7 @@ class Run(object):
     answers_output = None
     kwargs = None
 
-    def __init__(self, answers, APP, dryrun = False, debug = False, stop = False, **kwargs):
+    def __init__(self, answers, APP, dryrun = False, debug = False, stop = False, answers_format = ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
 
         self.debug = debug
         self.dryrun = dryrun
@@ -60,11 +60,11 @@ class Run(object):
         else:
             if not self.app_path:
                 self.app_path = os.getcwd()
-            install = Install(answers, APP, dryrun = dryrun, target_path = self.app_path)
+            install = Install(answers, APP, dryrun = dryrun, target_path = self.app_path, answers_format=answers_format)
             install.install()
             printStatus("Install Successful.")
 
-        self.nulecule_base = Nulecule_Base(target_path=self.app_path, dryrun = dryrun)
+        self.nulecule_base = Nulecule_Base(target_path=self.app_path, dryrun = dryrun, file_format=answers_format)
         if "ask" in kwargs:
             self.nulecule_base.ask = kwargs["ask"]
 

@@ -9,6 +9,7 @@ PARAMS_KEY="params"
 MAIN_FILE="Nulecule"
 ANSWERS_FILE="answers.conf"
 ANSWERS_FILE_SAMPLE="answers.conf.sample"
+ANSWERS_FILE_SAMPLE_FORMAT='ini'
 WORKDIR=".workdir"
 
 DEFAULT_PROVIDER="kubernetes"

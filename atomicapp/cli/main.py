@@ -9,7 +9,7 @@ from argparse import RawDescriptionHelpFormatter
 import logging
 
 from atomicapp import set_logging
-from atomicapp.constants import ANSWERS_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__
+from atomicapp.constants import ANSWERS_FILE, __ATOMICAPPVERSION__, __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +37,7 @@ class CLI():
 
         self.parser.add_argument("--dry-run", dest="dryrun", default=False, action="store_true", help="Don't actually call provider. The commands that should be run will be sent to stdout but not run.")
         self.parser.add_argument("-a", "--answers", dest="answers", default=os.path.join(os.getcwd(), ANSWERS_FILE), help="Path to %s" % ANSWERS_FILE)
+        self.parser.add_argument("--answers-format", dest="answers_format", default=ANSWERS_FILE_SAMPLE_FORMAT, help="The format for the answers.conf.sample file.Default is 'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'.")
 
         subparsers = self.parser.add_subparsers(dest="action")
 
