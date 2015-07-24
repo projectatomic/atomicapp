@@ -27,7 +27,7 @@ def cli_stop(args):
 
 class CLI():
     def __init__(self):
-        self.parser = ArgumentParser(prog='atomicapp', description='This will install and run an atomicapp, a containerized application conforming to the Nulecule Specification', formatter_class=RawDescriptionHelpFormatter)
+        self.parser = ArgumentParser(prog='atomicapp', description='This will install and run an Atomic App, a containerized application conforming to the Nulecule Specification', formatter_class=RawDescriptionHelpFormatter)
 
     def set_arguments(self):
 
@@ -56,7 +56,7 @@ class CLI():
         parser_install.set_defaults(func=cli_install)
 
         parser_stop = subparsers.add_parser("stop")
-        parser_stop.add_argument("APP", help="Path to the directory where the atomicapp is installed or an image containing atomicapp which should be stopped.")
+        parser_stop.add_argument("APP", help="Path to the directory where the Atomic App is installed or an image containing an Atomic App which should be stopped.")
         parser_stop.set_defaults(func=cli_stop)
 
     def run(self):
