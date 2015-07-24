@@ -1,4 +1,4 @@
-# Contributing to Atomic App (atomicapp)
+# Contributing to Atomic App
 
 :+1::tada: First off, thanks for taking the time to contribute! :tada::+1:
 
