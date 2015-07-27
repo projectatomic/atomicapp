@@ -93,9 +93,9 @@ class Nulecule_Base(object):
             raise Exception("%s not found: %s" % (MAIN_FILE, path))
 
         self.mainfile_data = anymarkup.parse_file(path)
-        logger.debug("Setting app id to %s", self.mainfile_data["id"])
         if "id" in self.mainfile_data:
             self.app_id = self.mainfile_data["id"]
+	    logger.debug("Setting app id to %s", self.mainfile_data["id"])
         else:
             raise Exception ("Missing ID in %s" % self.mainfile_data)
 
