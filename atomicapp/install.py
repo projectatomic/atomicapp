@@ -18,6 +18,7 @@ class Install(object):
     params = None
     answers_file = None
     docker_cli = "docker"
+    answers_file_values = {}
 
     def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, answers_format = ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         self.dryrun = dryrun
@@ -133,14 +134,13 @@ class Install(object):
         self.nulecule_base.checkAllArtifacts()
 
         printStatus("Loading Nulecule file.")
-        values = {}
         if not self.nulecule_base.nodeps:
             logger.info("Installing dependencies for %s", self.nulecule_base.app_id)
-            values = self._installDependencies()
+            self.answers_file_values = self._installDependencies()
             printStatus("All dependencies installed successfully.")
 
-        logger.debug(values)
-        answerContent = self.nulecule_base.loadAnswers(values)
+        logger.debug(self.answers_file_values)
+        answerContent = self.nulecule_base.loadAnswers(self.answers_file_values)
         logger.debug(self.nulecule_base.answers_data)
         if self.nulecule_base.write_sample_answers:
             self.nulecule_base.writeAnswersSample()
@@ -172,7 +172,8 @@ class Install(object):
                 printStatus("Pulling %s ..." % image_name)
                 component_app = Install(self.nulecule_base.answers_data, image_name, self.nulecule_base.nodeps, 
                                         self.nulecule_base.update, component_path, self.dryrun)
-                values = Utils.update(values, component_app.install())
+                component_app.install()
+                values = Utils.update(values, component_app.answers_file_values)
                 printStatus("Component %s installed successfully."%component)
                 logger.debug("Component installed into %s", component_path)
             else:
