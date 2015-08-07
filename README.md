@@ -38,10 +38,10 @@ alias atomicapp="`pwd`/atomicapp/cli/main.py"
 
 ### Build
 ```
-atomicapp [--dry-run] build [TAG]
+docker build -t [TAG] .
 ```
 
-Calls Docker build to package up the application and tags the resulting image.
+Just a call to Docker to package up the application and tag the resulting image.
 
 ### Install and Run
 ```
