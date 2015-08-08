@@ -43,8 +43,7 @@ class OpenShiftProvider(Provider):
             logger.warning("Configuration option 'openshiftconfig' not found")
 
         if not self.config_file or not os.access(self.config_file, os.R_OK):
-            raise ProviderFailedException(
-                "Cannot access configuration file %s" % self.config_file)
+            raise ProviderFailedException("Cannot access configuration file %s. Try adding 'openshiftconfig = /path/to/your/.kube/config' in the [general] section of the answers.conf file." % self.config_file)
 
     def _callCli(self, path):
         cmd = [self.cli, "--config=%s" % self.config_file, "create", "-f", path]
