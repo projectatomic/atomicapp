@@ -1,5 +1,6 @@
 from __future__ import print_function
-import os,sys
+import os
+import sys
 from string import Template
 import copy
 
@@ -32,13 +33,15 @@ class Run(object):
     answers_output = None
     kwargs = None
 
-    def __init__(self, answers, APP, dryrun = False, debug = False, stop = False, answers_format = ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+    def __init__(
+            self, answers, APP, dryrun=False, debug=False, stop=False,
+            answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
 
         self.debug = debug
         self.dryrun = dryrun
         self.stop = stop
         self.kwargs = kwargs
-        
+
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
 
@@ -60,11 +63,14 @@ class Run(object):
         else:
             if not self.app_path:
                 self.app_path = os.getcwd()
-            install = Install(answers, APP, dryrun = dryrun, target_path = self.app_path, answers_format=answers_format)
+            install = Install(
+                answers, APP, dryrun=dryrun, target_path=self.app_path,
+                answers_format=answers_format)
             install.install()
             printStatus("Install Successful.")
 
-        self.nulecule_base = Nulecule_Base(target_path=self.app_path, dryrun = dryrun, file_format=answers_format)
+        self.nulecule_base = Nulecule_Base(
+            target_path=self.app_path, dryrun=dryrun, file_format=answers_format)
         if "ask" in kwargs:
             self.nulecule_base.ask = kwargs["ask"]
 
@@ -75,7 +81,6 @@ class Run(object):
         self.utils = Utils(self.app_path, workdir)
         if not "workdir" in kwargs:
             kwargs["workdir"] = self.utils.workdir
-
 
         self.answers_file = answers
         self.plugin = Plugin()
@@ -94,7 +99,8 @@ class Run(object):
 
             if self.utils.isExternal(graph_item):
                 self.kwargs["image"] = self.utils.getSourceImage(graph_item)
-                component_run = Run(self.answers_file, self.utils.getExternalAppDir(component), self.dryrun, self.debug, self.stop, **self.kwargs)
+                component_run = Run(self.answers_file, self.utils.getExternalAppDir(
+                    component), self.dryrun, self.debug, self.stop, **self.kwargs)
                 ret = component_run.run()
                 if self.answers_output:
                     self.nulecule_base.loadAnswers(ret)
@@ -113,9 +119,14 @@ class Run(object):
                 output = template.substitute(config)
             except KeyError as ex:
                 name = ex.args[0]
-                logger.debug("Artifact contains unknown parameter %s, asking for it", name)
+                logger.debug(
+                    "Artifact contains unknown parameter %s, asking for it", name)
                 try:
-                    config[name] = self.utils.askFor(name, {"description": "Missing parameter '%s', provide the value or fix your %s" % (name, MAIN_FILE)})
+                    config[name] = self.utils.askFor(
+                        name,
+                        {"description":
+                         "Missing parameter '%s', provide the value or fix your %s" % (
+                             name, MAIN_FILE)})
                 except EOFError:
                     raise Exception("Artifact contains unknown parameter %s" % name)
                 if not len(config[name]):
@@ -125,14 +136,15 @@ class Run(object):
 
         return output
 
-    def _processArtifacts(self, component, provider, provider_name = None):
+    def _processArtifacts(self, component, provider, provider_name=None):
         if not provider_name:
             provider_name = str(provider)
 
         artifacts = self.nulecule_base.getArtifacts(component)
         artifact_provider_list = []
         if not provider_name in artifacts:
-            raise Exception("Data for provider \"%s\" are not part of this app" % provider_name)
+            msg = "Data for provider \"%s\" are not part of this app" % provider_name
+            raise Exception(msg)
 
         dst_dir = os.path.join(self.utils.workdir, component)
         data = None
@@ -141,7 +153,8 @@ class Run(object):
             if "inherit" in artifact:
                 logger.debug("Inheriting from %s", artifact["inherit"])
                 for item in artifact["inherit"]:
-                    inherited_artifacts, _ = self._processArtifacts(component, provider, item)
+                    inherited_artifacts, _ = self._processArtifacts(
+                        component, provider, item)
                     artifact_provider_list += inherited_artifacts
                 continue
             artifact_path = self.utils.sanitizePath(artifact)
@@ -159,14 +172,17 @@ class Run(object):
         return artifact_provider_list, dst_dir
 
     def _processComponent(self, component, graph_item):
-        logger.debug("Processing component '%s' and graph item '%s'", component, graph_item)
+        logger.debug(
+            "Processing component '%s' and graph item '%s'", component, graph_item)
 
         provider_class = self.plugin.getProvider(self.nulecule_base.provider)
-        dst_dir = os.path.join(self.utils.workdir, component) 
-        provider = provider_class(self.nulecule_base.getValues(component), dst_dir, self.dryrun)
+        dst_dir = os.path.join(self.utils.workdir, component)
+        provider = provider_class(
+            self.nulecule_base.getValues(component), dst_dir, self.dryrun)
         if provider:
             printStatus("Deploying component %s ..." % component)
-            logger.info("Using provider %s for component %s", self.nulecule_base.provider, component)
+            logger.info("Using provider %s for component %s",
+                        self.nulecule_base.provider, component)
         else:
             raise Exception("Something is broken - couldn't get the provider")
 
@@ -184,7 +200,8 @@ class Run(object):
             raise
 
     def run(self):
-        self.nulecule_base.loadMainfile(os.path.join(self.nulecule_base.target_path, MAIN_FILE))
+        self.nulecule_base.loadMainfile(
+            os.path.join(self.nulecule_base.target_path, MAIN_FILE))
         self.nulecule_base.checkSpecVersion()
         self.nulecule_base.loadAnswers(self.answers_file)
 
@@ -195,13 +212,9 @@ class Run(object):
 
         self._dispatchGraph()
 
-#Think about this a bit more probably - it's (re)written for all components...
+# Think about this a bit more probably - it's (re)written for all components...
         if self.answers_output:
             self.nulecule_base.writeAnswers(self.answers_output)
             return self.nulecule_base.answers_data
 
         return None
-
-
-
-
