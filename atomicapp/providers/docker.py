@@ -1,9 +1,11 @@
 from atomicapp.plugin import Provider, ProviderFailedException
-import os, subprocess
+import os
+import subprocess
 
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class DockerProvider(Provider):
     key = "docker"
@@ -25,7 +27,9 @@ class DockerProvider(Provider):
                 server = line.split(":")[1]
 
         if client > server:
-            raise ProviderFailedException("Docker version in app image (%s) is higher than the one on host (%s). Please update your host." % (client, server))
+            msg = ("Docker version in app image (%s) is higher than the one "
+                   "on host (%s). Please update your host." % (client, server))
+            raise ProviderFailedException(msg)
 
     def deploy(self):
         for artifact in self.artifacts:
