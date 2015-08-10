@@ -9,6 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class Provider(object):
     key = None
 
@@ -21,6 +22,7 @@ class Provider(object):
     @property
     def artifacts(self):
         return self.__artifacts
+
     @artifacts.setter
     def artifacts(self, artifacts):
         self.__artifacts = artifacts
@@ -39,8 +41,10 @@ class Provider(object):
         raise NotImplementedError()
 
     def undeploy(self):
-        logger.warning("Call to undeploy for provider %s failed - this action is not implemented" % self.key)
-    
+        logger.warning(
+            "Call to undeploy for provider %s failed - this action is not implemented",
+            self.key)
+
     def loadArtifact(self, path):
         with open(path, "r") as fp:
             data = fp.read()
@@ -60,12 +64,15 @@ class Provider(object):
     def __repr__(self):
         return "Plugin(key='%s')" % self.key
 
+
 class ProviderFailedException(Exception):
+
     """Error during provider execution"""
 
 
 class Plugin(object):
     plugins = []
+
     def __init__(self, ):
         pass
 
@@ -81,7 +88,8 @@ class Plugin(object):
             if f.endswith(".py"):
                 module_name = os.path.basename(f).rsplit('.', 1)[0]
                 try:
-                    f_module = imp.load_source(module_name, os.path.join(providers_dir, f))
+                    f_module = imp.load_source(
+                        module_name, os.path.join(providers_dir, f))
                 except (IOError, OSError, ImportError) as ex:
                     logger.warning("can't load module '%s': %s", f, repr(ex))
                     continue
