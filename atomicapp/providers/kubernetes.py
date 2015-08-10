@@ -1,11 +1,14 @@
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus
 from collections import OrderedDict
-import os, anymarkup, subprocess
+import os
+import anymarkup
+import subprocess
 from subprocess import Popen, PIPE
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class KubernetesProvider(Provider):
     key = "kubernetes"
@@ -13,11 +16,12 @@ class KubernetesProvider(Provider):
     def init(self):
         self.namespace = "default"
 
-        self.kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
+        self.kube_order = OrderedDict(
+            [("service", None), ("rc", None), ("pod", None)])  # FIXME
 
         logger.debug("Given config: %s", self.config)
         if self.config.get("namespace"):
-            self.namespace = self.config.get("namespace");
+            self.namespace = self.config.get("namespace")
 
         logger.info("Using namespace %s", self.namespace)
         if self.container:
@@ -32,7 +36,7 @@ class KubernetesProvider(Provider):
 
         if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
-                raise ProviderFailedException("Command: "+self.kubectl+" not found")
+                raise ProviderFailedException("Command: " + self.kubectl + " not found")
 
     def _findKubectl(self, prefix=""):
         """
@@ -47,7 +51,7 @@ class KubernetesProvider(Provider):
         if self.dryrun:
             # Testing env does not have kubectl in it
             return "/usr/bin/kubectl"
-        
+
         test_paths = ['/usr/bin/kubectl', '/usr/local/bin/kubectl']
         if self.config.get("provider_cli"):
             logger.info("caller gave provider_cli: " + self.config.get("provider_cli"))
@@ -63,7 +67,6 @@ class KubernetesProvider(Provider):
 
         raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths))
 
-                             
     def _callK8s(self, path):
         cmd = [self.kubectl, "create", "-f", path, "--namespace=%s" % self.namespace]
 
@@ -75,7 +78,7 @@ class KubernetesProvider(Provider):
                 stdout, stderr = p.communicate()
                 logger.debug("stdout = %s", stdout)
                 logger.debug("stderr = %s", stderr)
-                if stderr and  stderr.strip() != "":
+                if stderr and stderr.strip() != "":
                     raise Exception(str(stderr))
             except Exception:
                 printErrorStatus("cmd failed: " + " ".join(cmd))
@@ -95,7 +98,8 @@ class KubernetesProvider(Provider):
     def _resetReplicas(self, path):
         data = anymarkup.parse_file(path)
         name = data["id"]
-        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0", "--namespace=%s" % self.namespace]
+        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0", "--namespace=%s" %
+               self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
