@@ -1,7 +1,8 @@
 from __future__ import print_function
 import os
 import distutils.dir_util
-import random, string
+import random
+import string
 import json
 import subprocess
 
@@ -13,6 +14,7 @@ from constants import APP_ENT_PATH, MAIN_FILE, ANSWERS_FILE_SAMPLE_FORMAT
 
 logger = logging.getLogger(__name__)
 
+
 class Install(object):
     dryrun = False
     params = None
@@ -20,13 +22,16 @@ class Install(object):
     docker_cli = "docker"
     answers_file_values = {}
 
-    def __init__(self, answers, APP, nodeps = False, update = False, target_path = None, dryrun = False, answers_format = ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+    def __init__(
+            self, answers, APP, nodeps=False, update=False, target_path=None,
+            dryrun=False, answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         self.dryrun = dryrun
         self.kwargs = kwargs
 
-        app = APP #FIXME
+        app = APP  # FIXME
 
-        self.nulecule_base = Nulecule_Base(nodeps, update, target_path, dryrun, answers_format)
+        self.nulecule_base = Nulecule_Base(
+            nodeps, update, target_path, dryrun, answers_format)
 
         if os.path.exists(app):
             logger.info("App path is %s, will be populated to %s", app, target_path)
@@ -40,7 +45,7 @@ class Install(object):
                 self.nulecule_base.target_path = self.nulecule_base.app_path
             else:
                 self.nulecule_base.target_path = os.getcwd()
-        
+
         self.utils = Utils(self.nulecule_base.target_path)
 
         self.nulecule_base.app = app
@@ -63,7 +68,8 @@ class Install(object):
     def _copyFromContainer(self, image):
         image = self.nulecule_base.getImageURI(image)
 
-        name = "%s-%s" % (self.utils.getComponentName(image), ''.join(random.sample(string.letters, 6)))
+        name = "%s-%s" % (self.utils.getComponentName(image),
+                          ''.join(random.sample(string.letters, 6)))
         logger.debug("Creating a container with name %s", name)
 
         create = [self.docker_cli, "create", "--name", name, image, "nop"]
@@ -78,7 +84,7 @@ class Install(object):
         rm = [self.docker_cli, "rm", name]
         subprocess.call(rm)
 
-    def _populateApp(self, src = None, dst = None):
+    def _populateApp(self, src=None, dst=None):
         logger.info("Copying app %s", self.utils.getComponentName(self.nulecule_base.app))
         if not src:
             src = os.path.join(self.utils.tmpdir, APP_ENT_PATH)
@@ -88,7 +94,8 @@ class Install(object):
         distutils.dir_util.copy_tree(src, dst, update=(not self.nulecule_base.update))
 
     def _fromImage(self):
-        return not self.nulecule_base.app_path or self.nulecule_base.target_path == self.nulecule_base.app_path
+        return not self.nulecule_base.app_path or \
+            self.nulecule_base.target_path == self.nulecule_base.app_path
 
     def install(self):
         answerContent = self.nulecule_base.loadAnswers(self.answers_file)
@@ -111,16 +118,22 @@ class Install(object):
                 self.nulecule_base.loadMainfile(tmp_mainfile_path)
                 logger.debug("%s path for pulled image: %s", MAIN_FILE, tmp_mainfile_path)
                 if current_app_id != self.nulecule_base.app_id:
-                    raise Exception("You are trying to overwrite existing app %s with app %s - clear or change current directory." 
-                                                % (current_app_id, self.nulecule_base.app_id))
+                    msg = ("You are trying to overwrite existing app %s with "
+                           "app %s - clear or change current directory."
+                           % (current_app_id, self.nulecule_base.app_id))
+                    raise Exception(msg)
         elif self._fromImage():
-            logger.warning("Using DRY-RUN together with install from image may result in unexpected behaviour")
+            logger.warning("Using DRY-RUN together with install from image "
+                           "may result in unexpected behaviour")
 
-        if self.nulecule_base.update or (not self.dryrun and not os.path.exists(self.nulecule_base.getMainfilePath())):
+        if self.nulecule_base.update or \
+            (not self.dryrun
+             and not os.path.exists(self.nulecule_base.getMainfilePath())):
             if self._fromImage():
                 self._populateApp()
             else:
-                logger.info("Copying content of directory %s to %s", self.nulecule_base.app_path, self.nulecule_base.target_path)
+                logger.info("Copying content of directory %s to %s",
+                            self.nulecule_base.app_path, self.nulecule_base.target_path)
                 self._populateApp(src=self.nulecule_base.app_path)
 
         mainfile_path = os.path.join(self.nulecule_base.target_path, MAIN_FILE)
@@ -157,7 +170,8 @@ class Install(object):
                 raise ValueError("Component name missing in graph")
 
             if not self.utils.isExternal(graph_item):
-                values[component] = self.nulecule_base.getValues(component, skip_asking = True)
+                values[component] = self.nulecule_base.getValues(
+                    component, skip_asking=True)
                 logger.debug("Component %s is part of the app", component)
                 logger.debug("Values: %s", values)
                 continue
@@ -170,14 +184,17 @@ class Install(object):
             logger.debug("Component path: %s", component_path)
             if not os.path.isfile(mainfile_component_path) or self.nulecule_base.update:
                 printStatus("Pulling %s ..." % image_name)
-                component_app = Install(self.nulecule_base.answers_data, image_name, self.nulecule_base.nodeps, 
-                                        self.nulecule_base.update, component_path, self.dryrun)
+                component_app = Install(
+                    self.nulecule_base.answers_data,
+                    image_name, self.nulecule_base.nodeps,
+                    self.nulecule_base.update, component_path, self.dryrun)
                 component_app.install()
                 values = Utils.update(values, component_app.answers_file_values)
-                printStatus("Component %s installed successfully."%component)
+                printStatus("Component %s installed successfully." % component)
                 logger.debug("Component installed into %s", component_path)
             else:
-                printStatus("Component %s already installed."%component)
-                logger.info("Component %s already exists at %s - remove the directory or use --update option", component, component_path)
+                printStatus("Component %s already installed." % component)
+                logger.info("Component %s already exists at %s - remove the directory "
+                            "or use --update option" % (component, component_path))
 
         return values
