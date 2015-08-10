@@ -4,6 +4,7 @@ import re
 
 from setuptools import setup, find_packages
 
+
 def _get_requirements(path):
     try:
         with open(path) as f:
@@ -14,20 +15,22 @@ def _get_requirements(path):
     packages = list(filter(None, packages))
     return packages
 
+
 def _install_requirements():
     requirements = _get_requirements('requirements.txt')
     return requirements
 
-setup(name='atomicapp',
-      version='0.1.9',
-      description='A tool to install and run Nulecule apps',
-      author='Vaclav Pavlin',
-      author_email='vpavlin@redhat.com',
-      url='https://github.com/vpavlin/atomicapp-run',
-      license="MIT",
-      entry_points={
-          'console_scripts': ['atomicapp=atomicapp.cli.main:main'],
-      },
-      packages=find_packages(),
-      install_requires=['anymarkup>=0.4.1']
+setup(
+    name='atomicapp',
+    version='0.1.9',
+    description='A tool to install and run Nulecule apps',
+    author='Vaclav Pavlin',
+    author_email='vpavlin@redhat.com',
+    url='https://github.com/vpavlin/atomicapp-run',
+    license="MIT",
+    entry_points={
+        'console_scripts': ['atomicapp=atomicapp.cli.main:main'],
+    },
+    packages=find_packages(),
+    install_requires=['anymarkup>=0.4.1']
 )
