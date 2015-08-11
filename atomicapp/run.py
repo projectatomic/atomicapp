@@ -1,8 +1,6 @@
 from __future__ import print_function
 import os
-import sys
 from string import Template
-import copy
 
 import logging
 
@@ -79,7 +77,7 @@ class Run(object):
             workdir = kwargs["workdir"]
 
         self.utils = Utils(self.app_path, workdir)
-        if not "workdir" in kwargs:
+        if "workdir" not in kwargs:
             kwargs["workdir"] = self.utils.workdir
 
         self.answers_file = answers
@@ -87,7 +85,7 @@ class Run(object):
         self.plugin.load_plugins()
 
     def _dispatchGraph(self):
-        if not "graph" in self.nulecule_base.mainfile_data:
+        if "graph" not in self.nulecule_base.mainfile_data:
             printErrorStatus("Graph not specified in %s." % MAIN_FILE)
             raise Exception("Graph not specified in %s" % MAIN_FILE)
 
@@ -142,7 +140,7 @@ class Run(object):
 
         artifacts = self.nulecule_base.getArtifacts(component)
         artifact_provider_list = []
-        if not provider_name in artifacts:
+        if provider_name not in artifacts:
             msg = "Data for provider \"%s\" are not part of this app" % provider_name
             raise Exception(msg)
 

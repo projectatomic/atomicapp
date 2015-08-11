@@ -19,17 +19,28 @@ logger = logging.getLogger(__name__)
 
 def cli_install(args):
     install = Install(**vars(args))
-    sys.exit(install.install() != None)
 
+    if install.install() is not None:
+        sys.exit(True)
+    else:
+        sys.exit(False)
 
 def cli_run(args):
     ae = Run(**vars(args))
-    sys.exit(ae.run() != None)
+
+    if ae.run() is not None:
+        sys.exit(True)
+    else:
+        sys.exit(False)
 
 
 def cli_stop(args):
     stop = Run(stop=True, **vars(args))
-    sys.exit(stop.run() != None)
+
+    if stop.run() is not None:
+        sys.exit(True)
+    else:
+        sys.exit(False)
 
 
 class CLI():

@@ -209,7 +209,7 @@ class Nulecule_Base(object):
         return result
 
     def _updateAnswers(self, component, param, value):
-        if not component in self.answers_data:
+        if component not in self.answers_data:
             self.answers_data[component] = {}
 
         if component != GLOBAL_CONF and param in self.answers_data[GLOBAL_CONF] \
@@ -218,7 +218,7 @@ class Nulecule_Base(object):
                 "Param %s already in %s with value %s", param, GLOBAL_CONF, value)
             return
 
-        if not param in self.answers_data[component]:
+        if param not in self.answers_data[component]:
             self.answers_data[component][param] = None
 
         self.answers_data[component][param] = value
