@@ -1,1 +1,2 @@
 anymarkup>=0.4.1
+lockfile

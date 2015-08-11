@@ -8,11 +8,15 @@ import sys
 from argparse import ArgumentParser
 from argparse import RawDescriptionHelpFormatter
 import logging
+from lockfile import LockFile
+from lockfile import AlreadyLocked
 
 from atomicapp import set_logging
 from atomicapp.constants import \
     ANSWERS_FILE, __ATOMICAPPVERSION__, \
-    __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT
+    __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT, \
+    LOCK_FILE
+from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +177,10 @@ class CLI():
             set_logging(level=logging.WARNING)
         else:
             set_logging(level=logging.INFO)
+
+        lock = LockFile(os.path.join(Utils.getRoot(), LOCK_FILE))
         try:
+            lock.acquire(timeout=-1)
             args.func(args)
         except AttributeError:
             if hasattr(args, 'func'):
@@ -182,6 +189,8 @@ class CLI():
                 self.parser.print_help()
         except KeyboardInterrupt:
             pass
+        except AlreadyLocked:
+            logger.error("Could not proceed - there is probably another instance of Atomic App running on this machine.")
         except Exception as ex:
             if args.verbose:
                 raise
@@ -189,6 +198,9 @@ class CLI():
                 logger.error("Exception caught: %s", repr(ex))
                 logger.error(
                     "Run the command again with -v option to get more information.")
+        finally:
+            if lock.i_am_locking():
+                lock.release()
 
 
 def main():
