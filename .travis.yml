@@ -7,8 +7,9 @@ install:
   - pip install -r requirements.txt --use-mirrors
   - pip install pytest-cov coveralls --use-mirrors
   - pip install pep8 --use-mirrors
+  - pip install flake8 --use-mirrors 
 before_script:
-  - pep8 atomicapp
+  - flake8 atomicapp
 script:
   python -m pytest -vv tests --cov atomicapp
 after_success:
