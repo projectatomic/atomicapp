@@ -11,7 +11,7 @@ ANSWERS_FILE = "answers.conf"
 ANSWERS_FILE_SAMPLE = "answers.conf.sample"
 ANSWERS_FILE_SAMPLE_FORMAT = 'ini'
 WORKDIR = ".workdir"
-LOCK_FILE = "/var/lock/atomicapp.lock"
+LOCK_FILE = "/run/lock/atomicapp.lock"
 
 DEFAULT_PROVIDER = "kubernetes"
 DEFAULT_NAMESPACE = "default"
