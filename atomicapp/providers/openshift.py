@@ -1,12 +1,15 @@
 from atomicapp.plugin import Provider, ProviderFailedException
 
 from collections import OrderedDict
-import os, anymarkup, subprocess
+import os
+import anymarkup
+import subprocess
 from distutils.spawn import find_executable
 
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 class OpenShiftProvider(Provider):
     key = "openshift"
@@ -38,7 +41,8 @@ class OpenShiftProvider(Provider):
             logger.warning("Configuration option 'openshiftconfig' not found")
 
         if not self.config_file or not os.access(self.config_file, os.R_OK):
-            raise ProviderFailedException("Cannot access configuration file %s" % self.config_file)
+            raise ProviderFailedException(
+                "Cannot access configuration file %s" % self.config_file)
 
     def _callCli(self, path):
         cmd = [self.cli, "--config=%s" % self.config_file, "create", "-f", path]
@@ -63,24 +67,30 @@ class OpenShiftProvider(Provider):
     def loadArtifact(self, path):
         data = super(self.__class__, self).loadArtifact(path)
         self.template_data = anymarkup.parse(data, force_types=None)
-        if "kind" in self.template_data and self.template_data["kind"].lower() == "template":
+        if "kind" in self.template_data and \
+                self.template_data["kind"].lower() == "template":
             if "parameters" in self.template_data:
-                return anymarkup.serialize(self.template_data["parameters"], format="json")
+                return anymarkup.serialize(
+                    self.template_data["parameters"], format="json")
 
         return data
 
     def saveArtifact(self, path, data):
         if self.template_data:
-            if "kind" in self.template_data and self.template_data["kind"].lower() == "template":
+            if "kind" in self.template_data and \
+                    self.template_data["kind"].lower() == "template":
                 if "parameters" in self.template_data:
                     passed_data = anymarkup.parse(data, force_types=None)
                     self.template_data["parameters"] = passed_data
-                    data = anymarkup.serialize(self.template_data, format=os.path.splitext(path)[1].strip(".")) #FIXME
+                    data = anymarkup.serialize(
+                        self.template_data,
+                        format=os.path.splitext(path)[1].strip("."))  # FIXME
 
         super(self.__class__, self).saveArtifact(path, data)
 
     def deploy(self):
-        kube_order = OrderedDict([("service", None), ("rc", None), ("pod", None)]) #FIXME
+        kube_order = OrderedDict(
+            [("service", None), ("rc", None), ("pod", None)])  # FIXME
         for artifact in self.artifacts:
             data = None
             artifact_path = os.path.join(self.path, artifact)

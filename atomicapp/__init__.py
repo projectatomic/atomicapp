@@ -1,5 +1,6 @@
 import logging
 
+
 def set_logging(name="atomicapp", level=logging.DEBUG):
     # create logger
     logger = logging.getLogger()
@@ -19,4 +20,4 @@ def set_logging(name="atomicapp", level=logging.DEBUG):
     logger.addHandler(ch)
 
 
-set_logging(level=logging.DEBUG) #override this however you want
+set_logging(level=logging.DEBUG)  # override this however you want

@@ -14,19 +14,21 @@ __all__ = ('Utils')
 
 logger = logging.getLogger(__name__)
 
-#Following Methods(printStatus, printErrorStatus, printAnswerFile) 
+# Following Methods(printStatus, printErrorStatus, printAnswerFile)
 #  are required for Cockpit or thirdparty management tool integration
 #  DONOT change the atomicapp.status.* prefix in the logger method.
+
+
 def printStatus(message):
-    logger.info("atomicapp.status.info.message="+str(message))
+    logger.info("atomicapp.status.info.message=" + str(message))
 
 
 def printErrorStatus(message):
-    logger.info("atomicapp.status.error.message="+str(message))
+    logger.info("atomicapp.status.error.message=" + str(message))
 
 
 def printAnswerFile(message):
-    logger.info("atomicapp.status.answer.message="+str(message))
+    logger.info("atomicapp.status.answer.message=" + str(message))
 
 
 class Utils(object):
@@ -48,17 +50,17 @@ class Utils(object):
     @property
     def tmpdir(self):
         if not self.__tmpdir:
-            self.__tmpdir = tempfile.mkdtemp(prefix="nulecule-") 
+            self.__tmpdir = tempfile.mkdtemp(prefix="nulecule-")
             logger.info("Using temporary directory %s", self.__tmpdir)
 
         return self.__tmpdir
 
-    def __init__(self, target_path, workdir = None):
+    def __init__(self, target_path, workdir=None):
         self.target_path = target_path
         if workdir:
             self.__workdir = workdir
 
-    @staticmethod        
+    @staticmethod
     def isTrue(val):
         true_values = ('true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'sure')
         return str(val).lower() in true_values
@@ -68,14 +70,15 @@ class Utils(object):
         return app.replace("/", "-")
 
     def getExternalAppDir(self, component):
-        return os.path.join(self.target_path, EXTERNAL_APP_DIR, self.getComponentName(component))
+        return os.path.join(
+            self.target_path, EXTERNAL_APP_DIR, self.getComponentName(component))
 
     def getTmpAppDir(self):
         return os.path.join(self.tmpdir, APP_ENT_PATH)
 
     @staticmethod
     def getComponentName(graph_item):
-        #logger.debug("Getting name for %s", graph_item)
+        # logger.debug("Getting name for %s", graph_item)
         if type(graph_item) is str or type(graph_item) is unicode:
             return os.path.basename(graph_item).split(":")[0]
         elif type(graph_item) is dict:
@@ -122,7 +125,7 @@ class Utils(object):
         if path.startswith("file://"):
             return path[7:]
 
-    @staticmethod 
+    @staticmethod
     def askFor(what, info):
         repeat = True
         desc = info["description"]
@@ -132,7 +135,8 @@ class Utils(object):
         while repeat:
             repeat = False
             if "default" in info:
-                value = raw_input("%s (%s, default: %s): " % (what, desc, info["default"]))
+                value = raw_input(
+                    "%s (%s, default: %s): " % (what, desc, info["default"]))
                 if len(value) == 0:
                     value = info["default"]
             else:
@@ -154,7 +158,7 @@ class Utils(object):
     def update(old_dict, new_dict):
         for key, val in new_dict.iteritems():
             if isinstance(val, collections.Mapping):
-                tmp = Utils.update(old_dict.get(key, { }), val)
+                tmp = Utils.update(old_dict.get(key, {}), val)
                 old_dict[key] = tmp
             elif isinstance(val, list) and key in old_dict:
                 res = (old_dict[key] + val)
@@ -175,7 +179,7 @@ class Utils(object):
         return data.get("id")
 
     @staticmethod
-    def getDockerCli(dryrun = False):
+    def getDockerCli(dryrun=False):
         cli = find_executable("docker")
         if not cli:
             if dryrun:
@@ -184,4 +188,3 @@ class Utils(object):
                 raise Exception("Could not find docker client")
 
         return cli
-
