@@ -188,3 +188,10 @@ class Utils(object):
                 raise Exception("Could not find docker client")
 
         return cli
+
+    @staticmethod
+    def getRoot():
+        if os.path.isdir("/host"):
+            return "/host/"
+        else:
+            return "/"
