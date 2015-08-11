@@ -105,14 +105,14 @@ class Utils(object):
         if "artifacts" in graph_item:
             return False
 
-        if not "source" in graph_item:
+        if "source" not in graph_item:
             return False
 
         return True
 
     @staticmethod
     def getSourceImage(graph_item):
-        if not "source" in graph_item:
+        if "source" not in graph_item:
             return None
 
         if graph_item["source"].startswith("docker://"):
