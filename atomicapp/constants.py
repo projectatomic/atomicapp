@@ -1,3 +1,8 @@
+"""
+Update the below LABELS if ATOMICAPPVERSION & NULECULESPECVERSION are updated:
+1) LABEL io.projectatomic.nulecule.atomicappversion in atomicapp Dockerfile
+2) LABEL io.projectatomic.nulecule.specversion  in app Dockefile
+"""
 __ATOMICAPPVERSION__ = '0.1.1'
 __NULECULESPECVERSION__ = '0.0.2'
 
