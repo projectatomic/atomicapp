@@ -38,7 +38,7 @@ class OpenShiftProvider(Provider):
         if "openshiftconfig" in self.config:
             self.config_file = self.config["openshiftconfig"]
             if self.container:
-                self.config_file = "/host" + self.config_file
+                self.config_file = os.path.join("/host", self.config_file.lstrip("/"))
         else:
             logger.warning("Configuration option 'openshiftconfig' not found")
 
