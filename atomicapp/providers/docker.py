@@ -38,7 +38,7 @@ class DockerProvider(Provider):
             with open(artifact_path, "r") as fp:
                 label_run = fp.read().strip()
 
-            cmd = label_run.split(" ")
+            cmd = label_run.split()
 
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
