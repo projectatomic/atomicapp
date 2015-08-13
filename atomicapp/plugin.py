@@ -6,6 +6,8 @@ import os
 import imp
 
 import logging
+from utils import Utils
+from constants import HOST_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class Provider(object):
         self.config = config
         self.path = path
         self.dryrun = dryrun
-        if os.path.exists("/host"):
+        if Utils.getRoot() == HOST_DIR:
             self.container = True
 
     def init(self):

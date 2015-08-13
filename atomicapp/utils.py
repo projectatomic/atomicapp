@@ -8,7 +8,7 @@ from distutils.spawn import find_executable
 
 import logging
 
-from constants import APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR
+from constants import APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, HOST_DIR
 
 __all__ = ('Utils')
 
@@ -191,7 +191,7 @@ class Utils(object):
 
     @staticmethod
     def getRoot():
-        if os.path.isdir("/host"):
-            return "/host/"
+        if os.path.isdir(HOST_DIR):
+            return HOST_DIR
         else:
             return "/"

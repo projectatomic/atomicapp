@@ -1,5 +1,6 @@
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.utils import printErrorStatus
+from atomicapp.utils import printErrorStatus, Utils
+from atomicapp.constants import HOST_DIR
 from collections import OrderedDict
 import os
 import anymarkup
@@ -25,12 +26,13 @@ class KubernetesProvider(Provider):
 
         logger.info("Using namespace %s", self.namespace)
         if self.container:
-            self.kubectl = self._findKubectl("/host")
-            if not os.path.exists("/etc/kubernetes"):
+            self.kubectl = self._findKubectl(Utils.getRoot())
+            kube_conf_path = "/etc/kubernetes"
+            if not os.path.exists(kube_conf_path):
                 if self.dryrun:
-                    logger.info("DRY-RUN: link /etc/kubernetes from /host/etc/kubernetes")
+                    logger.info("DRY-RUN: link %s from %s%s" % (kube_conf_path, HOST_DIR, kube_conf_path))
                 else:
-                    os.symlink("/host/etc/kubernetes", "/etc/kubernetes")
+                    os.symlink(os.path.join(Utils.getRoot, kube_conf_path.lstrip("/"), kube_conf_path))
         else:
             self.kubectl = self._findKubectl()
 
