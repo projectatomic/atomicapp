@@ -32,7 +32,7 @@ class KubernetesProvider(Provider):
                 if self.dryrun:
                     logger.info("DRY-RUN: link %s from %s%s" % (kube_conf_path, HOST_DIR, kube_conf_path))
                 else:
-                    os.symlink(os.path.join(Utils.getRoot, kube_conf_path.lstrip("/"), kube_conf_path))
+                    os.symlink(os.path.join(Utils.getRoot(), kube_conf_path.lstrip("/")), kube_conf_path)
         else:
             self.kubectl = self._findKubectl()
 
