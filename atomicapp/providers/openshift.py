@@ -1,5 +1,5 @@
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.constants import HOST_DIR
+from utils import Utils
 
 from collections import OrderedDict
 import os
@@ -23,11 +23,11 @@ class OpenShiftProvider(Provider):
         if self.container and not self.cli:
             host_path = []
             for path in os.environ.get("PATH").split(":"):
-                host_path.append("%s%s" % (HOST_DIR, path))
+                host_path.append(os.path.join(Utils.getRoot(), path.lstrip("/")))
             self.cli = find_executable(self.cli_str, path=":".join(host_path))
             if not self.cli:
                 # if run as non-root we need a symlink in the container
-                os.symlink("%s/usr/bin/openshift" % HOST_DIR, "/usr/bin/oc")
+                os.symlink(os.path.join(Utils.getRoot(), "usr/bin/oc"), "/usr/bin/oc")
                 self.cli = "/usr/bin/oc"
 
         if not self.cli or not os.access(self.cli, os.X_OK):
@@ -38,7 +38,7 @@ class OpenShiftProvider(Provider):
         if "openshiftconfig" in self.config:
             self.config_file = self.config["openshiftconfig"]
             if self.container:
-                self.config_file = os.path.join(HOST_DIR, self.config_file.lstrip("/"))
+                self.config_file = os.path.join(Utils.getRoot(), self.config_file.lstrip("/"))
         else:
             logger.warning("Configuration option 'openshiftconfig' not found")
 
