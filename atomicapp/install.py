@@ -72,7 +72,8 @@ class Install(object):
                           ''.join(random.sample(string.letters, 6)))
         logger.debug("Creating a container with name %s", name)
 
-        create = [self.docker_cli, "create", "--name", name, image, "nop"]
+        # Workaround docker bug BZ1252168 by using run instead of create
+        create = [self.docker_cli, "run", "--name", name, "--entrypoint", "/bin/true", image]
         logger.debug(" ".join(create))
         subprocess.call(create)
         cp = [self.docker_cli, "cp", "%s:/%s" % (name, APP_ENT_PATH), self.utils.tmpdir]
