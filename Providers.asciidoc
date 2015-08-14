@@ -80,7 +80,7 @@ As of 0.1.0 of Atomic App, only
 http://docs.openshift.org/latest/dev_guide/templates.html[OpenShift templates] will be
 preprocessed by Atomic App during the run phase: parameters within a
 template file will be replaced by the
-https://github.com/projectatomic/nulecule/blob/master/spec/0.0.2/README.md#paramsObject[params]
+https://github.com/projectatomic/nulecule/blob/master/spec/README.md#paramsObject[params]
 supplied to Atomic App, names need to match.
 
 ==== configuration values
