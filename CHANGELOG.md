@@ -1,7 +1,14 @@
-# Atomic App Base Image 0.1.2
+# Atomic App Base Container Image
 
-Welcome to Atomic App 0.1.2, this is the reference implementation of the [Container
+Welcome to Atomic App, this is the reference implementation of the [Container
 Application Specification](http://www.projectatomic.io/nulecule/spec/0.0.2/index.html) (aka the Nulecule Specification)
+
+## Atomic App 0.1.3 (2015-Aug-17)
+
+This is a hotfix to 0.1.2 and removed a bug we had in [all LABELs of the Dockerfiles](https://github.com/projectatomic/atomicapp/issues/217).
+
+
+## Atomic App 0.1.2
 
 With this release we have fixed many bugs and implemented many enhancements. To follow
 the development in details, please have a look at the [Atomic App Issue tracker](https://github.com/projectatomic/atomicapp/issues/).

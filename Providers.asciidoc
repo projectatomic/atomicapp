@@ -10,7 +10,7 @@ support OpenShift3 and Kubernetes.
 
 === List of providers
 
-Atomic App 0.1.2 includes three providers: 
+Atomic App 0.1.3 includes three providers: 
 
 * Docker, which is the most simple one
 * Kubernets
