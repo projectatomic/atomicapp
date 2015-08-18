@@ -114,10 +114,19 @@ class KubernetesProvider(Provider):
             else:
                 raise ProviderFailedException("Malformed kube file")
 
-    def _resetReplicas(self, path):
+    def _resourceIdentity(self, path):
         data = anymarkup.parse_file(path)
-        name = data["id"]
-        cmd = [self.kubectl, "resize", "rc", name, "--replicas=0", "--namespace=%s" %
+        # TODO: modify this logic when moving to kube v1
+        if data["apiVersion"] in ["v1", "v1beta3"]:
+            return data["metadata"]["name"]
+        elif data["apiVersion"] == "v1beta1":
+            return data["id"]
+        else:
+            raise ProviderFailedException("Malformed kube file: %s" % path)
+
+    def _resetReplicas(self, path):
+        rid = self._resourceIdentity(path)
+        cmd = [self.kubectl, "resize", "rc", rid, "--replicas=0", "--namespace=%s" %
                self.namespace]
 
         if self.dryrun:
