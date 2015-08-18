@@ -51,6 +51,9 @@ There are no configuration values for the Docker provider.
 The Kubernetes Provider supports namespaces, this will deploy an
 application into a given namespace. All components of the applications
 will be created in that namespace.
+The `namespace` defined in Kubernetes artificats, if any, must match with the namespace value in configuration.
+
+Note: In Kubernetes, the default value of `namespace` field (if not defined in Kubernetes manifests explicitly) is `default` and one may leave the following configuration value to its default value.
 
 ==== configuration values
 
