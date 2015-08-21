@@ -116,17 +116,18 @@ class KubernetesProvider(Provider):
 
     def _resourceIdentity(self, path):
         data = anymarkup.parse_file(path)
-        # TODO: modify this logic when moving to kube v1
-        if data["apiVersion"] in ["v1", "v1beta3"]:
+        if data["apiVersion"] == "v1":
             return data["metadata"]["name"]
-        elif data["apiVersion"] == "v1beta1":
-            return data["id"]
+        elif data["apiVersion"] in ["v1beta3", "v1beta2", "v1beta3"]:
+            msg = ("%s is not supported API version, update Kubrnetes "
+                   "artificats to v1 API version." % data["apiVersion"])
+            raise ProviderFailedException(msg)
         else:
             raise ProviderFailedException("Malformed kube file: %s" % path)
 
     def _resetReplicas(self, path):
-        rid = self._resourceIdentity(path)
-        cmd = [self.kubectl, "resize", "rc", rid, "--replicas=0", "--namespace=%s" %
+        rname = self._resourceIdentity(path)
+        cmd = [self.kubectl, "resize", "rc", rname, "--replicas=0", "--namespace=%s" %
                self.namespace]
 
         if self.dryrun:
