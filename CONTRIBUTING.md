@@ -25,7 +25,15 @@ Before you submit your pull request consider the following guidelines:
      ```
 
 * Create your patch, **including appropriate test cases**. Do not forget to add a copyright notice to your files, pls read along the line 625 of gpl-3.txt
-* Commit your changes using a descriptive commit message.
+* Include documentation that either decribe to changed behavior to an atomicapp developer or the changed capability to an end user of atomicapp.
+* Commit your changes using **a descriptive commit message**.
+* think about implementing a git hook, as flake8 is part of the [travis-ci tests](https://travis-ci.org/projectatomic/atomicapp) it will help you pass the CI tests.
+```shell
+$ cat .git/hooks/pre-push
+#!/bin/bash
+
+flake8 -v atomicapp
+```
 * Push your branch to GitHub:
 
     ```shell
