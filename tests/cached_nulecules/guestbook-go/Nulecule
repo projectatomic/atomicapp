@@ -12,15 +12,9 @@ graph:
       - name: image
         description: The frontend part
         default: kubernetes/guestbook:v2
-      - name: hostport
-        description: The host TCP port as the external endpoint
-        default: 80
-      - name: publicip
-        description: The IP address or addresses at which your app can be reached
-        default: 0.0.0.0
     artifacts:
       kubernetes:
-        - file://artifacts/k8s/guestbook-controller.json
-        - file://artifacts/k8s/guestbook-service.json
+        - file://artifacts/kubernetes/guestbook-controller.json
+        - file://artifacts/kubernetes/guestbook-service.json
   - name: redis-centos7-atomicapp
     source: docker://projectatomic/redis-centos7-atomicapp
