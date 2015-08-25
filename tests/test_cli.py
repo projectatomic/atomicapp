@@ -95,7 +95,7 @@ class TestCLISuite(object):
 
     # test it with the famous WordPress Nulecule
     # wordpress-centos7-atomicapp
-    def test_with_wordpress_centos7_atomicapp(self):
+    def test_run_with_wordpress_centos7_atomicapp(self):
         # prepare the atomicapp command to dry run
         command = [
             "main.py",
@@ -111,9 +111,9 @@ class TestCLISuite(object):
 
         assert exec_info.value.code == 0
 
-    # lets test the stop command with the guestbookgo-app
-    # guestbookgo-app
-    def test_with_guestbookgo_app(self):
+    # lets test the stop command with the wordpress-centos7-atomicapp
+    # wordpress-centos7-atomicapp
+    def test_stop_with_wordpress_app(self):
         # prepare the atomicapp command to dry run
         command = [
             "main.py",
