@@ -120,7 +120,8 @@ class KubernetesProvider(Provider):
             return data["metadata"]["name"]
         elif data["apiVersion"] in ["v1beta3", "v1beta2", "v1beta1"]:
             msg = ("%s is not supported API version, update Kubernetes "
-                   "artifacts to v1 API version." % data["apiVersion"])
+                   "artifacts to v1 API version. Error in processing "
+                   "%s manifest." % (data["apiVersion"], path))
             raise ProviderFailedException(msg)
         else:
             raise ProviderFailedException("Malformed kube file: %s" % path)
