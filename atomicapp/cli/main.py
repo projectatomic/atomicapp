@@ -137,6 +137,12 @@ class CLI():
             help="A file which will contain anwsers provided in interactive mode")
 
         parser_run.add_argument(
+            "--provider",
+            dest="cli_provider",
+            choices=['docker', 'kubernetes', 'openshift'],
+            help="The provider to use. Overrides provider value in answerfile.")
+
+        parser_run.add_argument(
             "--ask",
             default=False,
             action="store_true",

@@ -60,7 +60,9 @@ class Nulecule_Base(object):
     @property
     def provider(self):
         config = self.get()
-        if "provider" in config:
+        if self.cli_provider:
+            return self.cli_provider
+        elif "provider" in config:
             return config["provider"]
         return self.__provider
 
@@ -79,7 +81,8 @@ class Nulecule_Base(object):
 
     def __init__(
             self, nodeps=False, update=False, target_path=None,
-            dryrun=False, file_format=ANSWERS_FILE_SAMPLE_FORMAT):
+            dryrun=False, file_format=ANSWERS_FILE_SAMPLE_FORMAT,
+            cli_provider=None):
         self.target_path = target_path
         self.nodeps = Utils.isTrue(nodeps)
         self.update = Utils.isTrue(update)
@@ -87,6 +90,7 @@ class Nulecule_Base(object):
         self.dryrun = dryrun
         self.docker_cli = Utils.getDockerCli(dryrun)
         self.answer_file_format = file_format
+        self.cli_provider = cli_provider
 
     def loadParams(self, data=None):
         if type(data) == dict:
