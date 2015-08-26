@@ -58,6 +58,7 @@ class Run(object):
         self.dryrun = dryrun
         self.stop = stop
         self.kwargs = kwargs
+        self.cli_provider = None
 
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]

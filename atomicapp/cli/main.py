@@ -187,6 +187,12 @@ class CLI():
 
         parser_stop = subparsers.add_parser("stop")
         parser_stop.add_argument(
+            "--provider",
+            dest="cli_provider",
+            choices=['docker', 'kubernetes', 'openshift'],
+            help="The provider to use. Overrides provider value in answerfile.")
+
+        parser_stop.add_argument(
             "APP",
             help=(
                 "Path to the directory where the Atomic App is installed or "
