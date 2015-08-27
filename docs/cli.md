@@ -11,7 +11,7 @@ Sample `answers.conf` file specifying provider
 provider = openshift
 ```
 
-Using the `--provider <provider>` option will  will override the provider in the answerfile.
+Using the `--provider <provider>` option will override the provider in the answerfile.
 
 ### Supported providers
 
