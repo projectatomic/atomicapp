@@ -19,6 +19,7 @@
 
 import logging
 
+
 def set_logging(name="atomicapp", level=logging.DEBUG):
     # create logger
     logger = logging.getLogger()
