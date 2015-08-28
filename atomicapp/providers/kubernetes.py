@@ -154,8 +154,9 @@ class KubernetesProvider(Provider):
         :arg replicas: Replica size to scale to.
         """
         rname = self._resource_identity(path)
-        cmd = [self.kubectl, "scale", "rc", rname, "--replicas=0", "--namespace=%s" %
-               self.namespace]
+        cmd = [self.kubectl, "scale", "rc", rname,
+               "--replicas=%s" % str(replicas),
+               "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
