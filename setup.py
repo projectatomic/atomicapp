@@ -39,6 +39,7 @@ def _install_requirements():
     requirements = _get_requirements('requirements.txt')
     return requirements
 
+
 def _get_version():
     version = _get_requirements('VERSION')
     return version[0]

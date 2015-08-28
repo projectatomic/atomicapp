@@ -23,6 +23,7 @@ Update the below LABELS if ATOMICAPPVERSION & NULECULESPECVERSION are updated:
 2) LABEL io.projectatomic.nulecule.specversion  in app Dockefile
 """
 
+
 def _get_version(path):
     try:
         with open(path) as f:
