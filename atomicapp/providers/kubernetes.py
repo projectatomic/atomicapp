@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 
 class KubernetesProvider(Provider):
+
     """Operations for Kubernetes provider is implemented in this class.
     This class implements deploy, stop and undeploy of an atomicapp on
     Kubernetes provider.
@@ -120,11 +121,18 @@ class KubernetesProvider(Provider):
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
                 logger.debug(os.path.join(self.path, artifact))
-                data = anymarkup.parse(fp)
+                try:
+                    data = anymarkup.parse(fp)
+                except Exception:
+                    msg = "Error processing %s artifcats, Error:" % os.path.join(
+                        self.path, artifact)
+                    printErrorStatus(msg)
+                    raise
             if "kind" in data:
                 self.k8s_manifests.append((data["kind"].lower(), artifact))
             else:
-                raise ProviderFailedException("Malformed kube file")
+                apath = os.path.join(self.path, artifact)
+                raise ProviderFailedException("Malformed kube file: %s" % apath)
 
     def _resource_identity(self, path):
         """Finds the Kubernetes resource name / identity from resource manifest
