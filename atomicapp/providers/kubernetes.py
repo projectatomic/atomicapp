@@ -17,27 +17,31 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.utils import printErrorStatus, Utils
-from atomicapp.constants import HOST_DIR
-from collections import OrderedDict
-import os
 import anymarkup
+import logging
+import os
 import subprocess
 from subprocess import Popen, PIPE
-import logging
+
+from atomicapp.constants import HOST_DIR
+from atomicapp.plugin import Provider, ProviderFailedException
+from atomicapp.utils import printErrorStatus, Utils
 
 logger = logging.getLogger(__name__)
 
 
 class KubernetesProvider(Provider):
+
+    """Operations for Kubernetes provider is implemented in this class.
+    This class implements deploy, stop and undeploy of an atomicapp on
+    Kubernetes provider.
+    """
     key = "kubernetes"
 
     def init(self):
         self.namespace = "default"
 
-        self.kube_order = OrderedDict(
-            [("service", None), ("rc", None), ("pod", None)])  # FIXME
+        self.k8s_manifests = []
 
         logger.debug("Given config: %s", self.config)
         if self.config.get("namespace"):
@@ -45,7 +49,7 @@ class KubernetesProvider(Provider):
 
         logger.info("Using namespace %s", self.namespace)
         if self.container:
-            self.kubectl = self._findKubectl(Utils.getRoot())
+            self.kubectl = self._find_kubectl(Utils.getRoot())
             kube_conf_path = "/etc/kubernetes"
             if not os.path.exists(kube_conf_path):
                 if self.dryrun:
@@ -53,15 +57,14 @@ class KubernetesProvider(Provider):
                 else:
                     os.symlink(os.path.join(Utils.getRoot(), kube_conf_path.lstrip("/")), kube_conf_path)
         else:
-            self.kubectl = self._findKubectl()
+            self.kubectl = self._find_kubectl()
 
         if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
                 raise ProviderFailedException("Command: " + self.kubectl + " not found")
 
-    def _findKubectl(self, prefix=""):
-        """
-        Determine the path to the kubectl program on the host.
+    def _find_kubectl(self, prefix=""):
+        """Determine the path to the kubectl program on the host.
         1) Check the config for a provider_cli in the general section
            remember to add /host prefix
         2) Search /usr/bin:/usr/local/bin
@@ -88,7 +91,12 @@ class KubernetesProvider(Provider):
 
         raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths))
 
-    def _callK8s(self, path):
+    def _call_k8s(self, path):
+        """Creates resource in manifest at given path by calling k8s CLI
+
+        :arg path: Absolute path to Kubernetes resource manifest
+        :raises: Exception
+        """
         cmd = [self.kubectl, "create", "-f", path, "--namespace=%s" % self.namespace]
 
         if self.dryrun:
@@ -105,18 +113,37 @@ class KubernetesProvider(Provider):
                 printErrorStatus("cmd failed: " + " ".join(cmd))
                 raise
 
-    def prepareOrder(self):
+    def process_k8s_artifacts(self):
+        """Processes Kubernetes manifests files and checks if manifest under
+        process is valid.
+        """
         for artifact in self.artifacts:
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
                 logger.debug(os.path.join(self.path, artifact))
-                data = anymarkup.parse(fp)
+                try:
+                    data = anymarkup.parse(fp)
+                except Exception:
+                    msg = "Error processing %s artifcats, Error:" % os.path.join(
+                        self.path, artifact)
+                    printErrorStatus(msg)
+                    raise
             if "kind" in data:
-                self.kube_order[data["kind"].lower()] = artifact
+                self.k8s_manifests.append((data["kind"].lower(), artifact))
             else:
-                raise ProviderFailedException("Malformed kube file")
+                apath = os.path.join(self.path, artifact)
+                raise ProviderFailedException("Malformed kube file: %s" % apath)
 
-    def _resourceIdentity(self, path):
+    def _resource_identity(self, path):
+        """Finds the Kubernetes resource name / identity from resource manifest
+        and raises if manifest is not supported.
+
+        :arg path: Absolute path to Kubernetes resource manifest
+
+        :return: str -- Resource name / identity
+
+        :raises: ProviderFailedException
+        """
         data = anymarkup.parse_file(path)
         if data["apiVersion"] == "v1":
             return data["metadata"]["name"]
@@ -128,10 +155,16 @@ class KubernetesProvider(Provider):
         else:
             raise ProviderFailedException("Malformed kube file: %s" % path)
 
-    def _resetReplicas(self, path):
-        rname = self._resourceIdentity(path)
-        cmd = [self.kubectl, "resize", "rc", rname, "--replicas=0", "--namespace=%s" %
-               self.namespace]
+    def _scale_replicas(self, path, replicas=0):
+        """Scales replicationController to specified replicas size
+
+        :arg path: Path to replicationController manifest
+        :arg replicas: Replica size to scale to.
+        """
+        rname = self._resource_identity(path)
+        cmd = [self.kubectl, "scale", "rc", rname,
+               "--replicas=%s" % str(replicas),
+               "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -139,28 +172,34 @@ class KubernetesProvider(Provider):
             subprocess.check_call(cmd)
 
     def deploy(self):
+        """Deploys the app by given resource manifests.
+        """
         logger.info("Deploying to Kubernetes")
-        self.prepareOrder()
+        self.process_k8s_artifacts()
 
-        for artifact in self.kube_order:
-            if not self.kube_order[artifact]:
+        for kind, artifact in self.k8s_manifests:
+            if not artifact:
                 continue
 
-            k8s_file = os.path.join(self.path, self.kube_order[artifact])
-            self._callK8s(k8s_file)
+            k8s_file = os.path.join(self.path, artifact)
+            self._call_k8s(k8s_file)
 
     def undeploy(self):
+        """Undeploys the app by given resource manifests.
+        Undeploy operation first scale down the replicas to 0 and then deletes
+        the resource from cluster.
+        """
         logger.info("Undeploying from Kubernetes")
-        self.prepareOrder()
+        self.process_k8s_artifacts()
 
-        for kind, artifact in self.kube_order.iteritems():
-            if not self.kube_order[kind]:
+        for kind, artifact in self.k8s_manifests:
+            if not artifact:
                 continue
 
             path = os.path.join(self.path, artifact)
 
             if kind in ["ReplicationController", "rc", "replicationcontroller"]:
-                self._resetReplicas(path)
+                self._scale_replicas(path, replicas=0)
 
             cmd = [self.kubectl, "delete", "-f", path, "--namespace=%s" % self.namespace]
             if self.dryrun:

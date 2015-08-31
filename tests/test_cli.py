@@ -142,3 +142,71 @@ class TestCLISuite(object):
             self.exec_cli(command)
 
         assert exec_info.value.code == 0
+
+    def test_install_with_gitlab_app(self):
+        # prepare the atomicapp command to dry run
+        command = [
+            "main.py",
+            "--verbose",
+            "--dry-run",
+            "install",
+            tests_root + 'cached_nulecules/gitlab/'
+        ]
+
+        # run the command and check if it was successful
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        assert exec_info.value.code == 0
+
+        work_dir = os.path.join(
+            tests_root,
+            "cached_nulecules/gitlab/.workdir")
+
+        assert set(os.listdir(work_dir)) == \
+            set(["gitlab", "postgresql", "redis"])
+
+    def test_run_with_gitlab_app(self):
+        # prepare the atomicapp command to dry run
+        command = [
+            "main.py",
+            "--verbose",
+            "--dry-run",
+            "run",
+            tests_root + 'cached_nulecules/gitlab/'
+        ]
+
+        # run the command and check if it was successful
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        assert exec_info.value.code == 0
+
+        work_dir = os.path.join(
+            tests_root,
+            "cached_nulecules/gitlab/.workdir")
+        assert set(os.listdir(work_dir)) == \
+            set(["gitlab", "postgresql", "redis"])
+
+    def test_stop_with_gitlab_app(self):
+        self.test_run_with_gitlab_app()
+        # prepare the atomicapp command to dry run
+        command = [
+            "main.py",
+            "--verbose",
+            "--dry-run",
+            "stop",
+            tests_root + 'cached_nulecules/gitlab/'
+        ]
+
+        # run the command and check if it was successful
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        assert exec_info.value.code == 0
+
+        work_dir = os.path.join(
+            tests_root,
+            "cached_nulecules/gitlab/.workdir")
+        assert set(os.listdir(work_dir)) == \
+            set(["gitlab", "postgresql", "redis"])
