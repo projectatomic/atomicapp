@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 if [ "$1" == "-h" -o "$1" == "--help" ]; then
     echo "This script let's you to run the atomicapp container as a tool."

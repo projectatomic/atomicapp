@@ -4,7 +4,7 @@ WHAT=$1
 
 # TODO sanity check that we got docker >= 1.6
 
-[ -z "${WHAT}" ] && echo "Need to provide a distro you want to build for (fedora|centos|rhel7)" && exit
+[ -z "${WHAT}" ] && echo "Need to provide a distro you want to build for (fedora|centos|rhel7|debian)" && exit
 IMAGE_NAME=atomicapp-${WHAT}
 
 if [ -z "$USERNAME" ]; then
