@@ -11,7 +11,7 @@ WORKDIR /opt/atomicapp
 
 # add all of Atomic App's files to the container image
 ADD atomicapp/ /opt/atomicapp/atomicapp/
-ADD setup.py VERSION NULECULE requirements.txt /opt/atomicapp/
+ADD setup.py requirements.txt /opt/atomicapp/
 
 # lets install pip, and gcc for the native extensions
 # and remove all after use

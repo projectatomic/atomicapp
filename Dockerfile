@@ -11,7 +11,7 @@ WORKDIR /opt/atomicapp
 
 # add all of Atomic App's files to the container image
 ADD atomicapp/ /opt/atomicapp/atomicapp/
-ADD setup.py VERSION NULECULE requirements.txt /opt/atomicapp/
+ADD setup.py requirements.txt /opt/atomicapp/
 
 # add EPEL repo for pip
 RUN echo -e "[epel]\nname=epel\nenabled=1\nbaseurl=https://dl.fedoraproject.org/pub/epel/7/x86_64/\ngpgcheck=0" > /etc/yum.repos.d/epel.repo

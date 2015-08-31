@@ -23,17 +23,8 @@ Update the below LABELS if ATOMICAPPVERSION & NULECULESPECVERSION are updated:
 2) LABEL io.projectatomic.nulecule.specversion  in app Dockefile
 """
 
-
-def _get_version(path):
-    try:
-        with open(path) as f:
-            version = f.read().splitlines()[0]
-    except (IOError, OSError) as ex:
-        raise RuntimeError("Can't open file with: %s", repr(ex))
-    return version
-
-__ATOMICAPPVERSION__ = _get_version('VERSION')
-__NULECULESPECVERSION__ = _get_version('NULECULE')
+__ATOMICAPPVERSION__ = '0.1.3'
+__NULECULESPECVERSION__ = '0.0.2'
 
 EXTERNAL_APP_DIR = "external"
 GLOBAL_CONF = "general"
