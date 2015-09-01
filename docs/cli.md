@@ -1,4 +1,4 @@
-# Atomica App Command Line Interface (CLI)
+# Atomic App Command Line Interface (CLI)
 
 ## Providers
 
