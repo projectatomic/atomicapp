@@ -126,7 +126,10 @@ class Run(object):
 
     def _applyTemplate(self, data, component):
         template = Template(data)
-        config = self.nulecule_base.getValues(component)
+        if self.stop:
+            config = self.nulecule_base.getValues(component, skip_asking=True)
+        else:
+            config = self.nulecule_base.getValues(component)
         logger.debug("Config: %s ", config)
 
         output = None
@@ -194,8 +197,11 @@ class Run(object):
 
         provider_class = self.plugin.getProvider(self.nulecule_base.provider)
         dst_dir = os.path.join(self.utils.workdir, component)
-        provider = provider_class(
-            self.nulecule_base.getValues(component), dst_dir, self.dryrun)
+        if self.stop:
+            component_values = self.nulecule_base.getValues(component, skip_asking=True)
+        else:
+            component_values = self.nulecule_base.getValues(component)
+        provider = provider_class(component_values, dst_dir, self.dryrun)
         if provider:
             printStatus("Deploying component %s ..." % component)
             logger.info("Using provider %s for component %s",
