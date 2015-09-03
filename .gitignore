@@ -1,3 +1,6 @@
+# ignore specific to Atomic App
+.workdir/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

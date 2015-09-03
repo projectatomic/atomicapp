@@ -163,8 +163,7 @@ class TestCLISuite(object):
             tests_root,
             "cached_nulecules/gitlab/.workdir")
 
-        assert set(os.listdir(work_dir)) == \
-            set(["gitlab", "postgresql", "redis"])
+        assert os.path.isdir(work_dir) == False
 
     def test_run_with_gitlab_app(self):
         # prepare the atomicapp command to dry run
