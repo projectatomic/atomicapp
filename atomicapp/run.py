@@ -58,9 +58,13 @@ class Run(object):
         self.dryrun = dryrun
         self.stop = stop
         self.kwargs = kwargs
+        self.cli_provider = None
 
         if "answers_output" in kwargs:
             self.answers_output = kwargs["answers_output"]
+
+        if "cli_provider" in kwargs:
+            self.cli_provider = kwargs["cli_provider"]
 
         if os.environ and "IMAGE" in os.environ:
             self.app_path = APP
@@ -87,7 +91,10 @@ class Run(object):
             printStatus("Install Successful.")
 
         self.nulecule_base = Nulecule_Base(
-            target_path=self.app_path, dryrun=dryrun, file_format=answers_format)
+            target_path=self.app_path,
+            dryrun=dryrun,
+            file_format=answers_format,
+            cli_provider=self.cli_provider)
         if "ask" in kwargs:
             self.nulecule_base.ask = kwargs["ask"]
 
@@ -191,7 +198,6 @@ class Run(object):
     def _processComponent(self, component, graph_item):
         logger.debug(
             "Processing component '%s' and graph item '%s'", component, graph_item)
-
         provider_class = self.plugin.getProvider(self.nulecule_base.provider)
         dst_dir = os.path.join(self.utils.workdir, component)
         provider = provider_class(
@@ -223,9 +229,6 @@ class Run(object):
         self.nulecule_base.loadAnswers(self.answers_file)
 
         self.nulecule_base.checkAllArtifacts()
-        config = self.nulecule_base.get()
-        if "provider" in config:
-            self.provider = config["provider"]
 
         self._dispatchGraph()
 

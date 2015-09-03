@@ -137,6 +137,12 @@ class CLI():
             help="A file which will contain anwsers provided in interactive mode")
 
         parser_run.add_argument(
+            "--provider",
+            dest="cli_provider",
+            choices=['docker', 'kubernetes', 'openshift'],
+            help="The provider to use. Overrides provider value in answerfile.")
+
+        parser_run.add_argument(
             "--ask",
             default=False,
             action="store_true",
@@ -180,6 +186,12 @@ class CLI():
         parser_install.set_defaults(func=cli_install)
 
         parser_stop = subparsers.add_parser("stop")
+        parser_stop.add_argument(
+            "--provider",
+            dest="cli_provider",
+            choices=['docker', 'kubernetes', 'openshift'],
+            help="The provider to use. Overrides provider value in answerfile.")
+
         parser_stop.add_argument(
             "APP",
             help=(
