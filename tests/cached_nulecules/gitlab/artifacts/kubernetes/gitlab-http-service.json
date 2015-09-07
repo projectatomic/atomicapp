@@ -9,7 +9,7 @@
             {
                "targetPort": "gitlab-http",
                "port": 80,
-               "nodePort": 80
+               "nodePort": 30000
             }
         ],
         "type": "NodePort",
