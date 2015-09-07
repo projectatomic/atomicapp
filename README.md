@@ -33,7 +33,7 @@ If you want to do some changes to the code, I suggest to do:
 ```
 cd atomicapp
 export PYTHONPATH=`pwd`:$PYTHONPATH
-alias atomicapp="`pwd`/atomicapp/cli/main.py"
+alias atomicapp="python `pwd`/atomicapp/cli/main.py"
 ```
 
 ### Build
