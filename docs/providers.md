@@ -16,13 +16,16 @@ Atomic App 0.1.3 includes three providers:
 
 All providers assume that you install and run the Atomic App on a host that is part of the backend cluster or runs docker directly. By now we do not support remote deployments.
 
-## Choosing a provider
+## Choosing and configuring a provider
 While deploying an Atomic App you can choose one of the providers by setting it in `answers.conf`:
 
 ```
 [general]
 provider: openshift
+providerconfig: /host/home/foo/.kube/config
 ```
+
+You need to provide Atomic App with access to a configuration file to be able to use Kubernetes and OpenShift providers. By using the `providerconfig` option you will override it's default value (`~/.kube/config`).
 
 Providers may need additional configuration.
 
@@ -77,16 +80,12 @@ This command undeploys the app in Kubernetes cluster in specified namespace. For
 The OpenShift3 Provider will deploy and run an Atomic App on an OpenShift3 instance provided via an OpenShift3 configuration file. An OpenShift3 configuration file is written to a disk provided that you have logged in see [osc login announcement](http://lists.openshift.redhat.com/openshift-archives/users/2015-March/msg00014.html)
 
 
-You need to provide a copy of `.config/openshift/.config` so that the provider may use this configuration to deploy and run the Atomic App.
+You need to provide a path to a copy of `.config/openshift/.config` as `providerconfig` so that the provider may use this configuration to deploy and run the Atomic App.
 
 
 As of 0.1.3 of Atomic App, OpenShift3 templates will only be processed by Atomic App during the run phase. The names of the parameters supplied by the OpenShift3 template file will be replaced by the parameters supplied to Atomic App.
 
 **Configuration values**
 
-Table 1. OpenShift3 default configuration values
-
-Keyword         | Required | Description                                 | Default value
-----------------|----------|---------------------------------------------|--------------
-openshiftconfig |   no     |   path to OpenShift3 configuration file     | none
+There are no configuration values specific to OpenShift provider.
 
