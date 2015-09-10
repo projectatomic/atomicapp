@@ -26,7 +26,7 @@ import imp
 
 import logging
 from utils import Utils
-from constants import HOST_DIR
+from constants import HOST_DIR, PROVIDER_CONFIG_KEY, DEFAULT_PROVIDER_CONFIG
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ class Provider(object):
     path = None
     dryrun = None
     container = False
+    config_file = None
     __artifacts = None
 
     @property
@@ -55,11 +56,33 @@ class Provider(object):
         if Utils.getRoot() == HOST_DIR:
             self.container = True
 
+        self.config_file = DEFAULT_PROVIDER_CONFIG
+        self.getConfigFile()
+
     def init(self):
         raise NotImplementedError()
 
     def deploy(self):
         raise NotImplementedError()
+
+    def getConfigFile(self):
+        """
+        Looks up provider configuration file (aka ~/.kube/config) in config passed
+        to provider.
+        """
+        if PROVIDER_CONFIG_KEY in self.config:
+            self.config_file = self.config[PROVIDER_CONFIG_KEY]
+            if self.container:
+                self.config_file = os.path.join(Utils.getRoot(), self.config_file.lstrip("/"))
+        else:
+            logger.warning("Configuration option '%s' not found" % PROVIDER_CONFIG_KEY)
+
+    def checkConfigFile(self):
+        if not self.config_file or not os.access(self.config_file, os.R_OK):
+            raise ProviderFailedException(
+                "Cannot access configuration file %s. Try adding "
+                "'%s = /path/to/your/config.file' in the "
+                "[general] section of the answers.conf file." % (self.config_file, PROVIDER_CONFIG_KEY))
 
     def undeploy(self):
         logger.warning(

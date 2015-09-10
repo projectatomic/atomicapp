@@ -37,6 +37,7 @@ class KubernetesProvider(Provider):
     Kubernetes provider.
     """
     key = "kubernetes"
+    config_file = None
 
     def init(self):
         self.namespace = "default"
@@ -62,6 +63,9 @@ class KubernetesProvider(Provider):
         if not self.dryrun:
             if not os.access(self.kubectl, os.X_OK):
                 raise ProviderFailedException("Command: " + self.kubectl + " not found")
+
+            # Check if Kubernetes config file is accessible
+            self.checkConfigFile()
 
     def _find_kubectl(self, prefix=""):
         """Determine the path to the kubectl program on the host.
@@ -97,7 +101,7 @@ class KubernetesProvider(Provider):
         :arg path: Absolute path to Kubernetes resource manifest
         :raises: Exception
         """
-        cmd = [self.kubectl, "create", "-f", path, "--namespace=%s" % self.namespace]
+        cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "create", "-f", path, "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -162,7 +166,7 @@ class KubernetesProvider(Provider):
         :arg replicas: Replica size to scale to.
         """
         rname = self._resource_identity(path)
-        cmd = [self.kubectl, "scale", "rc", rname,
+        cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "scale", "rc", rname,
                "--replicas=%s" % str(replicas),
                "--namespace=%s" % self.namespace]
 
@@ -201,7 +205,7 @@ class KubernetesProvider(Provider):
             if kind in ["ReplicationController", "rc", "replicationcontroller"]:
                 self._scale_replicas(path, replicas=0)
 
-            cmd = [self.kubectl, "delete", "-f", path, "--namespace=%s" % self.namespace]
+            cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "delete", "-f", path, "--namespace=%s" % self.namespace]
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
             else:

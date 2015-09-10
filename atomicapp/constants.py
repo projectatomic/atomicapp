@@ -47,3 +47,5 @@ DEFAULT_ANSWERS = {
         "namespace": DEFAULT_NAMESPACE
     }
 }
+PROVIDER_CONFIG_KEY="providerconfig"
+DEFAULT_PROVIDER_CONFIG="~/.kube/config"
