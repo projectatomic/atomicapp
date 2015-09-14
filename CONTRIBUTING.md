@@ -93,5 +93,36 @@ from the upstream repository:
 ## Git Commit Messages
 
 * Use the present tense ("Add feature" not "Added feature")
-* Use the imperative mood ("Move cursor to..." not "Moves cursor to..."):wq
+* Use the imperative mood ("Move cursor to..." not "Moves cursor to...")
 * Reference issues and pull requests liberally
+
+## How to Test
+
+[Functional tests](tests/test_cli.py) and [unit tests](tests/units/) are part
+of this repository. We prepared a [Dockerfile](Dockerfile.test) which creates
+an image able to run these tests. To build it, run:
+
+```
+docker build -t atomicapp-test -f Dockerfile.test .
+```
+
+In case you want to test code which is currently in repository, run:
+
+```
+docker run -t --rm atomicapp-test
+```
+
+To test your changes in code you have two options:
+
+1. rebuild the image every time you save a file
+2. add a volume to the `docker run` command as follows
+
+```
+docker run -t --rm -v $PWD/atomicapp:/opt/atomicapp/atomicapp atomicapp-test
+```
+
+You can use following command to run tests you added:
+
+```
+docker run -t --rm -v $PWD/tests/:/opt/atomicapp/tests atomicapp-test
+```
