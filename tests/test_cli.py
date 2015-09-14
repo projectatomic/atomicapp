@@ -22,11 +22,13 @@ __author__ = "goern"
 import os
 import sys
 import logging
+import shutil
 
 import pytest
 import json
 
 import atomicapp.cli.main
+from atomicapp.constants import WORKDIR
 
 logger = logging.getLogger('atomicapp.tests')
 tests_root = os.path.dirname(os.path.dirname(__file__)) + '/tests/'
@@ -143,6 +145,15 @@ class TestCLISuite(object):
 
         assert exec_info.value.code == 0
 
+    def setup_method(self, method):
+        if method.func_name == "test_install_with_gitlab_app":
+            work_dir = os.path.join(
+                    tests_root,
+                    "cached_nulecules/gitlab/%s" % WORKDIR)
+
+            if os.path.isdir(work_dir):
+               shutil.rmtree(work_dir)
+
     def test_install_with_gitlab_app(self):
         # prepare the atomicapp command to dry run
         command = [
@@ -161,7 +172,7 @@ class TestCLISuite(object):
 
         work_dir = os.path.join(
             tests_root,
-            "cached_nulecules/gitlab/.workdir")
+            "cached_nulecules/gitlab/%s" % WORKDIR)
 
         assert os.path.isdir(work_dir) == False
 
@@ -183,7 +194,7 @@ class TestCLISuite(object):
 
         work_dir = os.path.join(
             tests_root,
-            "cached_nulecules/gitlab/.workdir")
+            "cached_nulecules/gitlab/%s" % WORKDIR)
         assert set(os.listdir(work_dir)) == \
             set(["gitlab", "postgresql", "redis"])
 
@@ -206,6 +217,6 @@ class TestCLISuite(object):
 
         work_dir = os.path.join(
             tests_root,
-            "cached_nulecules/gitlab/.workdir")
+            "cached_nulecules/gitlab/%s" % WORKDIR)
         assert set(os.listdir(work_dir)) == \
             set(["gitlab", "postgresql", "redis"])

@@ -1,0 +1,20 @@
+FROM fedora:22
+
+RUN dnf -y install python-pip python-mock && \
+    dnf -y clean all
+
+ADD . /opt/atomicapp
+
+WORKDIR /opt/atomicapp
+
+RUN pip install -r requirements.txt --use-mirrors && \
+    pip install pytest-cov coveralls --use-mirrors && \
+    pip install pep8 --use-mirrors && \
+    pip install flake8 --use-mirrors
+
+RUN mkdir /run/lock
+
+ENV PYTHONPATH $PYTHONPATH:/opt/atomicapp/atomicapp
+
+CMD python -m pytest -vv tests --cov atomicapp
+
