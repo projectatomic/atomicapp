@@ -189,8 +189,9 @@ class Nulecule_Base(object):
         ) if not component == GLOBAL_CONF and global_base else {}
         if component == GLOBAL_CONF:
             if self.mainfile_data and PARAMS_KEY in self.mainfile_data:
+                config = self.fromListToDict(self.mainfile_data[PARAMS_KEY])
                 component_config = Utils.update(
-                    component_config, self.mainfile_data[PARAMS_KEY])
+                    component_config, config)
         else:
             graph_item = self.getComponent(component)
             if graph_item and PARAMS_KEY in graph_item:
