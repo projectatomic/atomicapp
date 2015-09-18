@@ -50,23 +50,14 @@ class OpenShiftProvider(Provider):
                 os.symlink(os.path.join(Utils.getRoot(), "usr/bin/oc"), "/usr/bin/oc")
                 self.cli = "/usr/bin/oc"
 
-        if not self.cli or not os.access(self.cli, os.X_OK):
-            raise ProviderFailedException("Command %s not found" % self.cli)
-        else:
-            logger.debug("Using %s to run OpenShift commands.", self.cli)
+        if not self.dryrun:
+            if not self.cli or not os.access(self.cli, os.X_OK):
+                raise ProviderFailedException("Command %s not found" % self.cli)
+            else:
+                logger.debug("Using %s to run OpenShift commands.", self.cli)
 
-        if "openshiftconfig" in self.config:
-            self.config_file = self.config["openshiftconfig"]
-            if self.container:
-                self.config_file = os.path.join(Utils.getRoot(), self.config_file.lstrip("/"))
-        else:
-            logger.warning("Configuration option 'openshiftconfig' not found")
-
-        if not self.config_file or not os.access(self.config_file, os.R_OK):
-            raise ProviderFailedException(
-                "Cannot access configuration file %s. Try adding "
-                "'openshiftconfig = /path/to/your/.kube/config' in the "
-                "[general] section of the answers.conf file." % self.config_file)
+            # Check if OpenShift config file is accessible
+            self.checkConfigFile()
 
     def _callCli(self, path):
         cmd = [self.cli, "--config=%s" % self.config_file, "create", "-f", path]
