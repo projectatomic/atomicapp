@@ -1,4 +1,4 @@
-FROM projectatomic/atomicapp:0.1.3
+FROM projectatomic/atomicapp:0.1.10
 
 MAINTAINER Christoph Görn <goern@redhat.com>
 
@@ -9,4 +9,3 @@ LABEL Build docker build --rm --tag goern/wordpress-centos7-atomicapp .
 
 ADD /Nulecule /Dockerfile README.asciidoc gpl-3.0.txt /application-entity/
 ADD /artifacts /application-entity/artifacts
-

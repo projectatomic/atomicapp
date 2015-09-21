@@ -3,6 +3,63 @@
 Welcome to Atomic App, this is the reference implementation of the [Container
 Application Specification](http://www.projectatomic.io/nulecule/spec/0.0.2/index.html) (aka the Nulecule Specification)
 
+## Atomic App 0.1.10 (2015-Sept-21)
+
+With this releasewe have fixed many bugs and implemented many enhancements, please see the [Atomic App Issue tracker](https://github.com/projectatomic/atomicapp/issues/) for the past.
+
+A summary of the major new features is given below.
+
+Author: Charlie Drage <charlie@charliedrage.com>
+
+ * More unit testing / restructure
+ * undeploy added to docker provider
+ * dont ask for missing artifacts if stopping
+ * debian dockerfile support
+
+Author: Ratnadeep Debnath <rtnpro@gmail.com>
+
+ * Convert global params in Nulecule file to `Dict` rather than `List`, fixed #276
+
+Author: Václav Pavlín <vaclav.pavlin@gmail.com>
+
+ * Add `providerconfig` option to fix #266
+ * Add Dockerfile for running tests, add How-to-test to CONTRIBUTION.md
+
+Author: Navid Shaikh <nshaikh@redhat.com>
+ * Add the right nodePort from allowed port range, reference <https://github.com/kubernetes/kubernetes/blob/master/docs/user-guide/services.md#type-nodeport>
+ * Add tests for fix of issue #212
+ * Fixes processing multiple k8s artifacts resources
+      - Nulecule multiple resource artifacts defined per kind of resource can now be
+      processed without overriding earlier artifacts
+      - Modifies the methods names as per <https://www.python.org/dev/peps/pep-0008/#method-names-and-instance-variables>
+      - Alters order of imports as per <https://www.python.org/dev/peps/pep-0008/#imports>
+      - Adds docstring to methods
+ * Adds support for resizing replicas if using kube v1 APIs   
+      This patch adds provision for lookup of resource identity based on the API
+      version under processing. Presently support for v1, v1beta3 and v1beta1 APIs
+      are included.
+
+Author: Aaron Weitekamp <aweiteka@redhat.com>
+
+ * Fix typo in docs/cli.md
+ * Add provider documentation
+ * Add --provider option
+    The --provider option is constrained to supported providers.
+    Providers can be specified in answers.conf. If --provider opt
+    is specified it will be overridden. Otherwise the default provider
+    is used.
+
+Author: Swapnil Kulkarni <me@coolsvap.net>
+
+* Update tox.ini to execute the pep8 tests
+    Currently if i do tox -e pep8
+    - it does not run
+    - fails to create the test env
+    Updated following,
+    - tox.ini to include testenv
+    Added test-requirements for flake8
+
+
 ## Atomic App 0.1.3 (2015-Aug-17)
 
 This is a hotfix to 0.1.2 and removed a bug we had in [all LABELs of the Dockerfiles](https://github.com/projectatomic/atomicapp/issues/217).
