@@ -87,9 +87,9 @@ class Provider(object):
             except NotImplementedError:
                 raise ProviderFailedException(
                     "Cannot access configuration file %s. Try adding "
-                    "'%s = /path/to/your/config.file' in the "
+                    "'%s = /path/to/your/%s' in the "
                     "[general] section of the answers.conf file."
-                    % (self.config_file, PROVIDER_CONFIG_KEY))
+                    % (self.config_file, PROVIDER_CONFIG_KEY, DEFAULT_PROVIDER_CONFIG))
 
     def undeploy(self):
         logger.warning(

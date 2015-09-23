@@ -58,3 +58,11 @@ class TestNuleculeBase(unittest.TestCase):
         provider.checkConfigFile()
         with open(path, "r") as fp:
             self.assertEqual(fp.read(), MOCK_CONTENT)
+
+    def test_provider_check_config_fail(self):
+        path = self.create_temp_file()
+        data = {'general': {'namespace': 'testing', 'provider': 'openshift'}}
+
+        provider = self.prepare_provider(data)
+
+        self.assertRaises(ProviderFailedException, provider.checkConfigFile)
