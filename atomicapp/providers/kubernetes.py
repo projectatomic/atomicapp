@@ -108,7 +108,7 @@ class KubernetesProvider(Provider):
             os.makedirs(config_dir)
 
         with open(self.config_file, "w") as fp:
-           fp.write(content)
+            fp.write(content)
 
     def _call(self, cmd):
         """Calls given command
