@@ -18,7 +18,7 @@
 """
 
 from atomicapp.plugin import Provider, ProviderFailedException
-from utils import Utils
+from atomicapp.utils import Utils
 
 from collections import OrderedDict
 import os
