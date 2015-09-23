@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import subprocess
 from atomicapp.utils import Utils
 
 
@@ -113,4 +114,28 @@ class NuleculeComponent(NuleculeBase):
         pass
 
     def load_external_application(self):
-        pass
+        docker_handler = DockerHandler(self.source)
+        docker_handler.pull()
+
+
+class DockerHandler(object):
+    """Interface to interact with Docker."""
+
+    def __init__(self, docker_cli='/usr/bin/docker'):
+        self.docker_cli = docker_cli
+
+    def pull(self, image, update=False):
+        pull_cmd = [self.docker_cli, 'pull', image]
+        subprocess.call(pull_cmd)
+
+    def extract(self, image, source, dest):
+        container_id = None
+        run_cmd = [
+            self.docker_cli, 'run', '-d', '--entrypoint', '/bin/true', image]
+        container_id = subprocess.check_output(run_cmd).strip()
+        cp_cmd = [self.docker_cli, 'cp',
+                  '%s:/%s' % (container_id, source),
+                  dest]
+        subprocess.call(cp_cmd)
+        rm_cmd = [self.docker_cli, 'rm', container_id]
+        subprocess.call(rm_cmd)
