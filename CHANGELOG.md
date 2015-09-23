@@ -3,6 +3,28 @@
 Welcome to Atomic App, this is the reference implementation of the [Container
 Application Specification](http://www.projectatomic.io/nulecule/spec/0.0.2/index.html) (aka the Nulecule Specification)
 
+## Atomic App 0.1.11 (2015-Sept-23)
+
+This is a hotfix to 0.1.10 and removed a bug we had in [Missing config file error (~/.kube/config) in 0.1.10](https://github.com/projectatomic/atomicapp/issues/280).
+
+Author: Václav Pavlín <vaclav.pavlin@gmail.com>
+ * Do not use sudo in Docker provider, Fixes #281
+
+ * Generate provider config for kubernetes if it does not exist
+
+    There is new unimplemented method in Plugin - generateConfigFile.
+    This method is invoked in case a provider calls checkConfigFile
+    and the file does not exist. If provider does not implement
+    this method, error about missing configuration file will
+    be printed out. Config file will be generated and used if the method
+    is implemented.  
+    Currently, it is implemented only by Kubernetes provider.
+    Fixes #280
+
+Author: Charlie Drage <charlie@charliedrage.com>
+
+ * fix openshift import warning
+
 ## Atomic App 0.1.10 (2015-Sept-21)
 
 With this releasewe have fixed many bugs and implemented many enhancements, please see the [Atomic App Issue tracker](https://github.com/projectatomic/atomicapp/issues/) for the past.
