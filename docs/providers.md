@@ -25,7 +25,7 @@ provider: openshift
 providerconfig: /host/home/foo/.kube/config
 ```
 
-You need to provide Atomic App with access to a configuration file to be able to use Kubernetes and OpenShift providers. By using the `providerconfig` option you will override it's default value (`~/.kube/config`).
+You need to provide Atomic App with access to a configuration file to be able to use some providers. By using the `providerconfig` option you will override it's default value (`provider.config`).
 
 Providers may need additional configuration.
 
@@ -36,7 +36,9 @@ Providers may need additional configuration.
 The Docker provider will simply start a Docker container on the host the Atomic App is deployed.
 
 
-Atomic App will use the name within namespace and append it with `atomic` and a hash value. If `--name` is provided within the Docker artifacts file, this will be used but the user will be given a warning.
+Atomic App will use the name within namespace and append it with `atomic` and a hash value. If `--name` is provided within the Docker artifacts file, this will be used but the user will be given a warning.a
+
+This provider does not use `providerconfig` option.
 
 **Configuration values**
 
@@ -76,6 +78,8 @@ The Kubernetes Provider supports namespaces, this will deploy an application int
 
 
 The default value of `namespace` is `default` unless otherwise defined in the Kubernetes manifest.
+
+This provider requires configuration file to be able to connect to Kubernetes Master. If the configuration file is not provided, it will try to generate default configuration file.
 
 **Configuration values**
 
