@@ -5,6 +5,11 @@ import os
 import json
 from atomicapp.plugin import Plugin, ProviderFailedException
 from atomicapp.nulecule_base import Nulecule_Base
+from atomicapp.providers.kubernetes import KubernetesProvider
+
+MOCK_CONTENT = "mock_provider_call_content"
+def mock_provider_call(self, cmd):
+    return MOCK_CONTENT
 
 class TestNuleculeBase(unittest.TestCase):
     def setUp(self):
@@ -27,20 +32,29 @@ class TestNuleculeBase(unittest.TestCase):
 
         return provider
 
+    @mock.patch.object(KubernetesProvider, '_call', mock_provider_call)
     def test_provider_config_exist(self):
         provider_config_path = self.create_temp_file()
+        mock_content = "%s_%s" % (MOCK_CONTENT, "_unchanged")
         with open(provider_config_path, "w") as fp:
-            fp.write("This is config")
+            fp.write(mock_content)
 
-        data = {'general': {'namespace': 'testing', 'provider': 'kubernetes', 'providerconfig': '%s' % provider_config_path}}
+        data = {'general': {'namespace': 'testing', 'provider': 'kubernetes', 'providerconfig': provider_config_path}}
         
         provider = self.prepare_provider(data)
 
         self.assertEqual(provider.config_file, provider_config_path)
+        provider.checkConfigFile()
+        with open(provider_config_path, "r") as fp:
+            self.assertEqual(fp.read(), mock_content)
 
-    def test_provider_check_config_fail(self):
-        data = {'general': {'namespace': 'testing', 'provider': 'kubernetes'}}
+    @mock.patch("kubernetes.KubernetesProvider._call", mock_provider_call)
+    def test_provider_check_config_generation(self):
+        path = self.create_temp_file()
+        data = {'general': {'namespace': 'testing', 'provider': 'kubernetes', 'providerconfig': path}}
 
         provider = self.prepare_provider(data)
 
-        self.assertRaises(ProviderFailedException, provider.checkConfigFile)
+        provider.checkConfigFile()
+        with open(path, "r") as fp:
+            self.assertEqual(fp.read(), MOCK_CONTENT)

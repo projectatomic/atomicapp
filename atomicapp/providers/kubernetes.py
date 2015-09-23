@@ -20,7 +20,6 @@
 import anymarkup
 import logging
 import os
-import subprocess
 from subprocess import Popen, PIPE
 
 from atomicapp.constants import HOST_DIR
@@ -38,6 +37,7 @@ class KubernetesProvider(Provider):
     """
     key = "kubernetes"
     config_file = None
+    kubectl = None
 
     def init(self):
         self.namespace = "default"
@@ -95,13 +95,27 @@ class KubernetesProvider(Provider):
 
         raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths))
 
-    def _call_k8s(self, path):
-        """Creates resource in manifest at given path by calling k8s CLI
+    def generateConfigFile(self):
+        """Generates configuration file for Kubernetes by calling
+        kubectl config view and saving the output
+        """
 
-        :arg path: Absolute path to Kubernetes resource manifest
+        cmd = [self.kubectl, "config", "view"]
+
+        content = self._call(cmd)
+        config_dir = os.path.dirname(self.config_file)
+        if config_dir and not os.path.isdir(config_dir):
+            os.makedirs(config_dir)
+
+        with open(self.config_file, "w") as fp:
+           fp.write(content)
+
+    def _call(self, cmd):
+        """Calls given command
+
+        :arg cmd: Command to be called in a form of list
         :raises: Exception
         """
-        cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "create", "-f", path, "--namespace=%s" % self.namespace]
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", " ".join(cmd))
@@ -113,6 +127,8 @@ class KubernetesProvider(Provider):
                 logger.debug("stderr = %s", stderr)
                 if stderr and stderr.strip() != "":
                     raise Exception(str(stderr))
+
+                return stdout
             except Exception:
                 printErrorStatus("cmd failed: " + " ".join(cmd))
                 raise
@@ -170,10 +186,7 @@ class KubernetesProvider(Provider):
                "--replicas=%s" % str(replicas),
                "--namespace=%s" % self.namespace]
 
-        if self.dryrun:
-            logger.info("DRY-RUN: %s", " ".join(cmd))
-        else:
-            subprocess.check_call(cmd)
+        self._call(cmd)
 
     def deploy(self):
         """Deploys the app by given resource manifests.
@@ -186,7 +199,9 @@ class KubernetesProvider(Provider):
                 continue
 
             k8s_file = os.path.join(self.path, artifact)
-            self._call_k8s(k8s_file)
+
+            cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "create", "-f", k8s_file, "--namespace=%s" % self.namespace]
+            self._call(cmd)
 
     def undeploy(self):
         """Undeploys the app by given resource manifests.
@@ -206,7 +221,4 @@ class KubernetesProvider(Provider):
                 self._scale_replicas(path, replicas=0)
 
             cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "delete", "-f", path, "--namespace=%s" % self.namespace]
-            if self.dryrun:
-                logger.info("DRY-RUN: %s", " ".join(cmd))
-            else:
-                subprocess.check_call(cmd)
+            self._call(cmd)
