@@ -63,7 +63,7 @@ class DockerProvider(Provider):
                 raise ProviderFailedException(msg)
 
     def _get_containers(self):
-        docker_cmd = 'docker inspect --format="{{ .Name }}" $(sudo docker ps -aq --no-trunc) | sed "s,/,,g"'
+        docker_cmd = 'docker inspect --format="{{ .Name }}" $(docker ps -aq --no-trunc) | sed "s,/,,g"'
         if self.dryrun:
             logger.info("DRY-RUN: %s", docker_cmd)
             return []
