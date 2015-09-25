@@ -143,7 +143,7 @@ class Nulecule_Base(object):
             logger.debug("Path to answers file given, loading %s", data)
             if os.path.isdir(data):
                 if os.path.isfile(os.path.join(data, ANSWERS_FILE)):
-                    data = os.path.isfile(os.path.join(data, ANSWERS_FILE))
+                    data = os.path.join(data, ANSWERS_FILE)
                 else:
                     self.write_sample_answers = True
 
