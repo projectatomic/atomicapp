@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
+import anymarkup
 import copy
+import os
 import subprocess
+import uuid
 from atomicapp.utils import Utils
 
 
@@ -10,11 +13,13 @@ class NuleculeBase(object):
 
     def load_config(self, config, params, namespace):
         for param in params:
-            value = config.get(namespace).get(param['name']) or \
-                config.get('general').get(param['name']) or \
+            value = config.get(namespace, {}).get(param['name']) or \
+                config.get('general', {}).get(param['name']) or \
                 param.get('default')
             if value is None:
                 value = Utils.askFor(param['name'], param)
+            if config.get(namespace) is None:
+                config[namespace] = {}
             config[namespace][param['name']] = value
         return config
 
@@ -53,6 +58,12 @@ class Nulecule(NuleculeBase):
         self.config = self.load_config(config, self.params, self.namespace)
         self.load()
 
+    @classmethod
+    def load_from_dir(cls, path, config={}):
+        nulecule_data = anymarkup.parse_file(
+            os.path.join(path, 'Nulecule'))
+        return Nulecule(config=config, **nulecule_data)
+
     def load(self):
         self.components = self.load_components(self.graph)
 
@@ -60,15 +71,17 @@ class Nulecule(NuleculeBase):
         components = []
         for node in graph:
             node_name = node['name']
+            config = {}
             if node.get('artifacts'):
-                config = {}
-                config['general'] = copy.deepcopy(self.config.get('general'))
-                config[node_name] = copy.deepcopy(self.config.get(node_name))
-                component = NuleculeComponent(
-                    node_name, node.get('source'), node.get('params'),
-                    node.get('artifacts'), config=config)
-                self.config[node_name].update(component.config.get(node_name))
-                components.append(component)
+                config['general'] = copy.deepcopy(self.config.get('general')) or {}
+                config[node_name] = copy.deepcopy(self.config.get(node_name)) or {}
+            component = NuleculeComponent(
+                node_name, node.get('source'), node.get('params'),
+                node.get('artifacts'), config=config)
+            if self.config.get(node_name) is None:
+                self.config[node_name] = {}
+            self.config[node_name].update(component.config.get(node_name))
+            components.append(component)
         return components
 
     def run(self):
@@ -102,20 +115,25 @@ class NuleculeComponent(NuleculeBase):
         self.params = params or []
         self.artifacts = artifacts
         self.config = self.load_config(config, self.params, name)
+        self.app = None
         self.load()
 
     def load(self):
-        if self.artifacts:
-            self.load_artifact()
-        else:
-            self.load_external_application()
+        dest = '/tmp/nulecule-{}'.format(uuid.uuid1())
+        if not self.artifacts:
+            self.load_external_application(dest)
 
-    def load_artifact(self):
-        pass
-
-    def load_external_application(self):
-        docker_handler = DockerHandler(self.source)
-        docker_handler.pull()
+    def load_external_application(self, dest):
+        docker_handler = DockerHandler()
+        docker_handler.pull(self.source)
+        container_dir = 'application-entity'
+        docker_handler.extract(self.source, container_dir, dest)
+        nulecule = Nulecule.load_from_dir(
+            os.path.join(dest, container_dir),
+            config=copy.deepcopy(self.config))
+        nulecule.load()
+        self.app = nulecule
+        self.config = nulecule.config
 
 
 class DockerHandler(object):
@@ -137,5 +155,5 @@ class DockerHandler(object):
                   '%s:/%s' % (container_id, source),
                   dest]
         subprocess.call(cp_cmd)
-        rm_cmd = [self.docker_cli, 'rm', container_id]
+        rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
         subprocess.call(rm_cmd)
