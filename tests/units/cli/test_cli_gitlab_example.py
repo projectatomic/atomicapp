@@ -42,6 +42,9 @@ class TestGitLabCli(unittest.TestCase):
         self.work_dir = os.path.join(
                 self.examples_dir,
                 "gitlab/%s" % WORKDIR)
+        self.answers_conf = os.path.join(
+                self.examples_dir,
+                "gitlab/answers.conf.sample")
 
         if os.path.isdir(self.work_dir):
            shutil.rmtree(self.work_dir)
@@ -49,6 +52,8 @@ class TestGitLabCli(unittest.TestCase):
     def tearDown(self):
         if os.path.isdir(self.work_dir):
            shutil.rmtree(self.work_dir)
+        if os.path.isfile(self.answers_conf):
+           os.remove(self.answers_conf)
 
     def test_install_gitlab_app(self):
         command = [
