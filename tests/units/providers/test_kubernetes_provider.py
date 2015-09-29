@@ -1,3 +1,22 @@
+"""
+ Copyright 2015 Red Hat, Inc.
+
+ This file is part of Atomic App.
+
+ Atomic App is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Lesser General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Atomic App is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
+"""
+
 import unittest
 import mock
 import tempfile
@@ -8,10 +27,11 @@ from atomicapp.nulecule_base import Nulecule_Base
 from atomicapp.providers.kubernetes import KubernetesProvider
 
 MOCK_CONTENT = "mock_provider_call_content"
+
 def mock_provider_call(self, cmd):
     return MOCK_CONTENT
 
-class TestNuleculeBase(unittest.TestCase):
+class TestKubernetesProviderBase(unittest.TestCase):
     def setUp(self):
         self.nulecule_base = Nulecule_Base(dryrun = True)
         self.tmpdir = tempfile.mkdtemp(prefix = "atomicapp-test", dir = "/tmp")
