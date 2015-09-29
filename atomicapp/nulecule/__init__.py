@@ -166,10 +166,12 @@ class DockerHandler(object):
         subprocess.call(rm_cmd)
 
     def is_image_present(self, image):
-        ps = subprocess.Popen([self.docker_cli, 'images'],
-                              stdout=subprocess.PIPE)
-        output = subprocess.check_output(['grep', image], stdin=ps.stdout)
-        ps.wait()
-        if len(output.strip().splitlines()) > 0:
-            return True
+        output = subprocess.check_output([self.docker_cli, 'images'])
+        image_lines = output.strip().splitlines()[1:]
+        for line in image_lines:
+            words = line.split()
+            image_name = words[0]
+            registry, repo = image_name.split('/', 1)
+            if image_name == image or repo == image:
+                return True
         return False
