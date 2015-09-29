@@ -31,7 +31,7 @@ Before you submit your pull request consider the following guidelines:
      $ tox
      ```
 
-* Include documentation that either decribe to changed behavior to an atomicapp developer or the changed capability to an end user of atomicapp.
+* Include documentation that either describe a change to a behavior of atomicapp or the changed capability to an end user of atomicapp.
 * Commit your changes using **a descriptive commit message**. If you are fixing an issue please include something like 'this closes issue #xyz'.
 * Additionally think about implementing a git hook, as flake8 is part of the [travis-ci tests](https://travis-ci.org/projectatomic/atomicapp) it will help you pass the CI tests.
 
@@ -59,6 +59,13 @@ Before you submit your pull request consider the following guidelines:
     ```
 
 That's it! Thank you for your contribution!
+
+### Merge Rules
+
+* Include unit or integration tests for the capability you have implemented
+* Include documentation for the capability you have implemented
+* If you are fixing an issue within Atomic App,
+ * include the issue number you are fixing
 
 ### After your pull request is merged
 
