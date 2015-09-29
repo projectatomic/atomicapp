@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 import anymarkup
 import copy
+import logging
 import os
 import subprocess
 import uuid
 from atomicapp.utils import Utils
+
+logger = logging.getLogger(__name__)
 
 
 class NuleculeBase(object):
@@ -143,8 +146,12 @@ class DockerHandler(object):
         self.docker_cli = docker_cli
 
     def pull(self, image, update=False):
-        pull_cmd = [self.docker_cli, 'pull', image]
-        subprocess.call(pull_cmd)
+        if not self.is_image_present(image) or update:
+            logger.debug('Pulling Docker image: %s' % image)
+            pull_cmd = [self.docker_cli, 'pull', image]
+            subprocess.call(pull_cmd)
+        else:
+            logger.debug('Skipping pulling Docker image: %s' % image)
 
     def extract(self, image, source, dest):
         container_id = None
@@ -157,3 +164,12 @@ class DockerHandler(object):
         subprocess.call(cp_cmd)
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
         subprocess.call(rm_cmd)
+
+    def is_image_present(self, image):
+        ps = subprocess.Popen([self.docker_cli, 'images'],
+                              stdout=subprocess.PIPE)
+        output = subprocess.check_output(['grep', image], stdin=ps.stdout)
+        ps.wait()
+        if len(output.strip().splitlines()) > 0:
+            return True
+        return False
