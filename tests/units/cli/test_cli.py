@@ -155,19 +155,6 @@ class TestCli(unittest.TestCase):
             "main.py",
             "--verbose",
             "--dry-run",
-            "run",
-            self.examples_dir + 'wordpress-centos7-atomicapp/'
-        ]
-
-        with pytest.raises(SystemExit) as exec_info:
-            self.exec_cli(command)
-
-        assert exec_info.value.code == 0
-
-        command = [
-            "main.py",
-            "--verbose",
-            "--dry-run",
             "stop",
             self.examples_dir + 'wordpress-centos7-atomicapp/'
         ]
