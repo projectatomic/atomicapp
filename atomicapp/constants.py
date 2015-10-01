@@ -29,6 +29,7 @@ __NULECULESPECVERSION__ = '0.0.2'
 EXTERNAL_APP_DIR = "external"
 GLOBAL_CONF = "general"
 APP_ENT_PATH = "application-entity"
+CACHE_DIR = "/var/atomicapp"
 
 PARAMS_KEY = "params"
 MAIN_FILE = "Nulecule"

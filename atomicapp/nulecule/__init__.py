@@ -3,9 +3,11 @@ import anymarkup
 import copy
 import logging
 import os
+import shutil
 import subprocess
 import uuid
 from atomicapp.utils import Utils
+from atomicapp.constants import CACHE_DIR, APP_ENT_PATH, EXTERNAL_APP_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -49,25 +51,32 @@ class Nulecule(NuleculeBase):
     components. A Nulecule instance knows everything about itself and its
     componenents, but does not have access to it's parent's scope.
     """
-    def __init__(self, id, specversion, metadata, graph, requirements=None,
-                 params=None, config=None, namespace='general'):
+    def __init__(self, id, specversion, metadata, graph, basepath,
+                 requirements=None, params=None, config=None,
+                 namespace='general'):
         self.id = id
         self.specversion = specversion
         self.metadata = metadata
         self.graph = graph
+        self.basepath = basepath
         self.requirements = requirements
         self.params = params or []
         self.namespace = namespace
-        self.config = self.load_config(config, self.params, self.namespace)
-        self.load()
+        self.config = None
 
     @classmethod
-    def load_from_dir(cls, path, config={}):
+    def unpack(cls, image, path, config={}):
+        docker_handler = DockerHandler()
+        docker_handler.pull(image)
+        docker_handler.extract(image, APP_ENT_PATH, path)
         nulecule_data = anymarkup.parse_file(
             os.path.join(path, 'Nulecule'))
-        return Nulecule(config=config, **nulecule_data)
+        nulecule = Nulecule(config=config, basepath=path, **nulecule_data)
+        nulecule.load()
+        return nulecule
 
-    def load(self):
+    def load(self, config={}):
+        self.config = self.load_config(config, self.params, self.namespace)
         self.components = self.load_components(self.graph)
 
     def load_components(self, graph):
@@ -79,28 +88,34 @@ class Nulecule(NuleculeBase):
                 config['general'] = copy.deepcopy(self.config.get('general')) or {}
                 config[node_name] = copy.deepcopy(self.config.get(node_name)) or {}
             component = NuleculeComponent(
-                node_name, node.get('source'), node.get('params'),
-                node.get('artifacts'), config=config)
+                node_name, self.basepath, node.get('source'),
+                node.get('params'), node.get('artifacts'), config=config)
+            component.load()
             if self.config.get(node_name) is None:
                 self.config[node_name] = {}
             self.config[node_name].update(component.config.get(node_name))
             components.append(component)
         return components
 
+    def install(self):
+        for component in self.components:
+            component.install()
+
     def run(self):
-        # run the Nulecule application
-        pass
+        for component in self.components:
+            component.run()
 
     def stop(self):
         # stop the Nulecule application
-        pass
-
-    def install(self):
-        # install the Nulecule application
-        pass
+        for component in self.components:
+            component.stop()
 
     def uninstall(self):
         # uninstall the Nulecule application
+        for component in self.components:
+            component.uninstall()
+
+    def render(self):
         pass
 
 
@@ -112,29 +127,26 @@ class NuleculeComponent(NuleculeBase):
     components, but can request the value of sibling's property from it's
     parent.
     """
-    def __init__(self, name, source=None, params=None, artifacts=None, config=None):
+    def __init__(self, name, basepath, source=None, params=None,
+                 artifacts=None, config=None):
         self.name = name
+        self.basepath = basepath
         self.source = source
         self.params = params or []
         self.artifacts = artifacts
         self.config = self.load_config(config, self.params, name)
         self.app = None
-        self.load()
 
     def load(self):
-        dest = '/tmp/nulecule-{}'.format(uuid.uuid1())
+        dest = os.path.join(EXTERNAL_APP_DIR, self.name)
         if not self.artifacts:
             self.load_external_application(dest)
 
     def load_external_application(self, dest):
-        docker_handler = DockerHandler()
-        docker_handler.pull(self.source)
-        container_dir = 'application-entity'
-        docker_handler.extract(self.source, container_dir, dest)
-        nulecule = Nulecule.load_from_dir(
-            os.path.join(dest, container_dir),
+        nulecule = Nulecule.unpack(
+            self.source,
+            os.path.join(self.basepath, EXTERNAL_APP_DIR, self.name),
             config=copy.deepcopy(self.config))
-        nulecule.load()
         self.app = nulecule
         self.config = nulecule.config
 
@@ -157,11 +169,16 @@ class DockerHandler(object):
         container_id = None
         run_cmd = [
             self.docker_cli, 'run', '-d', '--entrypoint', '/bin/true', image]
+        logger.debug(run_cmd)
         container_id = subprocess.check_output(run_cmd).strip()
+        tmpdir = '/tmp/nulecule-{}'.format(uuid.uuid1())
         cp_cmd = [self.docker_cli, 'cp',
-                  '%s:/%s' % (container_id, source),
-                  dest]
+                  '%s:/%s/.' % (container_id, source),
+                  tmpdir]
+        logger.debug('%s' % cp_cmd)
         subprocess.call(cp_cmd)
+        shutil.copytree(os.path.join(tmpdir, APP_ENT_PATH), dest)
+        shutil.rmtree(tmpdir)
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
         subprocess.call(rm_cmd)
 
@@ -171,7 +188,47 @@ class DockerHandler(object):
         for line in image_lines:
             words = line.split()
             image_name = words[0]
-            registry, repo = image_name.split('/', 1)
+            registry = repo = None
+            if image_name.find('/') >= 0:
+                registry, repo = image_name.split('/', 1)
             if image_name == image or repo == image:
                 return True
         return False
+
+
+class NuleculeManager(object):
+
+    def __init__(self, image):
+        self.image = image
+        self.initialize()
+
+    def initialize(self):
+        self.app_name = '{}-{}'.format(
+            Utils.sanitizeName(self.image), uuid.uuid1())
+        self.nulecule = None
+        self.unpack_path = os.path.join(CACHE_DIR, self.app_name)
+        self.nulecule = None
+
+    def unpack(self, update=False):
+        if not os.path.isdir(self.unpack_path) or update:
+            self.nulecule = Nulecule.unpack(self.image, self.unpack_path)
+
+    def install(self):
+        self.unpack()
+        self.nulecule.install()
+
+    def run(self):
+        self.install()
+        self.nulecule.run()
+
+    def stop(self):
+        self.nulecule.stop()
+
+    def uninstall(self):
+        self.stop()
+        self.nulecule.uninstall()
+
+    def clean(self, force=False):
+        self.uninstall()
+        shutil.rmtree(self.unpack_path)
+        self.initialize()
