@@ -8,10 +8,13 @@ import subprocess
 import uuid
 from string import Template
 from atomicapp.utils import Utils
+from atomicapp.plugin import Plugin
 from atomicapp.constants import (CACHE_DIR, APP_ENT_PATH, EXTERNAL_APP_DIR,
-                                 GLOBAL_CONF)
+                                 GLOBAL_CONF, DEFAULT_PROVIDER)
 
 logger = logging.getLogger(__name__)
+plugin = Plugin()
+plugin.load_plugins()
 
 
 class NuleculeBase(object):
@@ -45,10 +48,21 @@ class NuleculeBase(object):
                 for key, value in group_vars.items():
                     to_config[group][key] = value
 
-    def load_params(self, params):
-        pass
+    def get_context(self):
+        context = {}
+        context.update(self.config.get('general') or {})
+        context.update(self.config.get(self.namespace) or {})
+        return context
 
-    def run(self, provider):
+    def get_provider(self, provider_key=None, dry=False):
+        if provider_key is None:
+            provider_key = self.config.get('general', {}).get(
+                'provider', DEFAULT_PROVIDER)
+        provider_class = plugin.getProvider(provider_key)
+        return provider_key, provider_class(
+            self.get_context(), self.basepath, dry)
+
+    def run(self, provider_key=None, dry=False):
         raise NotImplementedError
 
     def stop(self, provider):
@@ -97,9 +111,10 @@ class Nulecule(NuleculeBase):
         self.load_config()
         self.render()
 
-    def run(self):
+    def run(self, provider_key=None, dry=False):
+        provider_key, provider = self.get_provider(provider_key, dry)
         for component in self.components:
-            component.run()
+            component.run(provider_key, dry)
 
     def stop(self):
         # stop the Nulecule application
@@ -163,6 +178,17 @@ class NuleculeComponent(NuleculeBase):
         if not self.artifacts:
             self.load_external_application(dest)
 
+    def run(self, provider_key, dry=False):
+        if self._app:
+            self._app.run(provider_key, dry)
+            return
+        provider_key, provider = self.get_provider(provider_key, dry)
+        provider.artifacts = self.get_artifact_paths_for_provider(
+            provider_key)
+        provider.init()
+        if not dry:
+            provider.deploy()
+
     def load_config(self, config={}):
         super(NuleculeComponent, self).load_config(config)
         if isinstance(self._app, Nulecule):
@@ -186,27 +212,29 @@ class NuleculeComponent(NuleculeBase):
             self._app.render()
             return
         context = self.get_context()
-        for provider, provider_artifacts in self.artifacts.items():
-            for artifact in provider_artifacts:
-                if not isinstance(artifact, basestring):
-                    continue
-                self.render_artifact(artifact, context)
+        for provider in self.artifacts:
+            for artifact_path in self.get_artifact_paths_for_provider(
+                    provider):
+                self.render_artifact(artifact_path, context)
 
-    def get_context(self):
-        context = {}
-        context.update(self.config.get('general') or {})
-        context.update(self.config.get(self.namespace) or {})
-        return context
+    def get_artifact_paths_for_provider(self, provider_key):
+        artifact_paths = []
+        artifacts = self.artifacts.get(provider_key)
+        for artifact in artifacts:
+            if not isinstance(artifact, basestring):
+                continue
+            if artifact.startswith('file:///'):
+                path = artifact[7:]
+            elif artifact.startswith('file://'):
+                path = os.path.join(self.basepath,
+                                    os.path.join(self.basepath, artifact[7:]))
+            else:
+                logger.error('Invalid artifact file')
+                continue
+            artifact_paths.append(path)
+        return artifact_paths
 
-    def render_artifact(self, artifact, context):
-        if artifact.startswith('file:///'):
-            path = artifact[7:]
-        elif artifact.startswith('file://'):
-            path = os.path.join(self.basepath,
-                                os.path.join(self.basepath, artifact[7:]))
-        else:
-            logger.error('Invalid artifact file')
-            return
+    def render_artifact(self, path, context):
         with open(path, 'r') as f:
             content = f.read()
             template = Template(content)
@@ -282,9 +310,9 @@ class NuleculeManager(object):
         self.unpack()
         self.nulecule.install()
 
-    def run(self):
+    def run(self, provider_key=None, dry=False):
         self.install()
-        self.nulecule.run()
+        self.nulecule.run(provider_key, dry)
 
     def stop(self):
         self.nulecule.stop()
