@@ -6,6 +6,7 @@ import os
 import shutil
 import subprocess
 import uuid
+from string import Template
 from atomicapp.utils import Utils
 from atomicapp.constants import (CACHE_DIR, APP_ENT_PATH, EXTERNAL_APP_DIR,
                                  GLOBAL_CONF)
@@ -181,7 +182,38 @@ class NuleculeComponent(NuleculeBase):
             return self._app.components
 
     def render(self):
-        pass
+        if self._app:
+            self._app.render()
+            return
+        context = self.get_context()
+        for provider, provider_artifacts in self.artifacts.items():
+            for artifact in provider_artifacts:
+                if not isinstance(artifact, basestring):
+                    continue
+                self.render_artifact(artifact, context)
+
+    def get_context(self):
+        context = {}
+        context.update(self.config.get('general') or {})
+        context.update(self.config.get(self.namespace) or {})
+        return context
+
+    def render_artifact(self, artifact, context):
+        if artifact.startswith('file:///'):
+            path = artifact[7:]
+        elif artifact.startswith('file://'):
+            path = os.path.join(self.basepath,
+                                os.path.join(self.basepath, artifact[7:]))
+        else:
+            logger.error('Invalid artifact file')
+            return
+        with open(path, 'r') as f:
+            content = f.read()
+            template = Template(content)
+            rendered_content = template.safe_substitute(context)
+
+        with open(path, 'w') as f:
+            f.write(rendered_content)
 
 
 class DockerHandler(object):
