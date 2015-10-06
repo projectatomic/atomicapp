@@ -116,10 +116,11 @@ class Nulecule(NuleculeBase):
         for component in self.components:
             component.run(provider_key, dry)
 
-    def stop(self):
+    def stop(self, provider_key=None):
+        provider_key, provider = self.get_provider(provider_key)
         # stop the Nulecule application
         for component in self.components:
-            component.stop()
+            component.stop(provider_key)
 
     def uninstall(self):
         # uninstall the Nulecule application
@@ -188,6 +189,13 @@ class NuleculeComponent(NuleculeBase):
         provider.init()
         if not dry:
             provider.deploy()
+
+    def stop(self, provider_key=None):
+        if self._app:
+            self._app.stop(provider_key)
+        provider_key, provider = self.get_provider(provider_key)
+        provider.init()
+        provider.undeploy()
 
     def load_config(self, config={}):
         super(NuleculeComponent, self).load_config(config)
@@ -314,8 +322,8 @@ class NuleculeManager(object):
         self.install()
         self.nulecule.run(provider_key, dry)
 
-    def stop(self):
-        self.nulecule.stop()
+    def stop(self, provider_key=None):
+        self.nulecule.stop(provider_key)
 
     def uninstall(self):
         self.stop()
