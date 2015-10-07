@@ -29,7 +29,7 @@ import pytest
 import atomicapp.cli.main
 
 class TestCli(unittest.TestCase):
-
+    
     def exec_cli(self, command):
         saved_args = sys.argv
         sys.argv = command
@@ -157,6 +157,36 @@ class TestCli(unittest.TestCase):
             "--dry-run",
             "stop",
             self.examples_dir + 'wordpress-centos7-atomicapp/'
+        ]
+
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        assert exec_info.value.code == 0
+  
+    def test_run_k8s_app_multiple_artifacts(self):
+        command = [
+            "main.py",
+            "--verbose",
+            "--dry-run",
+            "run",
+            "--provider=docker",
+            self.examples_dir + 'kubernetes-atomicapp/'
+        ]
+
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        assert exec_info.value.code == 0
+
+    def test_stop_k8s_app_multiple_artifacts(self):
+        command = [
+            "main.py",
+            "--verbose",
+            "--dry-run",
+            "stop",
+            "--provider=docker",
+            self.examples_dir + 'kubernetes-atomicapp/'
         ]
 
         with pytest.raises(SystemExit) as exec_info:
