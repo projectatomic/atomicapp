@@ -1,0 +1,15 @@
+---
+specversion: 0.0.2
+id: kubernetes-atomicapp
+
+metadata:
+  name: Kubernetes Atomic App
+  appversion: 0.0.1
+  description: Atomic app for deploying a local, dockerized kubernetes
+graph:
+  - name: kubernetes-atomicapp
+    artifacts:
+      docker:
+        - file://artifacts/docker/kube-etcd_run
+        - file://artifacts/docker/kube-master_run
+        - file://artifacts/docker/kube-svcproxy_run

@@ -72,6 +72,9 @@ class DockerProvider(Provider):
 
     def deploy(self):
         logger.info("Deploying to provider: Docker")
+        for container in self._get_containers():
+            if re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.default_name, self.namespace), container):
+                raise ProviderFailedException("Namespace with name %s already deployed in Docker" % self.namespace)
 
         for artifact in self.artifacts:
             artifact_path = os.path.join(self.path, artifact)
@@ -85,10 +88,8 @@ class DockerProvider(Provider):
             if '--name' in run_args:
                 logger.info("WARNING: Using --name provided within artifact file.")
             else:
-                for container in self._get_containers():
-                    if re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.default_name, self.namespace), container):
-                        raise ProviderFailedException("Namespace with name %s already deployed in Docker" % self.namespace)
                 run_args.insert(run_args.index('run') + 1, "--name=%s_%s_%s" % (self.default_name, self.namespace, Utils.getUniqueUUID()))
+
             cmd = run_args
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
