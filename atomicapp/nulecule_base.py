@@ -172,12 +172,7 @@ class Nulecule_Base(object):
         return params
 
     def getValues(self, component=GLOBAL_CONF, skip_asking=False):
-        if skip_asking:
-            params = self.get(component, skip_asking)
-            values = self._getComponentValues(params, not skip_asking)
-        else:
-            params = self.get(component, not skip_asking)
-            values = self._getComponentValues(params, skip_asking)
+        params = self.get(component, not skip_asking)
 
         values = self._getComponentValues(params, skip_asking)
         for n, p in values.iteritems():
