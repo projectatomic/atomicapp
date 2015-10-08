@@ -18,15 +18,18 @@ logger = logging.getLogger(__name__)
 
 class NuleculeManager(object):
 
-    def __init__(self, image):
+    def __init__(self, image, unpack_path=None):
         self.image = image
-        self.initialize()
+        self.initialize(unpack_path)
 
-    def initialize(self):
-        self.app_name = '{}-{}'.format(
-            Utils.sanitizeName(self.image), uuid.uuid1())
-        self.nulecule = None
-        self.unpack_path = os.path.join(CACHE_DIR, self.app_name)
+    def initialize(self, unpack_path=None):
+        if unpack_path:
+            self.unpack_path = unpack_path
+        else:
+            self.app_name = '{}-{}'.format(
+                Utils.sanitizeName(self.image), uuid.uuid1())
+            self.nulecule = None
+            self.unpack_path = os.path.join(CACHE_DIR, self.app_name)
         self.nulecule = None
 
     def unpack(self, update=False):
