@@ -33,17 +33,22 @@ from atomicapp.constants import \
     ANSWERS_FILE, __ATOMICAPPVERSION__, \
     __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT, \
     LOCK_FILE
+from atomicapp.nulecule import NuleculeManager
+from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
 
 
 def cli_install(args):
-    install = Install(**vars(args))
-
-    if install.install() is not None:
+    try:
+        NuleculeManager.do_install(**vars(args))
         sys.exit(True)
-    else:
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(False)
+    except Exception as e:
+        logger.error(e, exc_info=True)
         sys.exit(False)
 
 

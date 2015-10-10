@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import anymarkup
 import copy
+import distutils
 import logging
 import os
 import shutil
@@ -8,9 +9,12 @@ import uuid
 from string import Template
 
 from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
-                                 GLOBAL_CONF, CACHE_DIR)
+                                 GLOBAL_CONF, CACHE_DIR,
+                                 ANSWERS_FILE_SAMPLE_FORMAT,
+                                 MAIN_FILE)
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
+from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
@@ -18,9 +22,32 @@ logger = logging.getLogger(__name__)
 
 class NuleculeManager(object):
 
-    def __init__(self, image, unpack_path=None):
-        self.image = image
-        self.initialize(unpack_path)
+    @staticmethod
+    def do_install(answers, APP, nodeps=False, update=False, target_path=None,
+                   answers_format=ANSWERS_FILE_SAMPLE_FORMAT, dryrun=False,
+                   **kwargs):
+        m = NuleculeManager(answers, answers_format)
+        m.install(APP, target_path, nodeps, update, dryrun, **kwargs)
+        return m
+
+    @staticmethod
+    def do_run(answers, APP, cli_provider, answers_output, ask=False,
+               answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+        m = NuleculeManager(answers, answers_format)
+        m.run(APP, cli_provider, answers_output, ask, **kwargs)
+        return m
+
+    @staticmethod
+    def do_stop(answers, APP, cli_provider,
+                answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+        m = NuleculeManager(answers, answers_format)
+        m.stop(APP, cli_provider, **kwargs)
+        return m
+
+    def __init__(self, answers, answers_format, **kwargs):
+        self.answers = Utils.loadAnswers(answers)
+        self.answers_format = answers_format
+        # self.initialize(unpack_path)
 
     def initialize(self, unpack_path=None):
         if unpack_path:
@@ -32,13 +59,29 @@ class NuleculeManager(object):
             self.unpack_path = os.path.join(CACHE_DIR, self.app_name)
         self.nulecule = None
 
-    def unpack(self, update=False):
-        if not os.path.isdir(self.unpack_path) or update:
-            self.nulecule = Nulecule.unpack(self.image, self.unpack_path)
+    def unpack(self, image, unpack_path, update=False, dryrun=False,
+               nodeps=False):
+        logger.debug('Unpacking %s to %s' % (image, unpack_path))
+        if not os.path.exists(os.path.join(unpack_path, MAIN_FILE)) or \
+                update:
+            logger.debug(
+                'Nulecule application found at %s. Unpacking and updating...'
+                % unpack_path)
+            Nulecule.unpack(image, unpack_path, nodeps=nodeps,
+                            dryrun=dryrun, update=update)
+        else:
+            logger.debug(
+                'Nulecule application found at %s. Loading...')
+            return Nulecule.load_from_path(unpack_path, dryrun)
 
-    def install(self):
-        self.unpack()
-        self.nulecule.install()
+    def install(self, APP, target_path=None, nodeps=False, update=False,
+                dryrun=False, **kwargs):
+        target_path = target_path or os.getcwd()
+        if os.path.exists(APP):
+            self.nulecule = Nulecule.load_from_path(
+                APP, target_path, dryrun=dryrun)
+        else:
+            self.nulecule = self.unpack(APP, target_path, update, dryrun)
 
     def run(self, provider_key=None, dry=False):
         self.install()
@@ -78,22 +121,33 @@ class Nulecule(NuleculeBase):
         self.config = None
 
     @classmethod
-    def unpack(cls, image, path, config={}, namespace=GLOBAL_CONF):
-        docker_handler = DockerHandler()
-        docker_handler.pull(image)
-        docker_handler.extract(image, APP_ENT_PATH, path)
+    def unpack(cls, image, path, config={}, namespace=GLOBAL_CONF,
+               nodeps=False, dryrun=False, update=False):
+        if not dryrun:
+            docker_handler = DockerHandler()
+            docker_handler.pull(image)
+            docker_handler.extract(image, APP_ENT_PATH, path)
+            return cls.load_from_path(
+                path, config=config, namespace=namespace, nodeps=nodeps,
+                dryrun=dryrun, update=update)
+        else:
+            logger.debug('Skipping unpacking image: %s' % image)
+
+    @classmethod
+    def load_from_path(cls, src, dest=None, config={}, namespace=GLOBAL_CONF,
+                       nodeps=False, dryrun=False, update=False):
+        dest = dest or src
+        distutils.dir_util.copy_tree(src, dest, update)
         nulecule_data = anymarkup.parse_file(
-            os.path.join(path, 'Nulecule'))
-        nulecule = Nulecule(config=config, basepath=path, namespace=namespace,
-                            **nulecule_data)
-        nulecule.load_components()
+            os.path.join(dest, 'Nulecule'))
+        nulecule = Nulecule(config=config, basepath=dest,
+                            namespace=namespace, **nulecule_data)
+        nulecule.load_components(nodeps, dryrun)
         return nulecule
 
-    def install(self):
+    def run(self, provider_key=None, dry=False):
         self.load_config()
         self.render()
-
-    def run(self, provider_key=None, dry=False):
         provider_key, provider = self.get_provider(provider_key, dry)
         for component in self.components:
             component.run(provider_key, dry)
@@ -123,14 +177,14 @@ class Nulecule(NuleculeBase):
             component.load_config(config=_config)
             self.merge_config(self.config, component.config)
 
-    def load_components(self):
+    def load_components(self, nodeps=False, dryrun=False):
         components = []
         for node in self.graph:
             node_name = node['name']
             component = NuleculeComponent(
                 node_name, self.basepath, node.get('source'),
                 node.get('params'), node.get('artifacts'))
-            component.load()
+            component.load(nodeps, dryrun)
             components.append(component)
         self.components = components
 
@@ -156,10 +210,14 @@ class NuleculeComponent(NuleculeBase):
         self.artifacts = artifacts
         self._app = None
 
-    def load(self):
+    def load(self, nodeps=False, dryrun=False):
         dest = os.path.join(EXTERNAL_APP_DIR, self.name)
         if not self.artifacts:
-            self.load_external_application(dest)
+            if nodeps:
+                logger.debug(
+                    'Skipping loading external application: %s' % self.name)
+            else:
+                self.load_external_application(dest, dryrun)
 
     def run(self, provider_key, dry=False):
         if self._app:
@@ -185,11 +243,20 @@ class NuleculeComponent(NuleculeBase):
             self._app.load_config(config=copy.deepcopy(self.config))
             self.merge_config(self.config, self._app.config)
 
-    def load_external_application(self, dest):
-        nulecule = Nulecule.unpack(
-            self.source,
-            os.path.join(self.basepath, EXTERNAL_APP_DIR, self.name),
-            namespace=self.namespace)
+    def load_external_application(self, dest, dryrun=False, update=False):
+        external_app_path = os.path.join(
+            self.basepath, EXTERNAL_APP_DIR, self.name)
+        if os.path.isdir(external_app_path):
+            nulecule = Nulecule.load_from_path(
+                external_app_path, dryrun=dryrun, update=False)
+        else:
+            nulecule = Nulecule.unpack(
+                self.source,
+                external_app_path,
+                namespace=self.namespace,
+                dryrun=dryrun,
+                update=update
+            )
         self._app = nulecule
 
     @property

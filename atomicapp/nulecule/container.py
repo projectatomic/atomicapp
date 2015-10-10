@@ -1,5 +1,5 @@
+import distutils
 import os
-import shutil
 import subprocess
 import uuid
 import logging
@@ -23,7 +23,7 @@ class DockerHandler(object):
         else:
             logger.debug('Skipping pulling Docker image: %s' % image)
 
-    def extract(self, image, source, dest):
+    def extract(self, image, source, dest, update=False):
         container_id = None
         run_cmd = [
             self.docker_cli, 'run', '-d', '--entrypoint', '/bin/true', image]
@@ -31,12 +31,15 @@ class DockerHandler(object):
         container_id = subprocess.check_output(run_cmd).strip()
         tmpdir = '/tmp/nulecule-{}'.format(uuid.uuid1())
         cp_cmd = [self.docker_cli, 'cp',
-                  '%s:/%s/.' % (container_id, source),
+                  '%s:/%s' % (container_id, source),
                   tmpdir]
         logger.debug('%s' % cp_cmd)
         subprocess.call(cp_cmd)
-        shutil.copytree(os.path.join(tmpdir, APP_ENT_PATH), dest)
-        shutil.rmtree(tmpdir)
+        src = os.path.join(tmpdir, APP_ENT_PATH)
+        if not os.path.exists(src):
+            src = tmpdir
+        distutils.dir_util.copy_tree(src, dest, update)
+        distutils.dir_util.remove_tree(tmpdir)
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
         subprocess.call(rm_cmd)
 

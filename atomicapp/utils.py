@@ -18,6 +18,7 @@
 """
 
 from __future__ import print_function
+import copy
 import os
 import sys
 import tempfile
@@ -29,7 +30,8 @@ from distutils.spawn import find_executable
 
 import logging
 
-from constants import APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, HOST_DIR
+from constants import (APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, HOST_DIR,
+                       ANSWERS_FILE, DEFAULT_ANSWERS)
 
 __all__ = ('Utils')
 
@@ -218,6 +220,7 @@ class Utils(object):
 
     @staticmethod
     def getAppId(path):
+        # obsolete
         if not os.path.isfile(path):
             return None
 
@@ -247,3 +250,35 @@ class Utils(object):
     def getUniqueUUID():
         data = str(uuid.uuid4().get_hex().lower()[0:12])
         return data
+
+    @staticmethod
+    def loadAnswers(data=None):
+        answers_data = {}
+        write_sample_answers = False
+        if not data:
+            logger.info("No answers data given")
+
+        if type(data) == dict:
+            logger.debug("Data given %s", data)
+        elif os.path.exists(data):
+            logger.debug("Path to answers file given, loading %s", data)
+            if os.path.isdir(data):
+                if os.path.isfile(os.path.join(data, ANSWERS_FILE)):
+                    data = os.path.join(data, ANSWERS_FILE)
+                else:
+                    write_sample_answers = True
+
+            if os.path.isfile(data):
+                data = anymarkup.parse_file(data)
+        else:
+            write_sample_answers = True
+
+        if write_sample_answers:
+            data = copy.deepcopy(DEFAULT_ANSWERS)
+
+        if answers_data:
+            answers_data = Utils.update(answers_data, data)
+        else:
+            answers_data = data
+
+        return answers_data
