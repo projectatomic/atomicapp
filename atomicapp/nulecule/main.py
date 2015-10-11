@@ -6,6 +6,7 @@ import logging
 import os
 import shutil
 import uuid
+from collections import defaultdict
 from string import Template
 
 from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
@@ -83,9 +84,16 @@ class NuleculeManager(object):
         else:
             self.nulecule = self.unpack(APP, target_path, update, dryrun)
 
-    def run(self, provider_key=None, dry=False):
-        self.install()
-        self.nulecule.run(provider_key, dry)
+    def run(self, APP, cli_provider, answers_output, ask, **kwargs):
+        if not self.answers:
+            self.answers = Utils.loadAnswers(
+                os.path.join(APP, 'answers.conf'))
+        answers_path = answers_output or os.path.join(APP, 'answers.conf')
+        dryrun = kwargs.get('dryrun') or False
+        self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
+                                                dryrun=dryrun) 
+        self.nulecule.run(cli_provider, dryrun)
+        self._write_answers(answers_path)
 
     def stop(self, provider_key=None):
         self.nulecule.stop(provider_key)
@@ -98,6 +106,10 @@ class NuleculeManager(object):
         self.uninstall()
         shutil.rmtree(self.unpack_path)
         self.initialize()
+
+    def _write_answers(self, path):
+        anymarkup.serialize_file(
+            self.nulecule.config, path, format=self.answers_format)
 
 
 class Nulecule(NuleculeBase):
@@ -146,8 +158,8 @@ class Nulecule(NuleculeBase):
         return nulecule
 
     def run(self, provider_key=None, dry=False):
-        self.load_config()
-        self.render()
+        self.load_config(config=self.config)
+        self.render(provider_key)
         provider_key, provider = self.get_provider(provider_key, dry)
         for component in self.components:
             component.run(provider_key, dry)
@@ -188,9 +200,9 @@ class Nulecule(NuleculeBase):
             components.append(component)
         self.components = components
 
-    def render(self):
+    def render(self, provider_key=None):
         for component in self.components:
-            component.render()
+            component.render(provider_key=provider_key)
 
 
 class NuleculeComponent(NuleculeBase):
@@ -208,6 +220,7 @@ class NuleculeComponent(NuleculeBase):
         self.source = source
         self.params = params or []
         self.artifacts = artifacts
+        self.rendered_artifacts = defaultdict(list)
         self._app = None
 
     def load(self, nodeps=False, dryrun=False):
@@ -224,8 +237,7 @@ class NuleculeComponent(NuleculeBase):
             self._app.run(provider_key, dry)
             return
         provider_key, provider = self.get_provider(provider_key, dry)
-        provider.artifacts = self.get_artifact_paths_for_provider(
-            provider_key)
+        provider.artifacts = self.rendered_artifacts.get(provider_key, [])
         provider.init()
         if not dry:
             provider.deploy()
@@ -264,27 +276,27 @@ class NuleculeComponent(NuleculeBase):
         if self._app:
             return self._app.components
 
-    def render(self):
+    def render(self, provider_key=None):
         if self._app:
-            self._app.render()
+            self._app.render(provider_key=provider_key)
             return
         context = self.get_context()
         for provider in self.artifacts:
+            if provider_key and provider != provider_key:
+                continue
             for artifact_path in self.get_artifact_paths_for_provider(
                     provider):
-                self.render_artifact(artifact_path, context)
+                self.rendered_artifacts[provider].append(
+                    self.render_artifact(artifact_path, context))
 
     def get_artifact_paths_for_provider(self, provider_key):
         artifact_paths = []
         artifacts = self.artifacts.get(provider_key)
         for artifact in artifacts:
-            if not isinstance(artifact, basestring):
-                continue
-            if artifact.startswith('file:///'):
-                path = artifact[7:]
-            elif artifact.startswith('file://'):
-                path = os.path.join(self.basepath,
-                                    os.path.join(self.basepath, artifact[7:]))
+            if isinstance(artifact, basestring):
+                path = Utils.sanitizePath(artifact)
+                path = os.path.join(self.basepath, path) \
+                    if path[0] != '/' else path
             else:
                 logger.error('Invalid artifact file')
                 continue
@@ -292,10 +304,17 @@ class NuleculeComponent(NuleculeBase):
         return artifact_paths
 
     def render_artifact(self, path, context):
+        basepath, tail = os.path.split(path)
+        render_path = os.path.join(basepath, '.{}'.format(tail))
+
         with open(path, 'r') as f:
             content = f.read()
             template = Template(content)
             rendered_content = template.safe_substitute(context)
 
-        with open(path, 'w') as f:
+        with open(render_path, 'w') as f:
             f.write(rendered_content)
+
+        render_path = render_path.split(
+            self.basepath + '' if self.basepath.endswith('/') else '/', 1)[1]
+        return render_path

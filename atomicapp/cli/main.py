@@ -18,7 +18,6 @@
 """
 
 from atomicapp.run import Run
-from atomicapp.install import Install
 import os
 import sys
 
@@ -53,11 +52,14 @@ def cli_install(args):
 
 
 def cli_run(args):
-    ae = Run(**vars(args))
-
-    if ae.run() is not None:
+    try:
+        NuleculeManager.do_run(**vars(args))
         sys.exit(True)
-    else:
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(False)
+    except Exception as e:
+        logger.error(e, exc_info=True)
         sys.exit(False)
 
 
