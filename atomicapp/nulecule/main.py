@@ -95,8 +95,14 @@ class NuleculeManager(object):
         self.nulecule.run(cli_provider, dryrun)
         self._write_answers(answers_path)
 
-    def stop(self, provider_key=None):
-        self.nulecule.stop(provider_key)
+    def stop(self, APP, cli_provider, **kwargs):
+        if not self.answers:
+            self.answers = Utils.loadAnswers(
+                os.path.join(APP, 'answers.conf'))
+        dryrun = kwargs.get('dryrun') or False
+        self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
+                                                dryrun=dryrun)
+        self.nulecule.stop(cli_provider, dryrun)
 
     def uninstall(self):
         self.stop()
@@ -164,11 +170,13 @@ class Nulecule(NuleculeBase):
         for component in self.components:
             component.run(provider_key, dry)
 
-    def stop(self, provider_key=None):
+    def stop(self, provider_key=None, dryrun=False):
+        self.load_config(config=self.config)
+        self.render(provider_key)
         provider_key, provider = self.get_provider(provider_key)
         # stop the Nulecule application
         for component in self.components:
-            component.stop(provider_key)
+            component.stop(provider_key, dryrun)
 
     def uninstall(self):
         # uninstall the Nulecule application
@@ -242,10 +250,12 @@ class NuleculeComponent(NuleculeBase):
         if not dry:
             provider.deploy()
 
-    def stop(self, provider_key=None):
+    def stop(self, provider_key=None, dryrun=False):
         if self._app:
             self._app.stop(provider_key)
+            return
         provider_key, provider = self.get_provider(provider_key)
+        provider.artifacts = self.rendered_artifacts.get(provider_key, [])
         provider.init()
         provider.undeploy()
 

@@ -64,11 +64,14 @@ def cli_run(args):
 
 
 def cli_stop(args):
-    stop = Run(stop=True, **vars(args))
-
-    if stop.run() is not None:
+    try:
+        NuleculeManager.do_stop(**vars(args))
         sys.exit(True)
-    else:
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(False)
+    except Exception as e:
+        logger.error(e, exc_info=True)
         sys.exit(False)
 
 
