@@ -34,6 +34,7 @@ CACHE_DIR = "/var/atomicapp"
 PARAMS_KEY = "params"
 MAIN_FILE = "Nulecule"
 ANSWERS_FILE = "answers.conf"
+ANSWERS_RUNTIME_FILE = "answers.conf.gen"
 ANSWERS_FILE_SAMPLE = "answers.conf.sample"
 ANSWERS_FILE_SAMPLE_FORMAT = 'ini'
 WORKDIR = ".workdir"

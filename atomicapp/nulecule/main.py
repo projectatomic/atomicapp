@@ -12,6 +12,7 @@ from string import Template
 from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
                                  GLOBAL_CONF, CACHE_DIR,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
+                                 ANSWERS_RUNTIME_FILE,
                                  MAIN_FILE)
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
@@ -24,41 +25,30 @@ logger = logging.getLogger(__name__)
 class NuleculeManager(object):
 
     @staticmethod
-    def do_install(answers, APP, nodeps=False, update=False, target_path=None,
-                   answers_format=ANSWERS_FILE_SAMPLE_FORMAT, dryrun=False,
-                   **kwargs):
-        m = NuleculeManager(answers, answers_format)
+    def do_install(APP, nodeps=False, update=False, target_path=None,
+                   dryrun=False, **kwargs):
+        m = NuleculeManager()
         m.install(APP, target_path, nodeps, update, dryrun, **kwargs)
         return m
 
     @staticmethod
     def do_run(answers, APP, cli_provider, answers_output, ask=False,
                answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
-        m = NuleculeManager(answers, answers_format)
-        m.run(APP, cli_provider, answers_output, ask, **kwargs)
+        m = NuleculeManager()
+        m.run(APP, answers, cli_provider, answers_output, ask,
+              answers_format=answers_format, **kwargs)
         return m
 
     @staticmethod
-    def do_stop(answers, APP, cli_provider,
-                answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
-        m = NuleculeManager(answers, answers_format)
+    def do_stop(APP, cli_provider, **kwargs):
+        m = NuleculeManager()
         m.stop(APP, cli_provider, **kwargs)
         return m
 
-    def __init__(self, answers, answers_format, **kwargs):
-        self.answers = Utils.loadAnswers(answers)
-        self.answers_format = answers_format
-        # self.initialize(unpack_path)
-
-    def initialize(self, unpack_path=None):
-        if unpack_path:
-            self.unpack_path = unpack_path
-        else:
-            self.app_name = '{}-{}'.format(
-                Utils.sanitizeName(self.image), uuid.uuid1())
-            self.nulecule = None
-            self.unpack_path = os.path.join(CACHE_DIR, self.app_name)
-        self.nulecule = None
+    def __init__(self):
+        self.APP = None
+        self.answers = {}
+        self.answers_format = None
 
     def unpack(self, image, unpack_path, update=False, dryrun=False,
                nodeps=False):
@@ -84,21 +74,25 @@ class NuleculeManager(object):
         else:
             self.nulecule = self.unpack(APP, target_path, update, dryrun)
 
-    def run(self, APP, cli_provider, answers_output, ask, **kwargs):
-        if not self.answers:
-            self.answers = Utils.loadAnswers(
-                os.path.join(APP, 'answers.conf'))
-        answers_path = answers_output or os.path.join(APP, 'answers.conf')
+    def run(self, APP, answers, cli_provider, answers_output, ask,
+            answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+        answers = Utils.loadAnswers(
+            os.path.join(APP, 'answers.conf'))
+        answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
                                                 dryrun=dryrun) 
         self.nulecule.run(cli_provider, dryrun)
-        self._write_answers(answers_path)
+        self._write_answers(os.path.join(APP, ANSWERS_RUNTIME_FILE),
+                            self.nulecule.config,
+                            answers_format)
+        if answers_output:
+            self._write_answers(answers_output, self.nulecule.config,
+                                answers_format)
 
     def stop(self, APP, cli_provider, **kwargs):
-        if not self.answers:
-            self.answers = Utils.loadAnswers(
-                os.path.join(APP, 'answers.conf'))
+        self.answers = Utils.loadAnswers(
+            os.path.join(APP, ANSWERS_RUNTIME_FILE))
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
                                                 dryrun=dryrun)
@@ -113,9 +107,9 @@ class NuleculeManager(object):
         shutil.rmtree(self.unpack_path)
         self.initialize()
 
-    def _write_answers(self, path):
+    def _write_answers(self, path, answers, answers_format):
         anymarkup.serialize_file(
-            self.nulecule.config, path, format=self.answers_format)
+            answers, path, format=answers_format)
 
 
 class Nulecule(NuleculeBase):
