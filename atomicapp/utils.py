@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 import os
+import sys
 import tempfile
 import re
 import collections
@@ -49,6 +50,31 @@ def printErrorStatus(message):
 
 def printAnswerFile(message):
     logger.info("atomicapp.status.answer.message=" + str(message))
+
+
+def find_binary(executable, path=None):
+    """Tries to find 'executable' in the directories listed in 'path'.
+
+    A string listing directories separated by 'os.pathsep'; defaults to
+    os.environ['PATH'].  Returns the complete filename or None if not found.
+    """
+    if path is None:
+        path = os.environ['PATH']
+
+    paths = path.split(os.pathsep)
+    base, ext = os.path.splitext(executable)
+
+    if (sys.platform == 'win32' or os.name == 'os2') and (ext != '.exe'):
+        executable = executable + '.exe'
+
+    if not os.path.isfile(executable):
+        for p in paths:
+            f = os.path.join(p, executable)
+            if os.path.isfile(f) or os.path.islink(f):
+                return f
+        return None
+    else:
+        return executable
 
 
 class Utils(object):

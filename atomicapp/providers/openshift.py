@@ -18,7 +18,7 @@
 """
 
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.utils import Utils
+from atomicapp.utils import Utils, find_binary
 
 from collections import OrderedDict
 import os
@@ -44,7 +44,7 @@ class OpenShiftProvider(Provider):
             host_path = []
             for path in os.environ.get("PATH").split(":"):
                 host_path.append(os.path.join(Utils.getRoot(), path.lstrip("/")))
-            self.cli = find_executable(self.cli_str, path=":".join(host_path))
+            self.cli = find_binary(self.cli_str, path=":".join(host_path))
             if not self.cli:
                 # if run as non-root we need a symlink in the container
                 os.symlink(os.path.join(Utils.getRoot(), "usr/bin/oc"), "/usr/bin/oc")
