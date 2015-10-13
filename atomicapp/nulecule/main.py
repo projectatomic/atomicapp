@@ -122,14 +122,12 @@ class Nulecule(NuleculeBase):
     def __init__(self, id, specversion, metadata, graph, basepath,
                  requirements=None, params=None, config=None,
                  namespace=GLOBAL_CONF):
+        super(Nulecule, self).__init__(basepath, params, namespace)
         self.id = id
         self.specversion = specversion
         self.metadata = metadata
         self.graph = graph
-        self.basepath = basepath
         self.requirements = requirements
-        self.params = params or []
-        self.namespace = namespace
         self.config = None
 
     @classmethod
@@ -217,10 +215,9 @@ class NuleculeComponent(NuleculeBase):
     """
     def __init__(self, name, basepath, source=None, params=None,
                  artifacts=None, config=None):
-        self.name = self.namespace = name
-        self.basepath = basepath
+        super(NuleculeComponent, self).__init__(basepath, params, name)
+        self.name = name
         self.source = source
-        self.params = params or []
         self.artifacts = artifacts
         self.rendered_artifacts = defaultdict(list)
         self._app = None

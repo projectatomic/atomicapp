@@ -7,6 +7,12 @@ plugin.load_plugins()
 
 
 class NuleculeBase(object):
+
+    def __init__(self, basepath, params, namespace):
+        self.basepath = basepath
+        self.params = params or []
+        self.namespace = namespace
+
     def load(self):
         pass
 
