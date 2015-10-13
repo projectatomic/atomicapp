@@ -63,14 +63,14 @@ class NuleculeManager(object):
         else:
             logger.debug(
                 'Nulecule application found at %s. Loading...')
-            return Nulecule.load_from_path(unpack_path, dryrun)
+            return Nulecule.load_from_path(unpack_path, dryrun=dryrun)
 
     def install(self, APP, target_path=None, nodeps=False, update=False,
                 dryrun=False, **kwargs):
         target_path = target_path or os.getcwd()
         if os.path.exists(APP):
             self.nulecule = Nulecule.load_from_path(
-                APP, target_path, dryrun=dryrun)
+                APP, target_path, dryrun=dryrun, update=update)
         else:
             self.nulecule = self.unpack(APP, target_path, update, dryrun)
 
@@ -131,25 +131,67 @@ class Nulecule(NuleculeBase):
         self.config = None
 
     @classmethod
-    def unpack(cls, image, path, config={}, namespace=GLOBAL_CONF,
+    def unpack(cls, image, dest, config={}, namespace=GLOBAL_CONF,
                nodeps=False, dryrun=False, update=False):
-        if not dryrun:
-            docker_handler = DockerHandler()
-            docker_handler.pull(image)
-            docker_handler.extract(image, APP_ENT_PATH, path)
-            return cls.load_from_path(
-                path, config=config, namespace=namespace, nodeps=nodeps,
-                dryrun=dryrun, update=update)
-        else:
-            logger.debug('Skipping unpacking image: %s' % image)
+        """
+        Pull and extracts a docker image to the specified path, and loads
+        the Nulecule application from the path.
+
+        Args:
+            image: String, a Docker image name.
+            dest: String, destination path where Nulecule data from Docker
+                  image should be extracted.
+            config: Dictionary, config data for Nulecule application.
+            namespace: String, namespace for Nulecule application.
+            nodeps: Boolean, don't pull external Nulecule dependencies when
+                    True.
+            update: Boolean, don't update contents of destination directory
+                    if False, else update it.
+
+        Returns:
+            A Nulecule instance, or None in case of dry run.
+        """
+        logger.info('Unpacking image: %s to %s' % (image, dest))
+        docker_handler = DockerHandler(dryrun=dryrun)
+        docker_handler.pull(image)
+        docker_handler.extract(image, APP_ENT_PATH, dest)
+        return cls.load_from_path(
+            dest, config=config, namespace=namespace, nodeps=nodeps,
+            dryrun=dryrun, update=update)
 
     @classmethod
     def load_from_path(cls, src, dest=None, config={}, namespace=GLOBAL_CONF,
                        nodeps=False, dryrun=False, update=False):
-        dest = dest or src
-        distutils.dir_util.copy_tree(src, dest, update)
-        nulecule_data = anymarkup.parse_file(
-            os.path.join(dest, 'Nulecule'))
+        """
+        Load a Nulecule application from a path in the source path itself, or
+        in the specified destination path.
+
+        Args:
+            src: String, path to load Nulecule application from.
+            dest: String, path to install the Nulecule application.
+            config: Dictionary, config data for Nulecule application.
+            namespace: String, namespace for Nulecule application.
+            nodeps: Boolean. Do not pull external applications if True.
+            dryrun: Boolean. Do not make any change to underlying host.
+            update: Boolean, update existing application if True, else
+                    reuse it.
+
+        Returns:
+            A Nulecule instance or None in case of some dry run (installing
+            from image).
+        """
+        if not dryrun and dest and src != dest:
+            distutils.dir_util.copy_tree(src, dest, update)
+        # FIXME: Try to load the application from source path as much as
+        #        possible without making any change to the host
+        if dryrun:
+            dest = src
+        else:
+            dest = dest or src
+        nulecule_path = os.path.join(dest, MAIN_FILE)
+        if dryrun and not os.path.exists(nulecule_path):
+            return
+        nulecule_data = anymarkup.parse_file(nulecule_path)
         nulecule = Nulecule(config=config, basepath=dest,
                             namespace=namespace, **nulecule_data)
         nulecule.load_components(nodeps, dryrun)
@@ -227,10 +269,10 @@ class NuleculeComponent(NuleculeBase):
         dest = os.path.join(EXTERNAL_APP_DIR, self.name)
         if not self.artifacts:
             if nodeps:
-                logger.debug(
-                    'Skipping loading external application: %s' % self.name)
+                logger.info(
+                    'Skipping to load external application: %s' % self.name)
             else:
-                self.load_external_application(dest, dryrun)
+                self.load_external_application(dryrun)
 
     def run(self, provider_key, dry=False):
         if self._app:
@@ -257,13 +299,30 @@ class NuleculeComponent(NuleculeBase):
             self._app.load_config(config=copy.deepcopy(self.config))
             self.merge_config(self.config, self._app.config)
 
-    def load_external_application(self, dest, dryrun=False, update=False):
+    def load_external_application(self, dryrun=False, update=False):
+        """
+        Loads an external application for the NuleculeComponent.
+
+        Args:
+            dryrun: Boolean. When True, skips pulling an external application.
+            update: Boolean. When True, it ignores an already pulled external
+                    application, and tries to pull the external application
+                    and update the existing one.
+
+        Returns:
+            A Nulecule instance or None
+        """
+        nulecule = None
         external_app_path = os.path.join(
             self.basepath, EXTERNAL_APP_DIR, self.name)
-        if os.path.isdir(external_app_path):
+        if os.path.isdir(external_app_path) and not update:
+            logger.info(
+                'Found existing external application for %s. '
+                'Loading it.' % self.name)
             nulecule = Nulecule.load_from_path(
-                external_app_path, dryrun=dryrun, update=False)
-        else:
+                external_app_path, dryrun=dryrun, update=update)
+        elif not dryrun:
+            logger.info('Pulling external application for %s.' % self.name)
             nulecule = Nulecule.unpack(
                 self.source,
                 external_app_path,
