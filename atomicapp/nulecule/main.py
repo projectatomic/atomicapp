@@ -193,8 +193,9 @@ class Nulecule(NuleculeBase):
         components = []
         for node in self.graph:
             node_name = node['name']
+            source = Utils.getSourceImage(node)
             component = NuleculeComponent(
-                node_name, self.basepath, node.get('source'),
+                node_name, self.basepath, source,
                 node.get('params'), node.get('artifacts'))
             component.load(nodeps, dryrun)
             components.append(component)

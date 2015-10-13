@@ -50,7 +50,7 @@ class DockerHandler(object):
             words = line.split()
             image_name = words[0]
             registry = repo = None
-            if image_name.find('/') >= 0:
+            if '/' in image_name:
                 registry, repo = image_name.split('/', 1)
             if image_name == image or repo == image:
                 return True
