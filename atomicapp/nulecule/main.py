@@ -15,6 +15,8 @@ from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
+                                 DEFAULT_NAMESPACE,
+                                 DEFAULT_PROVIDER,
                                  MAIN_FILE)
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
@@ -63,7 +65,7 @@ class NuleculeManager(object):
                 'Nulecule application found at %s. Unpacking and updating...'
                 % unpack_path)
             return Nulecule.unpack(image, unpack_path, nodeps=nodeps,
-                            dryrun=dryrun, update=update)
+                                   dryrun=dryrun, update=update)
         else:
             logger.debug(
                 'Nulecule application found at %s. Loading...')
@@ -84,8 +86,10 @@ class NuleculeManager(object):
             self.nulecule = self.unpack(APP, target_path, update, dryrun,
                                         config=self.answers)
         self.nulecule.load_config(config=self.nulecule.config)
+        runtime_answers = self._get_runtime_answers(
+            self.nulecule.config, None)
         self._write_answers(os.path.join(target_path, ANSWERS_FILE_SAMPLE),
-                            self.nulecule.config, answers_format,
+                            runtime_answers, answers_format,
                             dryrun=dryrun)
 
     def run(self, APP, answers, cli_provider, answers_output, ask,
@@ -95,16 +99,18 @@ class NuleculeManager(object):
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
-                                                dryrun=dryrun) 
+                                                dryrun=dryrun)
         self.nulecule.load_config(config=self.nulecule.config)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
+        runtime_answers = self._get_runtime_answers(
+            self.nulecule.config, cli_provider)
         self._write_answers(os.path.join(APP, ANSWERS_RUNTIME_FILE),
-                            self.nulecule.config,
+                            runtime_answers,
                             self.answers_format, dryrun=dryrun)
         if answers_output:
-            self._write_answers(answers_output, self.nulecule.config,
-                                self.answers_format)
+            self._write_answers(answers_output, runtime_answers,
+                                self.answers_format, dryrun)
 
     def stop(self, APP, cli_provider, **kwargs):
         self.answers = Utils.loadAnswers(
@@ -129,6 +135,15 @@ class NuleculeManager(object):
                 answers, path, format=answers_format)
         else:
             logger.info('ANSWERS: %s' % answers)
+
+    def _get_runtime_answers(self, config, cli_provider):
+        _config = copy.deepcopy(config)
+        _config[GLOBAL_CONF] = config.get(GLOBAL_CONF) or {}
+        _config[GLOBAL_CONF]['provider'] = cli_provider or \
+            _config[GLOBAL_CONF].get('provider') or DEFAULT_PROVIDER
+        _config[GLOBAL_CONF]['namespace'] = _config[GLOBAL_CONF].get(
+            'namespace') or DEFAULT_NAMESPACE
+        return _config
 
 
 class Nulecule(NuleculeBase):
