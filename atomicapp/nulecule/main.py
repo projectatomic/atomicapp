@@ -4,12 +4,11 @@ import copy
 import logging
 import os
 import shutil
-import uuid
 from collections import defaultdict
 from string import Template
 
 from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
-                                 GLOBAL_CONF, CACHE_DIR,
+                                 GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE,
@@ -19,7 +18,6 @@ from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
                                  MAIN_FILE)
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
-from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
