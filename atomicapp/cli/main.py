@@ -17,7 +17,6 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from atomicapp.run import Run
 import os
 import sys
 
