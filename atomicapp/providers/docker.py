@@ -120,9 +120,9 @@ class DockerProvider(Provider):
             else:
                 m = re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.default_name, self.namespace), container)
             if m:
-                logger.info("REMOVING CONTAINER: %s", container)
+                logger.info("STOPPING CONTAINER: %s", container)
                 cmd = ["docker", "kill", container]
                 if self.dryrun:
-                    logger.info("DRY-RUN: REMOVING CONTAINER %s", " ".join(cmd))
+                    logger.info("DRY-RUN: STOPPING CONTAINER %s", " ".join(cmd))
                 else:
                     subprocess.check_call(cmd)
