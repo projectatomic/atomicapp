@@ -1,4 +1,5 @@
-from atomicapp.constants import GLOBAL_CONF, DEFAULT_PROVIDER
+from atomicapp.constants import (GLOBAL_CONF, DEFAULT_PROVIDER,
+                                 DEFAULT_ANSWERS)
 from atomicapp.utils import Utils
 from atomicapp.plugin import Plugin
 
@@ -17,7 +18,7 @@ class NuleculeBase(object):
         pass
 
     def load_config(self, config={}):
-        config = config or {}
+        config = config or DEFAULT_ANSWERS
         for param in self.params:
             value = config.get(self.namespace, {}).get(param['name']) or \
                 config.get(GLOBAL_CONF, {}).get(param['name']) or \

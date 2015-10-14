@@ -72,15 +72,17 @@ class NuleculeManager(object):
     def install(self, APP, answers, target_path=None, nodeps=False,
                 update=False, dryrun=False,
                 answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
-        answers = Utils.loadAnswers(
+        self.answers = Utils.loadAnswers(
             answers or os.path.join(APP, ANSWERS_FILE))
-        answers_format = answers_format or answers_file_sample_format
+        self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         target_path = target_path or os.getcwd()
         if os.path.exists(APP):
             self.nulecule = Nulecule.load_from_path(
-                APP, target_path, dryrun=dryrun, update=update)
+                APP, target_path, dryrun=dryrun, update=update,
+                config=self.answers)
         else:
-            self.nulecule = self.unpack(APP, target_path, update, dryrun)
+            self.nulecule = self.unpack(APP, target_path, update, dryrun,
+                                        config=self.answers)
         self.nulecule.load_config(config=self.nulecule.config)
         self._write_answers(os.path.join(target_path, ANSWERS_FILE_SAMPLE),
                             self.nulecule.config, answers_format,
@@ -88,9 +90,9 @@ class NuleculeManager(object):
 
     def run(self, APP, answers, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
-        answers = Utils.loadAnswers(
+        self.answers = Utils.loadAnswers(
             answers or os.path.join(APP, ANSWERS_FILE))
-        answers_format = answers_format or answers_file_sample_format
+        self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
                                                 dryrun=dryrun) 
@@ -99,10 +101,10 @@ class NuleculeManager(object):
         self.nulecule.run(cli_provider, dryrun)
         self._write_answers(os.path.join(APP, ANSWERS_RUNTIME_FILE),
                             self.nulecule.config,
-                            answers_format, dryrun=dryrun)
+                            self.answers_format, dryrun=dryrun)
         if answers_output:
             self._write_answers(answers_output, self.nulecule.config,
-                                answers_format)
+                                self.answers_format)
 
     def stop(self, APP, cli_provider, **kwargs):
         self.answers = Utils.loadAnswers(
@@ -145,7 +147,7 @@ class Nulecule(NuleculeBase):
         self.metadata = metadata
         self.graph = graph
         self.requirements = requirements
-        self.config = None
+        self.config = config or {}
 
     @classmethod
     def unpack(cls, image, dest, config={}, namespace=GLOBAL_CONF,
@@ -253,15 +255,10 @@ class Nulecule(NuleculeBase):
         """
         super(Nulecule, self).load_config(config=config)
         for component in self.components:
-            _config = {}
-            _config[GLOBAL_CONF] = copy.deepcopy(
-                self.config.get(GLOBAL_CONF)) or {}
-            if self.namespace != GLOBAL_CONF:
-                _config[GLOBAL_CONF].update(
-                    self.config.get(self.namespace) or {})
-            _config[component.name] = copy.deepcopy(
-                self.config.get(component.name)) or {}
-            component.load_config(config=_config)
+            # FIXME: Find a better way to expose config data to components.
+            #        A component should not get access to all the variables,
+            #        but only to variables it needs.
+            component.load_config(config=copy.deepcopy(self.config))
             self.merge_config(self.config, component.config)
 
     def load_components(self, nodeps=False, dryrun=False):
