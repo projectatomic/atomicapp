@@ -98,14 +98,21 @@ class NuleculeManager(object):
             answers or os.path.join(APP, ANSWERS_FILE))
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
-        self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
-                                                dryrun=dryrun)
+        if os.path.exists(APP):
+            self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
+                                                    dryrun=dryrun)
+            app_path = APP
+        else:
+            app_path = os.getcwd()
+            self.nulecule = Nulecule.unpack(APP, app_path, update=True,
+                                            dryrun=dryrun,
+                                            config=self.answers)
         self.nulecule.load_config(config=self.nulecule.config)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
         runtime_answers = self._get_runtime_answers(
             self.nulecule.config, cli_provider)
-        self._write_answers(os.path.join(APP, ANSWERS_RUNTIME_FILE),
+        self._write_answers(os.path.join(app_path, ANSWERS_RUNTIME_FILE),
                             runtime_answers,
                             self.answers_format, dryrun=dryrun)
         if answers_output:
