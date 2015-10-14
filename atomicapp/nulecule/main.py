@@ -12,6 +12,7 @@ from string import Template
 from atomicapp.constants import (APP_ENT_PATH, EXTERNAL_APP_DIR,
                                  GLOBAL_CONF, CACHE_DIR,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
+                                 ANSWERS_FILE,
                                  ANSWERS_RUNTIME_FILE,
                                  MAIN_FILE)
 from atomicapp.nulecule.lib import NuleculeBase
@@ -58,7 +59,7 @@ class NuleculeManager(object):
             logger.debug(
                 'Nulecule application found at %s. Unpacking and updating...'
                 % unpack_path)
-            Nulecule.unpack(image, unpack_path, nodeps=nodeps,
+            return Nulecule.unpack(image, unpack_path, nodeps=nodeps,
                             dryrun=dryrun, update=update)
         else:
             logger.debug(
@@ -77,15 +78,17 @@ class NuleculeManager(object):
     def run(self, APP, answers, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         answers = Utils.loadAnswers(
-            os.path.join(APP, 'answers.conf'))
+            answers or os.path.join(APP, ANSWERS_FILE))
         answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
                                                 dryrun=dryrun) 
+        self.nulecule.load_config(config=self.nulecule.config)
+        self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
         self._write_answers(os.path.join(APP, ANSWERS_RUNTIME_FILE),
                             self.nulecule.config,
-                            answers_format)
+                            answers_format, dryrun=dryrun)
         if answers_output:
             self._write_answers(answers_output, self.nulecule.config,
                                 answers_format)
@@ -107,9 +110,12 @@ class NuleculeManager(object):
         shutil.rmtree(self.unpack_path)
         self.initialize()
 
-    def _write_answers(self, path, answers, answers_format):
-        anymarkup.serialize_file(
-            answers, path, format=answers_format)
+    def _write_answers(self, path, answers, answers_format, dryrun=False):
+        if not dryrun:
+            anymarkup.serialize_file(
+                answers, path, format=answers_format)
+        else:
+            logger.info('ANSWERS: %s' % answers)
 
 
 class Nulecule(NuleculeBase):
@@ -197,12 +203,18 @@ class Nulecule(NuleculeBase):
         nulecule.load_components(nodeps, dryrun)
         return nulecule
 
-    def run(self, provider_key=None, dry=False):
-        self.load_config(config=self.config)
-        self.render(provider_key)
-        provider_key, provider = self.get_provider(provider_key, dry)
+    def run(self, provider_key=None, dryrun=False):
+        """
+        Runs a nulecule application.
+
+        Args:
+            provider_key: String, provider to use for running Nulecule
+                          application
+            dryrun: Boolean, Do not make changes to host when True
+        """
+        provider_key, provider = self.get_provider(provider_key, dryrun)
         for component in self.components:
-            component.run(provider_key, dry)
+            component.run(provider_key, dryrun)
 
     def stop(self, provider_key=None, dryrun=False):
         self.load_config(config=self.config)
@@ -218,6 +230,16 @@ class Nulecule(NuleculeBase):
             component.uninstall()
 
     def load_config(self, config={}):
+        """
+        Load config data for the entire Nulecule application, by traversing
+        through all the Nulecule components in a DFS fashion.
+
+        It updates self.config.
+
+        Args:
+            config: A dictionary, existing config data, may be from ANSWERS
+                    file or any other source.
+        """
         super(Nulecule, self).load_config(config=config)
         for component in self.components:
             _config = {}
@@ -243,9 +265,20 @@ class Nulecule(NuleculeBase):
             components.append(component)
         self.components = components
 
-    def render(self, provider_key=None):
+    def render(self, provider_key=None, dryrun=False):
+        """
+        Render the artifact files for the entire Nulecule application from
+        config data.
+
+        Args:
+            provider_key: String, provider for which artifacts need to be
+                          rendered. If it's None, we render artifacts for
+                          all providers.
+            dryrun: Boolean, do not make any change to the host system when
+                    True
+        """
         for component in self.components:
-            component.render(provider_key=provider_key)
+            component.render(provider_key=provider_key, dryrun=dryrun)
 
 
 class NuleculeComponent(NuleculeBase):
@@ -266,7 +299,6 @@ class NuleculeComponent(NuleculeBase):
         self._app = None
 
     def load(self, nodeps=False, dryrun=False):
-        dest = os.path.join(EXTERNAL_APP_DIR, self.name)
         if not self.artifacts:
             if nodeps:
                 logger.info(
@@ -337,7 +369,19 @@ class NuleculeComponent(NuleculeBase):
         if self._app:
             return self._app.components
 
-    def render(self, provider_key=None):
+    def render(self, provider_key=None, dryrun=False):
+        """
+        Render the artifact files for the Nuelcule component. If the component
+        is an external Nulecule application, recurse into it to load it and
+        render it's artifacts. If provider_key is specified, render artifacts
+        only for that provider, else, render artifacts for all providers.
+
+        Args:
+            provider_key (str or None): Provider name.
+
+        Returns:
+            None
+        """
         if self._app:
             self._app.render(provider_key=provider_key)
             return
@@ -351,6 +395,15 @@ class NuleculeComponent(NuleculeBase):
                     self.render_artifact(artifact_path, context))
 
     def get_artifact_paths_for_provider(self, provider_key):
+        """
+        Get artifact file paths of a Nulecule component for a provider.
+
+        Args:
+            provider_key (str): Provider name
+
+        Returns:
+            list: A list of artifact paths.
+        """
         artifact_paths = []
         artifacts = self.artifacts.get(provider_key)
         for artifact in artifacts:
@@ -365,6 +418,19 @@ class NuleculeComponent(NuleculeBase):
         return artifact_paths
 
     def render_artifact(self, path, context):
+        """
+        Render artifact file at path with context to a file at the same
+        level. The rendered file has a name a dot '.' prefixed to the
+        name of the the source artifact file.
+
+        Args:
+            path (str): path to the artifact file
+            context (dict): data to render in the artifact file
+
+        Returns:
+            str: Relative path to the rendered artifact file from the
+                 immediate parent Nuelcule application
+        """
         basepath, tail = os.path.split(path)
         render_path = os.path.join(basepath, '.{}'.format(tail))
 
@@ -377,5 +443,6 @@ class NuleculeComponent(NuleculeBase):
             f.write(rendered_content)
 
         render_path = render_path.split(
-            self.basepath + '' if self.basepath.endswith('/') else '/', 1)[1]
+            self.basepath + ('' if self.basepath.endswith('/') else '/'),
+            1)[1]
         return render_path
