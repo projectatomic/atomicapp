@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import anymarkup
 import copy
-import distutils
 import logging
 import os
 import shutil
@@ -79,8 +78,11 @@ class NuleculeManager(object):
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         target_path = target_path or os.getcwd()
         if os.path.exists(APP):
+            Utils.copy_dir(APP, target_path, dryrun=dryrun)
+            # Since directory is not copied to target_path during dry run
+            # we fall back to load the app from APP.
             self.nulecule = Nulecule.load_from_path(
-                APP, target_path, dryrun=dryrun, update=update,
+                APP if dryrun else target_path, dryrun=dryrun, update=update,
                 config=self.answers)
         else:
             self.nulecule = self.unpack(APP, target_path, update, dryrun,
@@ -201,7 +203,7 @@ class Nulecule(NuleculeBase):
             dryrun=dryrun, update=update)
 
     @classmethod
-    def load_from_path(cls, src, dest=None, config={}, namespace=GLOBAL_CONF,
+    def load_from_path(cls, src, config={}, namespace=GLOBAL_CONF,
                        nodeps=False, dryrun=False, update=False):
         """
         Load a Nulecule application from a path in the source path itself, or
@@ -209,7 +211,6 @@ class Nulecule(NuleculeBase):
 
         Args:
             src: String, path to load Nulecule application from.
-            dest: String, path to install the Nulecule application.
             config: Dictionary, config data for Nulecule application.
             namespace: String, namespace for Nulecule application.
             nodeps: Boolean. Do not pull external applications if True.
@@ -221,19 +222,11 @@ class Nulecule(NuleculeBase):
             A Nulecule instance or None in case of some dry run (installing
             from image).
         """
-        if not dryrun and dest and src != dest:
-            distutils.dir_util.copy_tree(src, dest, update)
-        # FIXME: Try to load the application from source path as much as
-        #        possible without making any change to the host
-        if dryrun:
-            dest = src
-        else:
-            dest = dest or src
-        nulecule_path = os.path.join(dest, MAIN_FILE)
+        nulecule_path = os.path.join(src, MAIN_FILE)
         if dryrun and not os.path.exists(nulecule_path):
             return
         nulecule_data = anymarkup.parse_file(nulecule_path)
-        nulecule = Nulecule(config=config, basepath=dest,
+        nulecule = Nulecule(config=config, basepath=src,
                             namespace=namespace, **nulecule_data)
         nulecule.load_components(nodeps, dryrun)
         return nulecule

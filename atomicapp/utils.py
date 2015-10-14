@@ -19,6 +19,7 @@
 
 from __future__ import print_function
 import copy
+import distutils
 import os
 import sys
 import tempfile
@@ -282,3 +283,8 @@ class Utils(object):
             answers_data = data
 
         return answers_data
+
+    @staticmethod
+    def copy_dir(src, dest, update=False, dryrun=False):
+        if not dryrun:
+            distutils.dir_utils.copy_tree(src, dest, update)
