@@ -166,6 +166,21 @@ class CLI():
         parser_install = subparsers.add_parser("install")
 
         parser_install.add_argument(
+            "-a",
+            "--answers",
+            dest="answers",
+            default=os.path.join(os.getcwd(), ANSWERS_FILE),
+            help="Path to %s" % ANSWERS_FILE)
+
+        parser_install.add_argument(
+            "--answers-format",
+            dest="answers_format",
+            default=ANSWERS_FILE_SAMPLE_FORMAT,
+            help=(
+                "The format for the answers.conf.sample file.Default is "
+                "'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'."))
+
+        parser_install.add_argument(
             "--no-deps",
             dest="nodeps",
             default=False,
