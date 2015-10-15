@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import anymarkup
 import copy
+import distutils
 import logging
 import os
-import shutil
 
 from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
@@ -129,7 +129,7 @@ class NuleculeManager(object):
 
     def clean(self, force=False):
         self.uninstall()
-        shutil.rmtree(self.unpack_path)
+        distutils.dir_util.remove_tree(self.unpack_path)
         self.initialize()
 
     def _write_answers(self, path, answers, answers_format, dryrun=False):
