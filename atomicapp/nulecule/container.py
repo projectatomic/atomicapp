@@ -1,4 +1,4 @@
-import distutils
+import distutils.dir_util
 import os
 import subprocess
 import uuid

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import anymarkup
 import copy
-import distutils
+import distutils.dir_util
 import logging
 import os
 
