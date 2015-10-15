@@ -108,8 +108,6 @@ class Nulecule(NuleculeBase):
             component.run(provider_key, dryrun)
 
     def stop(self, provider_key=None, dryrun=False):
-        self.load_config(config=self.config)
-        self.render(provider_key)
         provider_key, provider = self.get_provider(provider_key)
         # stop the Nulecule application
         for component in self.components:

@@ -123,6 +123,8 @@ class NuleculeManager(object):
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
                                                 dryrun=dryrun)
+        self.nulecule.load_config(config=self.answers)
+        self.nulecule.render(cli_provider, dryrun=dryrun)
         self.nulecule.stop(cli_provider, dryrun)
 
     def uninstall(self):
