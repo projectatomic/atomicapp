@@ -41,37 +41,37 @@ logger = logging.getLogger(__name__)
 def cli_install(args):
     try:
         NuleculeManager.do_install(**vars(args))
-        sys.exit(True)
+        sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
-        sys.exit(False)
+        sys.exit(1)
     except Exception as e:
         logger.error(e, exc_info=True)
-        sys.exit(False)
+        sys.exit(1)
 
 
 def cli_run(args):
     try:
         NuleculeManager.do_run(**vars(args))
-        sys.exit(True)
+        sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
-        sys.exit(False)
+        sys.exit(1)
     except Exception as e:
         logger.error(e, exc_info=True)
-        sys.exit(False)
+        sys.exit(1)
 
 
 def cli_stop(args):
     try:
         NuleculeManager.do_stop(**vars(args))
-        sys.exit(True)
+        sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
-        sys.exit(False)
+        sys.exit(1)
     except Exception as e:
         logger.error(e, exc_info=True)
-        sys.exit(False)
+        sys.exit(1)
 
 
 class CLI():
