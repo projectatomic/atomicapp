@@ -50,7 +50,7 @@ class NuleculeManager(object):
         self.answers_format = None
 
     def unpack(self, image, unpack_path, update=False, dryrun=False,
-               nodeps=False):
+               nodeps=False, config=None):
         logger.debug('Unpacking %s to %s' % (image, unpack_path))
         if not os.path.exists(os.path.join(unpack_path, MAIN_FILE)) or \
                 update:
@@ -81,9 +81,11 @@ class NuleculeManager(object):
         else:
             self.nulecule = self.unpack(APP, target_path, update, dryrun,
                                         config=self.answers)
-        self.nulecule.load_config(config=self.nulecule.config)
+        self.nulecule.load_config(config=self.nulecule.config,
+                                  skip_asking=True)
         runtime_answers = self._get_runtime_answers(
             self.nulecule.config, None)
+        # write sample answers file
         self._write_answers(os.path.join(target_path, ANSWERS_FILE_SAMPLE),
                             runtime_answers, answers_format,
                             dryrun=dryrun)
@@ -103,7 +105,7 @@ class NuleculeManager(object):
             self.nulecule = Nulecule.unpack(APP, app_path, update=True,
                                             dryrun=dryrun,
                                             config=self.answers)
-        self.nulecule.load_config(config=self.nulecule.config)
+        self.nulecule.load_config(config=self.nulecule.config, ask=ask)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
         runtime_answers = self._get_runtime_answers(

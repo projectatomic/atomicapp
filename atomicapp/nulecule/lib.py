@@ -17,14 +17,16 @@ class NuleculeBase(object):
     def load(self):
         pass
 
-    def load_config(self, config={}):
+    def load_config(self, config=None, ask=False, skip_asking=False):
         config = config or DEFAULT_ANSWERS
         for param in self.params:
             value = config.get(self.namespace, {}).get(param['name']) or \
-                config.get(GLOBAL_CONF, {}).get(param['name']) or \
-                param.get('default')
-            if value is None:
+                config.get(GLOBAL_CONF, {}).get(param['name'])
+            if value is None and (ask or (
+                    not skip_asking and param.get('default') is None)):
                 value = Utils.askFor(param['name'], param)
+            elif value is None:
+                value = param.get('default')
             if config.get(self.namespace) is None:
                 config[self.namespace] = {}
             config[self.namespace][param['name']] = value

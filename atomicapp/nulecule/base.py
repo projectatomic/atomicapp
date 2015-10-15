@@ -37,7 +37,7 @@ class Nulecule(NuleculeBase):
         self.config = config or {}
 
     @classmethod
-    def unpack(cls, image, dest, config={}, namespace=GLOBAL_CONF,
+    def unpack(cls, image, dest, config=None, namespace=GLOBAL_CONF,
                nodeps=False, dryrun=False, update=False):
         """
         Pull and extracts a docker image to the specified path, and loads
@@ -66,7 +66,7 @@ class Nulecule(NuleculeBase):
             dryrun=dryrun, update=update)
 
     @classmethod
-    def load_from_path(cls, src, config={}, namespace=GLOBAL_CONF,
+    def load_from_path(cls, src, config=None, namespace=GLOBAL_CONF,
                        nodeps=False, dryrun=False, update=False):
         """
         Load a Nulecule application from a path in the source path itself, or
@@ -120,7 +120,7 @@ class Nulecule(NuleculeBase):
         for component in self.components:
             component.uninstall()
 
-    def load_config(self, config={}):
+    def load_config(self, config=None, ask=False, skip_asking=False):
         """
         Load config data for the entire Nulecule application, by traversing
         through all the Nulecule components in a DFS fashion.
@@ -131,12 +131,14 @@ class Nulecule(NuleculeBase):
             config: A dictionary, existing config data, may be from ANSWERS
                     file or any other source.
         """
-        super(Nulecule, self).load_config(config=config)
+        super(Nulecule, self).load_config(
+            config=config, ask=ask, skip_asking=skip_asking)
         for component in self.components:
             # FIXME: Find a better way to expose config data to components.
             #        A component should not get access to all the variables,
             #        but only to variables it needs.
-            component.load_config(config=copy.deepcopy(self.config))
+            component.load_config(config=copy.deepcopy(self.config),
+                                  ask=ask, skip_asking=skip_asking)
             self.merge_config(self.config, component.config)
 
     def load_components(self, nodeps=False, dryrun=False):
@@ -211,10 +213,12 @@ class NuleculeComponent(NuleculeBase):
         provider.init()
         provider.undeploy()
 
-    def load_config(self, config={}):
-        super(NuleculeComponent, self).load_config(config)
+    def load_config(self, config=None, ask=False, skip_asking=False):
+        super(NuleculeComponent, self).load_config(
+            config, ask=ask, skip_asking=skip_asking)
         if isinstance(self._app, Nulecule):
-            self._app.load_config(config=copy.deepcopy(self.config))
+            self._app.load_config(config=copy.deepcopy(self.config),
+                                  ask=ask, skip_asking=skip_asking)
             self.merge_config(self.config, self._app.config)
 
     def load_external_application(self, dryrun=False, update=False):
