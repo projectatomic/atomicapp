@@ -24,37 +24,34 @@ import tempfile
 import os
 import json
 from atomicapp.plugin import Plugin, ProviderFailedException
-from atomicapp.nulecule_base import Nulecule_Base
+from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.providers.docker import DockerProvider
 from atomicapp.constants import DEFAULT_CONTAINER_NAME, DEFAULT_NAMESPACE
 
 def mock_name_get_call(self):
-    return ["atomic_default_e9b9a7bfe8f9"]
+    return ["atomic_test_e9b9a7bfe8f9"]
 
 class TestDockerProviderBase(unittest.TestCase):
     
     # Create a temporary directory for our setup as well as load the required providers
     def setUp(self):
-        self.nulecule_base = Nulecule_Base(dryrun = True)
+        self.nulecule_base = NuleculeBase(params = [], basepath = os.getcwd(), namespace = "test")
         self.tmpdir = tempfile.mkdtemp(prefix = "atomicapp-test", dir = "/tmp")
         self.artifact_dir = os.path.dirname(__file__) + '/docker_artifact_test/'
-        self.plugin = Plugin()
-        self.plugin.load_plugins()
 
     def tearDown(self):
         pass
     
-    # Lets prepare the docker provider with pre-loaded configuration
+    # Lets prepare the docker provider with pre-loaded configuration and use the DockerProvider
     def prepare_provider(self, data):
-        self.nulecule_base.loadAnswers(data)
-        provider_class = self.plugin.getProvider(self.nulecule_base.provider)
-        config = self.nulecule_base.getValues(skip_asking=True)
-        provider = provider_class(config, self.tmpdir, dryrun = True)
+        self.nulecule_base.load_config(data)
+        config = self.nulecule_base.config
+        provider = DockerProvider(config, self.tmpdir, dryrun = True)
         return provider
 
     # Test deploying multiple artifacts within docker
     def test_multiple_artifact_load(self):
-        data = {'general': {'namespace': 'test', 'provider': 'docker'}}
+        data = {'namespace': 'test', 'provider': 'docker'}
         provider = self.prepare_provider(data)
         provider.init()
         provider.artifacts = [
@@ -68,14 +65,14 @@ class TestDockerProviderBase(unittest.TestCase):
             ["atomic_default_e9b9a7bfe8f9", "atomic_test_e9b9a7bfe8f9"],
             ["atomic_default_e9b9a7bfe8f9", "atomic_test_e9b9a7bfe8f9", "atomic_test_e9b9a7bfe8f9"]
             ])
-        with mock.patch("docker.DockerProvider._get_containers", mock_container_list):
+        with mock.patch("atomicapp.providers.docker.DockerProvider._get_containers", mock_container_list):
             provider.deploy()
 
    
     # Patch in a general container list and make sure it fails if there is already a container with the same name 
-    @mock.patch("docker.DockerProvider._get_containers", mock_name_get_call)
+    @mock.patch("atomicapp.providers.docker.DockerProvider._get_containers", mock_name_get_call)
     def test_namespace_name_check(self):
-        data = {'general': {'namespace': 'default', 'provider': 'docker'}}
+        data = {'namespace': 'test', 'provider': 'docker'}
         provider = self.prepare_provider(data)
         provider.init()
         provider.artifacts = [self.artifact_dir + 'hello-world-one']
