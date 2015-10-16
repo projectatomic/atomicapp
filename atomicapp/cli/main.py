@@ -120,6 +120,14 @@ class CLI():
                 "Don't actually call provider. The commands that should be "
                 "run will be sent to stdout but not run."))
 
+        self.parser.add_argument(
+            "--answers-format",
+            dest="answers_format",
+            default=ANSWERS_FILE_SAMPLE_FORMAT,
+            help=(
+                "The format for the answers.conf.sample file.Default is "
+                "'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'."))
+
         subparsers = self.parser.add_subparsers(dest="action")
 
         parser_run = subparsers.add_parser("run")
@@ -130,14 +138,6 @@ class CLI():
             dest="answers",
             default=os.path.join(os.getcwd(), ANSWERS_FILE),
             help="Path to %s" % ANSWERS_FILE)
-
-        parser_run.add_argument(
-            "--answers-format",
-            dest="answers_format",
-            default=ANSWERS_FILE_SAMPLE_FORMAT,
-            help=(
-                "The format for the answers.conf.sample file.Default is "
-                "'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'."))
 
         parser_run.add_argument(
             "--write-answers",
@@ -170,14 +170,6 @@ class CLI():
             dest="answers",
             default=os.path.join(os.getcwd(), ANSWERS_FILE),
             help="Path to %s" % ANSWERS_FILE)
-
-        parser_install.add_argument(
-            "--answers-format",
-            dest="answers_format",
-            default=ANSWERS_FILE_SAMPLE_FORMAT,
-            help=(
-                "The format for the answers.conf.sample file.Default is "
-                "'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'."))
 
         parser_install.add_argument(
             "--no-deps",
