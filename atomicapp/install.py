@@ -145,8 +145,8 @@ class Install(object):
                            "may result in unexpected behaviour")
 
         if self.nulecule_base.update or \
-            (not self.dryrun
-             and not os.path.exists(self.nulecule_base.getMainfilePath())):
+            (not self.dryrun and
+             not os.path.exists(self.nulecule_base.getMainfilePath())):
             if self._fromImage():
                 self._populateApp()
             else:
