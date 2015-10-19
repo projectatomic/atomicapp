@@ -37,11 +37,19 @@ from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
 
+APP_MESSAGE = """
+Your application resides in %s
+Please use this directory for managing your application
+"""
+
 
 def cli_install(args):
     try:
-        nm = NuleculeManager()
-        nm.install(**vars(args))
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['APP'],
+                             destination=argdict['destination'])
+        nm.install(**argdict)
+        print(APP_MESSAGE % nm.app_path)  # msg for users
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -53,8 +61,11 @@ def cli_install(args):
 
 def cli_run(args):
     try:
-        nm = NuleculeManager()
-        nm.run(**vars(args))
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['APP'],
+                             destination=argdict['destination'])
+        nm.run(**argdict)
+        print(APP_MESSAGE % nm.app_path)  # msg for users
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -66,8 +77,9 @@ def cli_run(args):
 
 def cli_stop(args):
     try:
-        nm = NuleculeManager()
-        nm.stop(**vars(args))
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['APP'])
+        nm.stop(**argdict)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -163,6 +175,12 @@ class CLI():
             "APP",
             help="Path to the directory where the image is installed.")
 
+        parser_run.add_argument(
+            "--destination",
+            dest="destination",
+            default=None,
+            help="Destination directory for install")
+
         parser_run.set_defaults(func=cli_run)
 
         parser_install = subparsers.add_parser("install")
@@ -191,7 +209,7 @@ class CLI():
 
         parser_install.add_argument(
             "--destination",
-            dest="target_path",
+            dest="destination",
             default=None,
             help="Destination directory for install")
 
