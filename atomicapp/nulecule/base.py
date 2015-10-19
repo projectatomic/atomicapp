@@ -108,7 +108,7 @@ class Nulecule(NuleculeBase):
             component.run(provider_key, dryrun)
 
     def stop(self, provider_key=None, dryrun=False):
-        provider_key, provider = self.get_provider(provider_key)
+        provider_key, provider = self.get_provider(provider_key, dryrun)
         # stop the Nulecule application
         for component in self.components:
             component.stop(provider_key, dryrun)
@@ -192,21 +192,20 @@ class NuleculeComponent(NuleculeBase):
             else:
                 self.load_external_application(dryrun)
 
-    def run(self, provider_key, dry=False):
+    def run(self, provider_key, dryrun=False):
         if self._app:
-            self._app.run(provider_key, dry)
+            self._app.run(provider_key, dryrun)
             return
-        provider_key, provider = self.get_provider(provider_key, dry)
+        provider_key, provider = self.get_provider(provider_key, dryrun)
         provider.artifacts = self.rendered_artifacts.get(provider_key, [])
         provider.init()
-        if not dry:
-            provider.deploy()
+        provider.deploy()
 
     def stop(self, provider_key=None, dryrun=False):
         if self._app:
-            self._app.stop(provider_key)
+            self._app.stop(provider_key, dryrun)
             return
-        provider_key, provider = self.get_provider(provider_key)
+        provider_key, provider = self.get_provider(provider_key, dryrun)
         provider.artifacts = self.rendered_artifacts.get(provider_key, [])
         provider.init()
         provider.undeploy()
