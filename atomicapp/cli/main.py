@@ -151,7 +151,6 @@ class CLI():
             "-a",
             "--answers",
             dest="answers",
-            default=os.path.join(os.getcwd(), ANSWERS_FILE),
             help="Path to %s" % ANSWERS_FILE)
 
         parser_run.add_argument(
@@ -191,7 +190,6 @@ class CLI():
             "-a",
             "--answers",
             dest="answers",
-            default=os.path.join(os.getcwd(), ANSWERS_FILE),
             help="Path to %s" % ANSWERS_FILE)
 
         parser_install.add_argument(
