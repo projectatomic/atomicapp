@@ -101,18 +101,14 @@ class NuleculeManager(object):
                 self.image, self.app_path,
                 nodeps=nodeps, dryrun=dryrun, update=update)
 
-    def install(self, APP, answers, target_path=None, nodeps=False,
-                update=False, dryrun=False,
+    def install(self, answers, nodeps=False, update=False, dryrun=False,
                 answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         """
-        Instance method of NuleculeManager to install a Nulecule application
-        from a local path or a Nulecule image name to specified target path
-        or current working directory.
+        Installs (unpacks) a Nulecule application from a Nulecule image
+        to a target path.
 
         Args:
-            APP (str): Image name or local path
             answers (dict or str): Answers data or local path to answers file
-            target_path (str): Path to install a Nulecule application
             nodeps (bool): Install the nulecule application without installing
                            external dependencies
             update (bool): Pull requisite Nulecule image and install or
@@ -125,27 +121,21 @@ class NuleculeManager(object):
             None
         """
         self.answers = Utils.loadAnswers(
-            answers or os.path.join(APP, ANSWERS_FILE))
+            answers or os.path.join(self.app_path, ANSWERS_FILE))
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
-        target_path = target_path or os.getcwd()
-        if os.path.exists(APP):
-            Utils.copy_dir(APP, target_path, dryrun=dryrun)
-            # Since directory is not copied to target_path during dry run
-            # we fall back to load the app from APP.
-            self.nulecule = Nulecule.load_from_path(
-                APP if dryrun else target_path, dryrun=dryrun, update=update,
-                config=self.answers)
-        else:
-            self.nulecule = self.unpack(APP, target_path, update, dryrun,
-                                        config=self.answers)
+
+        # Call unpack. If the app doesn't exist it will be pulled. If
+        # it does exist it will be just be loaded and returned
+        self.nulecule = self.unpack(update, dryrun, config=self.answers)
+
         self.nulecule.load_config(config=self.nulecule.config,
                                   skip_asking=True)
         runtime_answers = self._get_runtime_answers(
             self.nulecule.config, None)
         # write sample answers file
-        self._write_answers(os.path.join(target_path, ANSWERS_FILE_SAMPLE),
-                            runtime_answers, answers_format,
-                            dryrun=dryrun)
+        self._write_answers(
+            os.path.join(self.app_path, ANSWERS_FILE_SAMPLE),
+            runtime_answers, answers_format, dryrun=dryrun)
 
     def run(self, APP, answers, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
