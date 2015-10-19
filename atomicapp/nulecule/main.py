@@ -63,35 +63,43 @@ class NuleculeManager(object):
         # Set where the main nulecule file should be
         self.main_file = os.path.join(self.app_path, MAIN_FILE)
 
-    def unpack(self, image, unpack_path, update=False, dryrun=False,
-               nodeps=False, config=None):
+    def unpack(self, update=False,
+               dryrun=False, nodeps=False, config=None):
         """
-        Unpack a Nulecule application from a Nulecule image to a path.
+        Unpacks a Nulecule application from a Nulecule image to a path
+        or load a Nulecule that already exists locally.
 
         Args:
-            image (str): Name of Nulecule image
-            unpack_path (str): Path to unpack the Nulecule image to
             update (bool): Update existing Nulecule application in
-                           unpack_path, if True
+                           app_path, if True
             dryrun (bool): Do not make any change to the host system
-            nodeps (bool): Do not unpack any external dependency
+            nodeps (bool): Do not unpack external dependencies
             config (dict): Config data, if any, to use for unpacking
 
         Returns:
             A Nulecule instance.
         """
-        logger.debug('Unpacking %s to %s' % (image, unpack_path))
-        if not os.path.exists(os.path.join(unpack_path, MAIN_FILE)) or \
-                update:
-            logger.debug(
-                'Nulecule application found at %s. Unpacking and updating...'
-                % unpack_path)
-            return Nulecule.unpack(image, unpack_path, nodeps=nodeps,
-                                   dryrun=dryrun, update=update)
+        app_exists = os.path.exists(self.main_file)
+        logger.debug('Request to unpack to %s to %s' %
+                     (self.image, self.app_path))
+        # Unpack/Update/Load the app depending on the current state
+        if app_exists:
+            logger.debug('Nulecule app found at %s.' % self.main_file)
+            if update:
+                logger.debug('Update requested. Unpacking to %s.'
+                             % self.app_path)
+                return Nulecule.unpack(
+                    self.image, self.app_path,
+                    nodeps=nodeps, dryrun=dryrun, update=update)
+            else:
+                logger.debug('Loading nulecule from %s.' % self.main_file)
+                return Nulecule.load_from_path(
+                    self.app_path, dryrun=dryrun, config=config)
         else:
-            logger.debug(
-                'Nulecule application found at %s. Loading...')
-            return Nulecule.load_from_path(unpack_path, dryrun=dryrun)
+            logger.debug('No app found at %s. Unpacking...' % self.main_file)
+            return Nulecule.unpack(
+                self.image, self.app_path,
+                nodeps=nodeps, dryrun=dryrun, update=update)
 
     def install(self, APP, answers, target_path=None, nodeps=False,
                 update=False, dryrun=False,
