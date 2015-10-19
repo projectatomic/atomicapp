@@ -40,7 +40,8 @@ logger = logging.getLogger(__name__)
 
 def cli_install(args):
     try:
-        NuleculeManager.do_install(**vars(args))
+        nm = NuleculeManager()
+        nm.install(**vars(args))
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -52,7 +53,8 @@ def cli_install(args):
 
 def cli_run(args):
     try:
-        NuleculeManager.do_run(**vars(args))
+        nm = NuleculeManager()
+        nm.run(**vars(args))
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -64,7 +66,8 @@ def cli_run(args):
 
 def cli_stop(args):
     try:
-        NuleculeManager.do_stop(**vars(args))
+        nm = NuleculeManager()
+        nm.stop(**vars(args))
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
