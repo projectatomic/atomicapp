@@ -10,10 +10,12 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
+                                 CACHE_DIR,
                                  DEFAULT_NAMESPACE,
                                  DEFAULT_PROVIDER,
                                  MAIN_FILE)
 from atomicapp.nulecule.base import Nulecule
+from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
@@ -24,10 +26,42 @@ class NuleculeManager(object):
     Interface to install, run, stop a Nulecule application.
     """
 
-    def __init__(self):
-        self.APP = None
+    def __init__(self, app_spec, destination=None):
+        """
+        init function for NuleculeManager. Sets a few instance variables.
+
+        Args:
+            app_spec: either a path to an unpacked nulecule app or a
+                      container image name where a nulecule can be found
+            destination: where to unpack a nulecule to if it isn't local
+        """
         self.answers = {}
         self.answers_format = None
+        self.app_path = None  # The path where the app resides or will reside
+        self.image = None     # The container image to pull the app from
+
+        # Doesn't make sense to provide a local path and a destination
+        if os.path.exists(app_spec) and destination:
+            raise NuleculeException(
+                "You can't provide a local path and destination.")
+
+        # Translate the app_spec: a few options:
+        #   - user provided local path to unpacked app
+        #   - user provided container image name (will set app_path
+        #     based on provided destination)
+        if os.path.exists(app_spec):
+            self.app_path = app_spec
+        else:
+            self.image = app_spec
+            if destination:
+                self.app_path = destination
+            else:
+                tmpname = "%s-%s" % (Utils.sanitizeName(self.image),
+                                     Utils.getUniqueUUID())
+                self.app_path = os.path.join(CACHE_DIR, tmpname)
+
+        # Set where the main nulecule file should be
+        self.main_file = os.path.join(self.app_path, MAIN_FILE)
 
     def unpack(self, image, unpack_path, update=False, dryrun=False,
                nodeps=False, config=None):
