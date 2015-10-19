@@ -46,7 +46,7 @@ Please use this directory for managing your application
 def cli_install(args):
     try:
         argdict = args.__dict__
-        nm = NuleculeManager(app_spec=argdict['APP'],
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
                              destination=argdict['destination'])
         nm.install(**argdict)
         print(APP_MESSAGE % nm.app_path)  # msg for users
@@ -62,7 +62,7 @@ def cli_install(args):
 def cli_run(args):
     try:
         argdict = args.__dict__
-        nm = NuleculeManager(app_spec=argdict['APP'],
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
                              destination=argdict['destination'])
         nm.run(**argdict)
         print(APP_MESSAGE % nm.app_path)  # msg for users
@@ -78,7 +78,7 @@ def cli_run(args):
 def cli_stop(args):
     try:
         argdict = args.__dict__
-        nm = NuleculeManager(app_spec=argdict['APP'])
+        nm = NuleculeManager(app_spec=argdict['app_spec'])
         nm.stop(**argdict)
         sys.exit(0)
     except NuleculeException as e:
@@ -172,8 +172,10 @@ class CLI():
             help="Ask for params even if the defaul value is provided")
 
         parser_run.add_argument(
-            "APP",
-            help="Path to the directory where the image is installed.")
+            "app_spec",
+            help=(
+                "Application to run. This is a container image or a path "
+                "that contains the metadata describing the whole application."))
 
         parser_run.add_argument(
             "--destination",
@@ -214,7 +216,7 @@ class CLI():
             help="Destination directory for install")
 
         parser_install.add_argument(
-            "APP",
+            "app_spec",
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
@@ -229,7 +231,7 @@ class CLI():
             help="The provider to use. Overrides provider value in answerfile.")
 
         parser_stop.add_argument(
-            "APP",
+            "app_spec",
             help=(
                 "Path to the directory where the Atomic App is installed or "
                 "an image containing an Atomic App which should be stopped."))
