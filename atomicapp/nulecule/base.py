@@ -299,15 +299,16 @@ class NuleculeComponent(NuleculeBase):
                 path = Utils.sanitizePath(artifact)
                 path = os.path.join(self.basepath, path) \
                     if path[0] != '/' else path
+                artifact_paths.append(path)
             elif isinstance(artifact, dict) and artifact.get('inherit') and \
                     isinstance(artifact.get('inherit'), list):
-                inherited_provider_key = artifact.get('inherit')[0]
-                return self.get_artifact_paths_for_provider(
-                    inherited_provider_key)
+                for inherited_provider_key in artifact.get('inherit'):
+                    artifact_paths.extend(
+                        self.get_artifact_paths_for_provider(
+                            inherited_provider_key)
+                    )
             else:
                 logger.error('Invalid artifact file')
-                continue
-            artifact_paths.append(path)
         return artifact_paths
 
     def render_artifact(self, path, context):
