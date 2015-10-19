@@ -178,21 +178,19 @@ class NuleculeManager(object):
             self._write_answers(answers_output, runtime_answers,
                                 self.answers_format, dryrun)
 
-    def stop(self, APP, cli_provider, **kwargs):
+    def stop(self, cli_provider, **kwargs):
         """
-        Instance method of NuleculeManager to stop a running Nulecule
-        application.
+        Stops a running Nulecule application.
 
         Args:
-            APP (str): Local path to installed Nulecule application
             cli_provider (str): Provider running the Nulecule application
             kwargs (dict): Extra keyword arguments
         """
         self.answers = Utils.loadAnswers(
-            os.path.join(APP, ANSWERS_RUNTIME_FILE))
+            os.path.join(self.app_path, ANSWERS_RUNTIME_FILE))
         dryrun = kwargs.get('dryrun') or False
-        self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
-                                                dryrun=dryrun)
+        self.nulecule = Nulecule.load_from_path(
+            self.app_path, config=self.answers, dryrun=dryrun)
         self.nulecule.load_config(config=self.answers)
         self.nulecule.render(cli_provider, dryrun=dryrun)
         self.nulecule.stop(cli_provider, dryrun)
