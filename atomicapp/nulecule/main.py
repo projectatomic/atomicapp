@@ -20,11 +20,33 @@ logger = logging.getLogger(__name__)
 
 
 class NuleculeManager(object):
+    """
+    Interface to install, run, stop a Nulecule application.
+    """
 
     @staticmethod
     def do_install(APP, answers, nodeps=False, update=False, target_path=None,
                    dryrun=False, answers_format=ANSWERS_FILE_SAMPLE_FORMAT,
                    **kwargs):
+        """
+        Installs a Nulecule application from a Nulecule image name or
+        local path.
+
+        Args:
+            APP (str): Image name or local path
+            answers (dict or str): Answers data or local path to answers file
+            nodeps (bool): Install the nulecule application without installing
+                           external dependencies
+            update (bool): Pull requistite Nulecule image and install or
+                           update already installed Nulecule application
+            target_path (str): Path to  install a Nulecule application
+            dryrun (bool): Do not make any change to the host system if True
+            answers_format (str): File format for writing sample answers file
+            kwargs (dict): Extra keyword arguments
+
+        Returns:
+            A NuleculeManager instance
+        """
         m = NuleculeManager()
         m.install(APP, answers, target_path, nodeps, update, dryrun,
                   answers_format, **kwargs)
@@ -33,6 +55,25 @@ class NuleculeManager(object):
     @staticmethod
     def do_run(answers, APP, cli_provider, answers_output, ask=False,
                answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+        """
+        Runs a Nulecule application from a local path or a Nulecule image
+        name.
+
+        Args:
+            APP (str): Image name or local path
+            answers (dict or str): Answers data or local path to answers file
+            cli_provider (str): Provider to use to run the Nulecule
+                                application
+            answers_output (str): Path to file to export runtime answers data
+                                  to
+            ask (bool): Ask for values for params with default values from
+                        user, if True
+            answers_format (str): File format for writing sample answers file
+            kwargs (dict): Extra keyword arguments
+
+        Returns:
+            A NuleculeManager instance
+        """
         m = NuleculeManager()
         m.run(APP, answers, cli_provider, answers_output, ask,
               answers_format=answers_format, **kwargs)
@@ -40,6 +81,17 @@ class NuleculeManager(object):
 
     @staticmethod
     def do_stop(APP, cli_provider, **kwargs):
+        """
+        Stop a running Nulecule application.
+
+        Args:
+            APP (str): Local path to installed Nulecule application
+            cli_provider (str): Provider running the Nulecule application
+            kwargs (dict): Extra keyword arguments
+
+        Returns:
+            A NuleculeManager instance
+        """
         m = NuleculeManager()
         m.stop(APP, cli_provider, **kwargs)
         return m
@@ -51,6 +103,21 @@ class NuleculeManager(object):
 
     def unpack(self, image, unpack_path, update=False, dryrun=False,
                nodeps=False, config=None):
+        """
+        Unpack a Nulecule application from a Nulecule image to a path.
+
+        Args:
+            image (str): Name of Nulecule image
+            unpack_path (str): Path to unpack the Nulecule image to
+            udpate (bool): Update existing Nulecule application in
+                           unpack_path, if True
+            dryrun (bool): Do not make any change to the host system
+            nodeps (bool): Do not unpack external dependencies
+            config (dict): Config data, if any, to use for unpacking
+
+        Returns:
+            A Nulecule instance.
+        """
         logger.debug('Unpacking %s to %s' % (image, unpack_path))
         if not os.path.exists(os.path.join(unpack_path, MAIN_FILE)) or \
                 update:
@@ -67,6 +134,26 @@ class NuleculeManager(object):
     def install(self, APP, answers, target_path=None, nodeps=False,
                 update=False, dryrun=False,
                 answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+        """
+        Instance method of NuleculeManager to install a Nulecule application
+        from a local path or a Nulecule image name to specified target path
+        or current working directory.
+
+        Args:
+            APP (str): Image name or local path
+            answers (dict or str): Answers data or local path to answers file
+            target_path (str): Path to  install a Nulecule application
+            nodeps (bool): Install the nulecule application without installing
+                           external dependencies
+            update (bool): Pull requistite Nulecule image and install or
+                           update already installed Nulecule application
+            dryrun (bool): Do not make any change to the host system if True
+            answers_format (str): File format for writing sample answers file
+            kwargs (dict): Extra keyword arguments
+
+        Returns:
+            None
+        """
         self.answers = Utils.loadAnswers(
             answers or os.path.join(APP, ANSWERS_FILE))
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
@@ -92,6 +179,25 @@ class NuleculeManager(object):
 
     def run(self, APP, answers, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
+        """
+        Instance method of NuleculeManager to run a Nulecule application from
+        a local path or a Nulecule image name.
+
+        Args:
+            APP (str): Image name or local path
+            answers (dict or str): Answers data or local path to answers file
+            cli_provider (str): Provider to use to run the Nulecule
+                                application
+            answers_output (str): Path to file to export runtime answers data
+                                  to
+            ask (bool): Ask for values for params with default values from
+                        user, if True
+            answers_format (str): File format for writing sample answers file
+            kwargs (dict): Extra keyword arguments
+
+        Returns:
+            None
+        """
         self.answers = Utils.loadAnswers(
             answers or os.path.join(APP, ANSWERS_FILE))
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
@@ -118,6 +224,15 @@ class NuleculeManager(object):
                                 self.answers_format, dryrun)
 
     def stop(self, APP, cli_provider, **kwargs):
+        """
+        Instance method of NuleculeManager to stop a running Nulecule
+        application.
+
+        Args:
+            APP (str): Local path to installed Nulecule application
+            cli_provider (str): Provider running the Nulecule application
+            kwargs (dict): Extra keyword arguments
+        """
         self.answers = Utils.loadAnswers(
             os.path.join(APP, ANSWERS_RUNTIME_FILE))
         dryrun = kwargs.get('dryrun') or False
@@ -128,15 +243,31 @@ class NuleculeManager(object):
         self.nulecule.stop(cli_provider, dryrun)
 
     def uninstall(self):
+        # For future use
         self.stop()
         self.nulecule.uninstall()
 
     def clean(self, force=False):
+        # For future use
         self.uninstall()
         distutils.dir_util.remove_tree(self.unpack_path)
         self.initialize()
 
     def _write_answers(self, path, answers, answers_format, dryrun=False):
+        """
+        Write answers data to file.
+
+        Args:
+            path (str): path to answers file to write to
+            answers (dict): Answers data
+            answers_format (str): Format to use to dump answers data to file,
+                                  e.g, json
+            dryrun (bool): Do not make any change to the host system,
+                           when True
+
+        Returns:
+            None
+        """
         if not dryrun:
             anymarkup.serialize_file(
                 answers, path, format=answers_format)
@@ -144,6 +275,17 @@ class NuleculeManager(object):
             logger.info('ANSWERS: %s' % answers)
 
     def _get_runtime_answers(self, config, cli_provider):
+        """
+        Get runtime answers data from config (Nulecule config) by adding
+        some default data if missing.
+
+        Args:
+            config (dict): Nulecule config data
+            cli_provider (str): Provider used for running Nulecule application
+
+        Returns:
+            dict
+        """
         _config = copy.deepcopy(config)
         _config[GLOBAL_CONF] = config.get(GLOBAL_CONF) or {}
         _config[GLOBAL_CONF]['provider'] = cli_provider or \
