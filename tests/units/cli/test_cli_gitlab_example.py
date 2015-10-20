@@ -26,7 +26,6 @@ import unittest
 import pytest
 
 import atomicapp.cli.main
-from atomicapp.constants import WORKDIR
 
 class TestGitLabCli(unittest.TestCase):
 
@@ -39,22 +38,39 @@ class TestGitLabCli(unittest.TestCase):
     def setUp(self):
         logger = logging.getLogger('atomicapp.tests')
         self.examples_dir = os.path.dirname(__file__) + '/test_examples/'
-        self.work_dir = os.path.join(
-                self.examples_dir,
-                "gitlab/%s" % WORKDIR)
         self.answers_conf = os.path.join(
                 self.examples_dir,
                 "gitlab/answers.conf.sample")
 
-        if os.path.isdir(self.work_dir):
-           shutil.rmtree(self.work_dir)
+        # "work dir" of the kubernetes artifacts
+        self.work_dir = os.path.join(
+            self.examples_dir,
+            "gitlab/artifacts/kubernetes/")
 
+        # A list of artifacts that should be there during install / run / stop
+        self.artifacts_array = [
+                "gitlab-http-service.json",
+                ".gitlab-http-service.json",
+                "gitlab-rc.json",
+                ".gitlab-rc.json",
+                "postgres-rc.json",
+                ".postgres-rc.json",
+                "postgres-service.json",
+                ".postgres-service.json",
+                "redis-rc.json",
+                ".redis-rc.json",
+                "redis-service.json",
+                ".redis-service.json"]
+
+    # Remove the examples answers.conf file as well as the dotfiles created 
     def tearDown(self):
-        if os.path.isdir(self.work_dir):
-           shutil.rmtree(self.work_dir)
         if os.path.isfile(self.answers_conf):
            os.remove(self.answers_conf)
+        for f in os.listdir(self.work_dir):
+            if f.startswith('.'):
+                os.remove(self.work_dir + f)
 
+    # Installs the gitlab example similarly to `test_cli.py` examples
     def test_install_gitlab_app(self):
         command = [
             "main.py",
@@ -69,12 +85,7 @@ class TestGitLabCli(unittest.TestCase):
 
         assert exec_info.value.code == 0
 
-        work_dir = os.path.join(
-            self.examples_dir,
-            "gitlab/%s" % WORKDIR)
-
-        assert os.path.isdir(work_dir) == False
-
+    # When running, we check that the multiple artifacts are created / there in the folder
     def test_run_gitlab_app(self):
         command = [
             "main.py",
@@ -89,12 +100,10 @@ class TestGitLabCli(unittest.TestCase):
 
         assert exec_info.value.code == 0
 
-        work_dir = os.path.join(
-            self.examples_dir,
-            "gitlab/%s" % WORKDIR)
-        assert set(os.listdir(work_dir)) == \
-            set(["gitlab", "postgresql", "redis"])
+        assert set(os.listdir(self.work_dir)) == \
+            set(self.artifacts_array)
 
+    # Similarly to run, we stop the atomicapp and check to see if the artifacts include the dotfiles
     def test_stop_gitlab_app(self):
         self.test_run_gitlab_app()
         command = [
@@ -110,9 +119,5 @@ class TestGitLabCli(unittest.TestCase):
 
         assert exec_info.value.code == 0
 
-        work_dir = os.path.join(
-            self.examples_dir,
-            "gitlab/%s" % WORKDIR)
-        assert set(os.listdir(work_dir)) == \
-            set(["gitlab", "postgresql", "redis"])
-
+        assert set(os.listdir(self.work_dir)) == \
+            set(self.artifacts_array)
