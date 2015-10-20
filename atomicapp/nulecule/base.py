@@ -28,6 +28,23 @@ class Nulecule(NuleculeBase):
     def __init__(self, id, specversion, metadata, graph, basepath,
                  requirements=None, params=None, config=None,
                  namespace=GLOBAL_CONF):
+        """
+        Create a Nulecule instance.
+
+        Args:
+            id (str): Nulecule application ID
+            specversion (str): Nulecule spec version
+            metadata (dict): Nulecule metadata
+            graph (list): Nulecule graph of components
+            basepath (str): Basepath for Nulecule application
+            requirements (dict): Requirements for the Nulecule application
+            params (list): List of params for the Nulecule application
+            config (dict): Config data for the Nulecule application
+            namespace (str): Namespace of the current Nulecule application
+
+        Returns:
+            A Nulecule instance
+        """
         super(Nulecule, self).__init__(basepath, params, namespace)
         self.id = id
         self.specversion = specversion
@@ -44,15 +61,15 @@ class Nulecule(NuleculeBase):
         the Nulecule application from the path.
 
         Args:
-            image: String, a Docker image name.
-            dest: String, destination path where Nulecule data from Docker
-                  image should be extracted.
-            config: Dictionary, config data for Nulecule application.
-            namespace: String, namespace for Nulecule application.
-            nodeps: Boolean, don't pull external Nulecule dependencies when
-                    True.
-            update: Boolean, don't update contents of destination directory
-                    if False, else update it.
+            image (str): A Docker image name.
+            dest (str): Destination path where Nulecule data from Docker
+                        image should be extracted.
+            config (dict): Dictionary, config data for Nulecule application.
+            namespace (str): Namespace for Nulecule application.
+            nodeps (bool): Don't pull external Nulecule dependencies when
+                           True.
+            update (bool): Don't update contents of destination directory
+                           if False, else update it.
 
         Returns:
             A Nulecule instance, or None in case of dry run.
@@ -73,13 +90,12 @@ class Nulecule(NuleculeBase):
         in the specified destination path.
 
         Args:
-            src: String, path to load Nulecule application from.
-            config: Dictionary, config data for Nulecule application.
-            namespace: String, namespace for Nulecule application.
-            nodeps: Boolean. Do not pull external applications if True.
-            dryrun: Boolean. Do not make any change to underlying host.
-            update: Boolean, update existing application if True, else
-                    reuse it.
+            src (str): Path to load Nulecule application from.
+            config (dict): Config data for Nulecule application.
+            namespace (str): Namespace for Nulecule application.
+            nodeps (bool): Do not pull external applications if True.
+            dryrun (bool): Do not make any change to underlying host.
+            update (bool): Update existing application if True, else reuse it.
 
         Returns:
             A Nulecule instance or None in case of some dry run (installing
@@ -99,15 +115,29 @@ class Nulecule(NuleculeBase):
         Runs a nulecule application.
 
         Args:
-            provider_key: String, provider to use for running Nulecule
-                          application
-            dryrun: Boolean, Do not make changes to host when True
+            provider_key (str): Provider to use for running Nulecule
+                                application
+            dryrun (bool): Do not make changes to host when True
+
+        Returns:
+            None
         """
         provider_key, provider = self.get_provider(provider_key, dryrun)
         for component in self.components:
             component.run(provider_key, dryrun)
 
     def stop(self, provider_key=None, dryrun=False):
+        """
+        Stop the Nulecule application.
+
+        Args:
+            provider_key (str): Provider to use for running Nulecule
+                                application
+            dryrun (bool): Do not make changes to host when True
+
+        Returns:
+            None
+        """
         provider_key, provider = self.get_provider(provider_key, dryrun)
         # stop the Nulecule application
         for component in self.components:
@@ -126,8 +156,11 @@ class Nulecule(NuleculeBase):
         It updates self.config.
 
         Args:
-            config: A dictionary, existing config data, may be from ANSWERS
-                    file or any other source.
+            config (dict): Existing config data, may be from ANSWERS
+                           file or any other source.
+
+        Returns:
+            None
         """
         super(Nulecule, self).load_config(
             config=config, ask=ask, skip_asking=skip_asking)
@@ -140,6 +173,19 @@ class Nulecule(NuleculeBase):
             self.merge_config(self.config, component.config)
 
     def load_components(self, nodeps=False, dryrun=False):
+        """
+        Load components for the Nulecule application. Sets a list of
+        NuleculeComponent instances to self.components.
+
+        Args:
+            nodeps (bool): When True, do not external dependencies of a
+                           Nulecule component
+            dryrun (bool): When True, do not make any change to the host
+                           system
+
+        Returns:
+            None
+        """
         components = []
         for node in self.graph:
             node_name = node['name']
@@ -157,11 +203,13 @@ class Nulecule(NuleculeBase):
         config data.
 
         Args:
-            provider_key: String, provider for which artifacts need to be
-                          rendered. If it's None, we render artifacts for
-                          all providers.
-            dryrun: Boolean, do not make any change to the host system when
-                    True
+            provider_key (str): Provider for which artifacts need to be
+                                rendered. If it's None, we render artifacts
+                                for all providers.
+            dryrun (bool): Do not make any change to the host system when True
+
+        Returns:
+            None
         """
         for component in self.components:
             component.render(provider_key=provider_key, dryrun=dryrun)
@@ -185,6 +233,9 @@ class NuleculeComponent(NuleculeBase):
         self._app = None
 
     def load(self, nodeps=False, dryrun=False):
+        """
+        Load external application of the Nulecule component.
+        """
         if not self.artifacts:
             if nodeps:
                 logger.info(
@@ -193,6 +244,9 @@ class NuleculeComponent(NuleculeBase):
                 self.load_external_application(dryrun)
 
     def run(self, provider_key, dryrun=False):
+        """
+        Run the Nulecule component with the specified provider,
+        """
         if self._app:
             self._app.run(provider_key, dryrun)
             return
@@ -202,6 +256,9 @@ class NuleculeComponent(NuleculeBase):
         provider.deploy()
 
     def stop(self, provider_key=None, dryrun=False):
+        """
+        Stop the Nulecule component with the specified provider.
+        """
         if self._app:
             self._app.stop(provider_key, dryrun)
             return
@@ -211,6 +268,9 @@ class NuleculeComponent(NuleculeBase):
         provider.undeploy()
 
     def load_config(self, config=None, ask=False, skip_asking=False):
+        """
+        Load config for the Nulecule component.
+        """
         super(NuleculeComponent, self).load_config(
             config, ask=ask, skip_asking=skip_asking)
         if isinstance(self._app, Nulecule):
@@ -223,10 +283,10 @@ class NuleculeComponent(NuleculeBase):
         Loads an external application for the NuleculeComponent.
 
         Args:
-            dryrun: Boolean. When True, skips pulling an external application.
-            update: Boolean. When True, it ignores an already pulled external
-                    application, and tries to pull the external application
-                    and update the existing one.
+            dryrun (bool): When True, skips pulling an external application.
+            update (bool): When True, it ignores an already pulled external
+                           application, and tries to pull the external
+                           application and update the existing one.
 
         Returns:
             A Nulecule instance or None
@@ -253,6 +313,10 @@ class NuleculeComponent(NuleculeBase):
 
     @property
     def components(self):
+        """
+        If the Nulecule component is an external application, list Nulecule
+        components of the external Nulecule application.
+        """
         if self._app:
             return self._app.components
 

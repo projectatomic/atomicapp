@@ -21,9 +21,12 @@ class DockerHandler(object):
         Pulls a Docker image if not already present in the host.
 
         Args:
-            image: String, container image name
-            update: Boolean, always pull image if True even if image already
+            image (str): Container image name
+            update (bool): Always pull image if True even if image already
                     exists on host
+
+        Returns:
+            None
         """
         if not self.is_image_present(image) or update:
             logger.info('Pulling Docker image: %s' % image)
@@ -40,11 +43,14 @@ class DockerHandler(object):
         destination.
 
         Args:
-            image: String, docker image name
-            source: String, source directory in Docker image to copy from
-            dest: String, path to destination directory on host
-            update: Boolean, update destination directory if it exists when
-                    True
+            image (str): Docker image name
+            source (str): Source directory in Docker image to copy from
+            dest (str): Path to destination directory on host
+            update (bool): Update destination directory if it exists when
+                           True
+
+        Returns:
+            None
         """
         logger.info(
             'Extracting nulecule data from image: %s to %s' % (image, dest))
@@ -77,7 +83,10 @@ class DockerHandler(object):
         Check if a Docker image is present in the host.
 
         Args:
-            image: String, Docker image name.
+            image (str): Docker image name.
+
+        Returns:
+            bool: True if docker image is present on host, else False
         """
         output = subprocess.check_output([self.docker_cli, 'images'])
         image_lines = output.strip().splitlines()[1:]
