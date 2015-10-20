@@ -92,7 +92,7 @@ class NuleculeBase(object):
 
         Args:
             provider_key (str or None): Name of provider
-            dry (bool): Do not make change to the host system when True.
+            dry (bool): Do not make change to the host system while True
 
         Returns:
             tuple: (provider key, provider instance)

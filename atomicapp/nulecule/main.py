@@ -35,12 +35,13 @@ class NuleculeManager(object):
         Args:
             APP (str): Image name or local path
             answers (dict or str): Answers data or local path to answers file
-            nodeps (bool): Install the nulecule application without installing
+            nodeps (bool): Install the Nulecule application without installing
                            external dependencies
-            update (bool): Pull requistite Nulecule image and install or
+            update (bool): Pull requisite Nulecule image and install or
                            update already installed Nulecule application
             target_path (str): Path to  install a Nulecule application
-            dryrun (bool): Do not make any change to the host system if True
+            dryrun (bool): Do not make any change to the host system while
+                           True
             answers_format (str): File format for writing sample answers file
             kwargs (dict): Extra keyword arguments
 
@@ -66,7 +67,7 @@ class NuleculeManager(object):
                                 application
             answers_output (str): Path to file to export runtime answers data
                                   to
-            ask (bool): Ask for values for params with default values from
+            ask (bool): Ask values for params with default values from
                         user, if True
             answers_format (str): File format for writing sample answers file
             kwargs (dict): Extra keyword arguments
@@ -85,7 +86,7 @@ class NuleculeManager(object):
         Stop a running Nulecule application.
 
         Args:
-            APP (str): Local path to installed Nulecule application
+            APP (str): Local path of installed Nulecule application
             cli_provider (str): Provider running the Nulecule application
             kwargs (dict): Extra keyword arguments
 
@@ -109,10 +110,10 @@ class NuleculeManager(object):
         Args:
             image (str): Name of Nulecule image
             unpack_path (str): Path to unpack the Nulecule image to
-            udpate (bool): Update existing Nulecule application in
+            update (bool): Update existing Nulecule application in
                            unpack_path, if True
             dryrun (bool): Do not make any change to the host system
-            nodeps (bool): Do not unpack external dependencies
+            nodeps (bool): Do not unpack any external dependency
             config (dict): Config data, if any, to use for unpacking
 
         Returns:
@@ -142,10 +143,10 @@ class NuleculeManager(object):
         Args:
             APP (str): Image name or local path
             answers (dict or str): Answers data or local path to answers file
-            target_path (str): Path to  install a Nulecule application
+            target_path (str): Path to install a Nulecule application
             nodeps (bool): Install the nulecule application without installing
                            external dependencies
-            update (bool): Pull requistite Nulecule image and install or
+            update (bool): Pull requisite Nulecule image and install or
                            update already installed Nulecule application
             dryrun (bool): Do not make any change to the host system if True
             answers_format (str): File format for writing sample answers file
@@ -261,9 +262,9 @@ class NuleculeManager(object):
             path (str): path to answers file to write to
             answers (dict): Answers data
             answers_format (str): Format to use to dump answers data to file,
-                                  e.g, json
+                                  e.g., json
             dryrun (bool): Do not make any change to the host system,
-                           when True
+                           while True
 
         Returns:
             None
@@ -277,7 +278,7 @@ class NuleculeManager(object):
     def _get_runtime_answers(self, config, cli_provider):
         """
         Get runtime answers data from config (Nulecule config) by adding
-        some default data if missing.
+        default data if missing.
 
         Args:
             config (dict): Nulecule config data
