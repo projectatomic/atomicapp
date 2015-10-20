@@ -89,7 +89,7 @@ class NuleculeManager(object):
                 logger.debug('Update requested. Unpacking to %s.'
                              % self.app_path)
                 return Nulecule.unpack(
-                    self.image, self.app_path,
+                    self.image, self.app_path, config=config,
                     nodeps=nodeps, dryrun=dryrun, update=update)
             else:
                 logger.debug('Loading nulecule from %s.' % self.main_file)
@@ -98,7 +98,7 @@ class NuleculeManager(object):
         else:
             logger.debug('No app found at %s. Unpacking...' % self.main_file)
             return Nulecule.unpack(
-                self.image, self.app_path,
+                self.image, self.app_path, config=config,
                 nodeps=nodeps, dryrun=dryrun, update=update)
 
     def install(self, answers, nodeps=False, update=False, dryrun=False,
