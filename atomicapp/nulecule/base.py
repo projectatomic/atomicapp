@@ -77,7 +77,7 @@ class Nulecule(NuleculeBase):
         logger.info('Unpacking image: %s to %s' % (image, dest))
         docker_handler = DockerHandler(dryrun=dryrun)
         docker_handler.pull(image)
-        docker_handler.extract(image, APP_ENT_PATH, dest)
+        docker_handler.extract(image, APP_ENT_PATH, dest, update)
         return cls.load_from_path(
             dest, config=config, namespace=namespace, nodeps=nodeps,
             dryrun=dryrun, update=update)
