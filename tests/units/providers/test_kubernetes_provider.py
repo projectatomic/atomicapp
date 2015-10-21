@@ -68,19 +68,6 @@ class TestKubernetesProviderBase(unittest.TestCase):
         provider.checkConfigFile()
         with open(provider_config_path, "r") as fp:
             self.assertEqual(fp.read(), mock_content)
-
-    # Test that atomicapp generates the configuration file correctly
-    @mock.patch("atomicapp.providers.kubernetes.KubernetesProvider._call", mock_provider_call)
-    def test_provider_check_config_generation(self):
-        path = self.create_temp_file()
-        data = {'namespace': 'testing', 'provider': 'kubernetes', 'providerconfig': path}
-
-        provider = self.prepare_provider(data)
-
-        provider.checkConfigFile()
-        with open(path, "r") as fp:
-            self.assertEqual(fp.read(), MOCK_CONTENT)
-
     # If we do not provide a configuration file: fail
     def test_provider_check_config_fail(self):
         path = self.create_temp_file()

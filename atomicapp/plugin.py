@@ -65,9 +65,6 @@ class Provider(object):
     def deploy(self):
         raise NotImplementedError()
 
-    def generateConfigFile(self):
-        raise NotImplementedError()
-
     def getConfigFile(self):
         """
         Looks up provider configuration file (aka ~/.kube/config) in config passed
@@ -82,14 +79,11 @@ class Provider(object):
 
     def checkConfigFile(self):
         if not self.config_file or not os.access(self.config_file, os.R_OK):
-            try:
-                self.generateConfigFile()
-            except NotImplementedError:
-                raise ProviderFailedException(
-                    "Cannot access configuration file %s. Try adding "
-                    "'%s = /path/to/your/%s' in the "
-                    "[general] section of the answers.conf file."
-                    % (self.config_file, PROVIDER_CONFIG_KEY, DEFAULT_PROVIDER_CONFIG))
+            raise ProviderFailedException(
+                "Cannot access configuration file %s. Try adding "
+                "'%s = /path/to/your/%s' in the "
+                "[general] section of the answers.conf file."
+                % (self.config_file, PROVIDER_CONFIG_KEY, DEFAULT_PROVIDER_CONFIG))
 
     def undeploy(self):
         logger.warning(

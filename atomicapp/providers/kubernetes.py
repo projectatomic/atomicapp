@@ -95,21 +95,6 @@ class KubernetesProvider(Provider):
 
         raise ProviderFailedException("No kubectl found in %s" % ":".join(test_paths))
 
-    def generateConfigFile(self):
-        """Generates configuration file for Kubernetes by calling
-        kubectl config view and saving the output
-        """
-
-        cmd = [self.kubectl, "config", "view"]
-
-        content = self._call(cmd)
-        config_dir = os.path.dirname(self.config_file)
-        if config_dir and not os.path.isdir(config_dir):
-            os.makedirs(config_dir)
-
-        with open(self.config_file, "w") as fp:
-            fp.write(content)
-
     def _call(self, cmd):
         """Calls given command
 
