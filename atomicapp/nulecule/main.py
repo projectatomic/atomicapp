@@ -10,10 +10,12 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
+                                 CACHE_DIR,
                                  DEFAULT_NAMESPACE,
                                  DEFAULT_PROVIDER,
                                  MAIN_FILE)
 from atomicapp.nulecule.base import Nulecule
+from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
@@ -24,126 +26,89 @@ class NuleculeManager(object):
     Interface to install, run, stop a Nulecule application.
     """
 
-    @staticmethod
-    def do_install(APP, answers, nodeps=False, update=False, target_path=None,
-                   dryrun=False, answers_format=ANSWERS_FILE_SAMPLE_FORMAT,
-                   **kwargs):
+    def __init__(self, app_spec, destination=None):
         """
-        Installs a Nulecule application from a Nulecule image name or
-        local path.
+        init function for NuleculeManager. Sets a few instance variables.
 
         Args:
-            APP (str): Image name or local path
-            answers (dict or str): Answers data or local path to answers file
-            nodeps (bool): Install the Nulecule application without installing
-                           external dependencies
-            update (bool): Pull requisite Nulecule image and install or
-                           update already installed Nulecule application
-            target_path (str): Path to  install a Nulecule application
-            dryrun (bool): Do not make any change to the host system while
-                           True
-            answers_format (str): File format for writing sample answers file
-            kwargs (dict): Extra keyword arguments
-
-        Returns:
-            A NuleculeManager instance
+            app_spec: either a path to an unpacked nulecule app or a
+                      container image name where a nulecule can be found
+            destination: where to unpack a nulecule to if it isn't local
         """
-        m = NuleculeManager()
-        m.install(APP, answers, target_path, nodeps, update, dryrun,
-                  answers_format, **kwargs)
-        return m
-
-    @staticmethod
-    def do_run(answers, APP, cli_provider, answers_output, ask=False,
-               answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
-        """
-        Runs a Nulecule application from a local path or a Nulecule image
-        name.
-
-        Args:
-            APP (str): Image name or local path
-            answers (dict or str): Answers data or local path to answers file
-            cli_provider (str): Provider to use to run the Nulecule
-                                application
-            answers_output (str): Path to file to export runtime answers data
-                                  to
-            ask (bool): Ask values for params with default values from
-                        user, if True
-            answers_format (str): File format for writing sample answers file
-            kwargs (dict): Extra keyword arguments
-
-        Returns:
-            A NuleculeManager instance
-        """
-        m = NuleculeManager()
-        m.run(APP, answers, cli_provider, answers_output, ask,
-              answers_format=answers_format, **kwargs)
-        return m
-
-    @staticmethod
-    def do_stop(APP, cli_provider, **kwargs):
-        """
-        Stop a running Nulecule application.
-
-        Args:
-            APP (str): Local path of installed Nulecule application
-            cli_provider (str): Provider running the Nulecule application
-            kwargs (dict): Extra keyword arguments
-
-        Returns:
-            A NuleculeManager instance
-        """
-        m = NuleculeManager()
-        m.stop(APP, cli_provider, **kwargs)
-        return m
-
-    def __init__(self):
-        self.APP = None
         self.answers = {}
         self.answers_format = None
+        self.app_path = None  # The path where the app resides or will reside
+        self.image = None     # The container image to pull the app from
 
-    def unpack(self, image, unpack_path, update=False, dryrun=False,
-               nodeps=False, config=None):
+        # Doesn't make sense to provide a local path and a destination
+        if os.path.exists(app_spec) and destination:
+            raise NuleculeException(
+                "You can't provide a local path and destination.")
+
+        # Translate the app_spec: a few options:
+        #   - user provided local path to unpacked app
+        #   - user provided container image name (will set app_path
+        #     based on provided destination)
+        if os.path.exists(app_spec):
+            self.app_path = app_spec
+        else:
+            self.image = app_spec
+            if destination:
+                self.app_path = destination
+            else:
+                tmpname = "%s-%s" % (Utils.sanitizeName(self.image),
+                                     Utils.getUniqueUUID())
+                self.app_path = os.path.join(CACHE_DIR, tmpname)
+
+        # Set where the main nulecule file should be
+        self.main_file = os.path.join(self.app_path, MAIN_FILE)
+
+    def unpack(self, update=False,
+               dryrun=False, nodeps=False, config=None):
         """
-        Unpack a Nulecule application from a Nulecule image to a path.
+        Unpacks a Nulecule application from a Nulecule image to a path
+        or load a Nulecule that already exists locally.
 
         Args:
-            image (str): Name of Nulecule image
-            unpack_path (str): Path to unpack the Nulecule image to
             update (bool): Update existing Nulecule application in
-                           unpack_path, if True
+                           app_path, if True
             dryrun (bool): Do not make any change to the host system
-            nodeps (bool): Do not unpack any external dependency
+            nodeps (bool): Do not unpack external dependencies
             config (dict): Config data, if any, to use for unpacking
 
         Returns:
             A Nulecule instance.
         """
-        logger.debug('Unpacking %s to %s' % (image, unpack_path))
-        if not os.path.exists(os.path.join(unpack_path, MAIN_FILE)) or \
-                update:
-            logger.debug(
-                'Nulecule application found at %s. Unpacking and updating...'
-                % unpack_path)
-            return Nulecule.unpack(image, unpack_path, nodeps=nodeps,
-                                   dryrun=dryrun, update=update)
+        app_exists = os.path.exists(self.main_file)
+        logger.debug('Request to unpack to %s to %s' %
+                     (self.image, self.app_path))
+        # Unpack/Update/Load the app depending on the current state
+        if app_exists:
+            logger.debug('Nulecule app found at %s.' % self.main_file)
+            if update:
+                logger.debug('Update requested. Unpacking to %s.'
+                             % self.app_path)
+                return Nulecule.unpack(
+                    self.image, self.app_path, config=config,
+                    nodeps=nodeps, dryrun=dryrun, update=update)
+            else:
+                logger.debug('Loading nulecule from %s.' % self.main_file)
+                return Nulecule.load_from_path(
+                    self.app_path, dryrun=dryrun, config=config)
         else:
-            logger.debug(
-                'Nulecule application found at %s. Loading...')
-            return Nulecule.load_from_path(unpack_path, dryrun=dryrun)
+            logger.debug('No app found at %s. Unpacking...' % self.main_file)
+            return Nulecule.unpack(
+                self.image, self.app_path, config=config,
+                nodeps=nodeps, dryrun=dryrun, update=update)
 
-    def install(self, APP, answers, target_path=None, nodeps=False,
-                update=False, dryrun=False,
+    def install(self, answers, nodeps=False, update=False, dryrun=False,
                 answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         """
-        Instance method of NuleculeManager to install a Nulecule application
-        from a local path or a Nulecule image name to specified target path
-        or current working directory.
+        Installs (unpacks) a Nulecule application from a Nulecule image
+        to a target path.
 
         Args:
-            APP (str): Image name or local path
             answers (dict or str): Answers data or local path to answers file
-            target_path (str): Path to install a Nulecule application
             nodeps (bool): Install the nulecule application without installing
                            external dependencies
             update (bool): Pull requisite Nulecule image and install or
@@ -156,36 +121,29 @@ class NuleculeManager(object):
             None
         """
         self.answers = Utils.loadAnswers(
-            answers or os.path.join(APP, ANSWERS_FILE))
+            answers or os.path.join(self.app_path, ANSWERS_FILE))
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
-        target_path = target_path or os.getcwd()
-        if os.path.exists(APP):
-            Utils.copy_dir(APP, target_path, dryrun=dryrun)
-            # Since directory is not copied to target_path during dry run
-            # we fall back to load the app from APP.
-            self.nulecule = Nulecule.load_from_path(
-                APP if dryrun else target_path, dryrun=dryrun, update=update,
-                config=self.answers)
-        else:
-            self.nulecule = self.unpack(APP, target_path, update, dryrun,
-                                        config=self.answers)
+
+        # Call unpack. If the app doesn't exist it will be pulled. If
+        # it does exist it will be just be loaded and returned
+        self.nulecule = self.unpack(update, dryrun, config=self.answers)
+
         self.nulecule.load_config(config=self.nulecule.config,
                                   skip_asking=True)
         runtime_answers = self._get_runtime_answers(
             self.nulecule.config, None)
         # write sample answers file
-        self._write_answers(os.path.join(target_path, ANSWERS_FILE_SAMPLE),
-                            runtime_answers, answers_format,
-                            dryrun=dryrun)
+        self._write_answers(
+            os.path.join(self.app_path, ANSWERS_FILE_SAMPLE),
+            runtime_answers, answers_format, dryrun=dryrun)
 
-    def run(self, APP, answers, cli_provider, answers_output, ask,
+    def run(self, answers, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         """
-        Instance method of NuleculeManager to run a Nulecule application from
-        a local path or a Nulecule image name.
+        Runs a Nulecule application from a local path or a Nulecule image
+        name.
 
         Args:
-            APP (str): Image name or local path
             answers (dict or str): Answers data or local path to answers file
             cli_provider (str): Provider to use to run the Nulecule
                                 application
@@ -200,45 +158,39 @@ class NuleculeManager(object):
             None
         """
         self.answers = Utils.loadAnswers(
-            answers or os.path.join(APP, ANSWERS_FILE))
+            answers or os.path.join(self.app_path, ANSWERS_FILE))
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
-        if os.path.exists(APP):
-            self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
-                                                    dryrun=dryrun)
-            app_path = APP
-        else:
-            app_path = os.getcwd()
-            self.nulecule = Nulecule.unpack(APP, app_path, update=True,
-                                            dryrun=dryrun,
-                                            config=self.answers)
+
+        # Call unpack. If the app doesn't exist it will be pulled. If
+        # it does exist it will be just be loaded and returned
+        self.nulecule = self.unpack(dryrun=dryrun, config=self.answers)
+
         self.nulecule.load_config(config=self.nulecule.config, ask=ask)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
         runtime_answers = self._get_runtime_answers(
             self.nulecule.config, cli_provider)
-        self._write_answers(os.path.join(app_path, ANSWERS_RUNTIME_FILE),
-                            runtime_answers,
-                            self.answers_format, dryrun=dryrun)
+        self._write_answers(
+            os.path.join(self.app_path, ANSWERS_RUNTIME_FILE),
+            runtime_answers, self.answers_format, dryrun=dryrun)
         if answers_output:
             self._write_answers(answers_output, runtime_answers,
                                 self.answers_format, dryrun)
 
-    def stop(self, APP, cli_provider, **kwargs):
+    def stop(self, cli_provider, **kwargs):
         """
-        Instance method of NuleculeManager to stop a running Nulecule
-        application.
+        Stops a running Nulecule application.
 
         Args:
-            APP (str): Local path to installed Nulecule application
             cli_provider (str): Provider running the Nulecule application
             kwargs (dict): Extra keyword arguments
         """
         self.answers = Utils.loadAnswers(
-            os.path.join(APP, ANSWERS_RUNTIME_FILE))
+            os.path.join(self.app_path, ANSWERS_RUNTIME_FILE))
         dryrun = kwargs.get('dryrun') or False
-        self.nulecule = Nulecule.load_from_path(APP, config=self.answers,
-                                                dryrun=dryrun)
+        self.nulecule = Nulecule.load_from_path(
+            self.app_path, config=self.answers, dryrun=dryrun)
         self.nulecule.load_config(config=self.answers)
         self.nulecule.render(cli_provider, dryrun=dryrun)
         self.nulecule.stop(cli_provider, dryrun)

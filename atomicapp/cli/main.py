@@ -37,10 +37,19 @@ from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
 
+APP_MESSAGE = """
+Your application resides in %s
+Please use this directory for managing your application
+"""
+
 
 def cli_install(args):
     try:
-        NuleculeManager.do_install(**vars(args))
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
+                             destination=argdict['destination'])
+        nm.install(**argdict)
+        print(APP_MESSAGE % nm.app_path)  # msg for users
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -52,7 +61,11 @@ def cli_install(args):
 
 def cli_run(args):
     try:
-        NuleculeManager.do_run(**vars(args))
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
+                             destination=argdict['destination'])
+        nm.run(**argdict)
+        print(APP_MESSAGE % nm.app_path)  # msg for users
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -64,7 +77,9 @@ def cli_run(args):
 
 def cli_stop(args):
     try:
-        NuleculeManager.do_stop(**vars(args))
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['app_spec'])
+        nm.stop(**argdict)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -136,7 +151,6 @@ class CLI():
             "-a",
             "--answers",
             dest="answers",
-            default=os.path.join(os.getcwd(), ANSWERS_FILE),
             help="Path to %s" % ANSWERS_FILE)
 
         parser_run.add_argument(
@@ -157,8 +171,16 @@ class CLI():
             help="Ask for params even if the defaul value is provided")
 
         parser_run.add_argument(
-            "APP",
-            help="Path to the directory where the image is installed.")
+            "app_spec",
+            help=(
+                "Application to run. This is a container image or a path "
+                "that contains the metadata describing the whole application."))
+
+        parser_run.add_argument(
+            "--destination",
+            dest="destination",
+            default=None,
+            help="Destination directory for install")
 
         parser_run.set_defaults(func=cli_run)
 
@@ -168,7 +190,6 @@ class CLI():
             "-a",
             "--answers",
             dest="answers",
-            default=os.path.join(os.getcwd(), ANSWERS_FILE),
             help="Path to %s" % ANSWERS_FILE)
 
         parser_install.add_argument(
@@ -188,12 +209,12 @@ class CLI():
 
         parser_install.add_argument(
             "--destination",
-            dest="target_path",
+            dest="destination",
             default=None,
             help="Destination directory for install")
 
         parser_install.add_argument(
-            "APP",
+            "app_spec",
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
@@ -208,7 +229,7 @@ class CLI():
             help="The provider to use. Overrides provider value in answerfile.")
 
         parser_stop.add_argument(
-            "APP",
+            "app_spec",
             help=(
                 "Path to the directory where the Atomic App is installed or "
                 "an image containing an Atomic App which should be stopped."))
