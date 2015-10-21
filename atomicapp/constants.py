@@ -51,4 +51,3 @@ DEFAULT_ANSWERS = {
     }
 }
 PROVIDER_CONFIG_KEY = "providerconfig"
-DEFAULT_PROVIDER_CONFIG = "provider.config"

@@ -26,7 +26,7 @@ import imp
 
 import logging
 from utils import Utils
-from constants import HOST_DIR, PROVIDER_CONFIG_KEY, DEFAULT_PROVIDER_CONFIG
+from constants import HOST_DIR, PROVIDER_CONFIG_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -56,16 +56,13 @@ class Provider(object):
         if Utils.getRoot() == HOST_DIR:
             self.container = True
 
-        self.config_file = DEFAULT_PROVIDER_CONFIG
+        self.config_file = None
         self.getConfigFile()
 
     def init(self):
         raise NotImplementedError()
 
     def deploy(self):
-        raise NotImplementedError()
-
-    def generateConfigFile(self):
         raise NotImplementedError()
 
     def getConfigFile(self):
@@ -81,15 +78,15 @@ class Provider(object):
             logger.warning("Configuration option '%s' not found" % PROVIDER_CONFIG_KEY)
 
     def checkConfigFile(self):
-        if not self.config_file or not os.access(self.config_file, os.R_OK):
-            try:
-                self.generateConfigFile()
-            except NotImplementedError:
-                raise ProviderFailedException(
-                    "Cannot access configuration file %s. Try adding "
-                    "'%s = /path/to/your/%s' in the "
-                    "[general] section of the answers.conf file."
-                    % (self.config_file, PROVIDER_CONFIG_KEY, DEFAULT_PROVIDER_CONFIG))
+        if not self.config_file:
+            raise ProviderFailedException(
+                "No provider config file specified!")
+        elif not os.access(self.config_file, os.R_OK):
+            raise ProviderFailedException(
+                "Cannot access configuration file %s. Try adding "
+                "'%s = /path/to/your/config_file' in the "
+                "[general] section of the answers.conf file."
+                % (self.config_file, PROVIDER_CONFIG_KEY))
 
     def undeploy(self):
         logger.warning(
