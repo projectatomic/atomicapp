@@ -64,8 +64,10 @@ class KubernetesProvider(Provider):
             if not os.access(self.kubectl, os.X_OK):
                 raise ProviderFailedException("Command: " + self.kubectl + " not found")
 
-            # Check if Kubernetes config file is accessible
-            self.checkConfigFile()
+            # Check if Kubernetes config file is accessible, but only
+            # if one was provided by the user; config file is optional.
+            if self.config_file:
+                self.checkConfigFile()
 
     def _find_kubectl(self, prefix=""):
         """Determine the path to the kubectl program on the host.
@@ -167,9 +169,11 @@ class KubernetesProvider(Provider):
         :arg replicas: Replica size to scale to.
         """
         rname = self._resource_identity(path)
-        cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "scale", "rc", rname,
+        cmd = [self.kubectl, "scale", "rc", rname,
                "--replicas=%s" % str(replicas),
                "--namespace=%s" % self.namespace]
+        if self.config_file:
+            cmd.append("--kubeconfig=%s" % self.config_file)
 
         self._call(cmd)
 
@@ -185,7 +189,9 @@ class KubernetesProvider(Provider):
 
             k8s_file = os.path.join(self.path, artifact)
 
-            cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "create", "-f", k8s_file, "--namespace=%s" % self.namespace]
+            cmd = [self.kubectl, "create", "-f", k8s_file, "--namespace=%s" % self.namespace]
+            if self.config_file:
+                cmd.append("--kubeconfig=%s" % self.config_file)
             self._call(cmd)
 
     def undeploy(self):
@@ -205,5 +211,7 @@ class KubernetesProvider(Provider):
             if kind in ["ReplicationController", "rc", "replicationcontroller"]:
                 self._scale_replicas(path, replicas=0)
 
-            cmd = [self.kubectl, "--kubeconfig=%s" % self.config_file, "delete", "-f", path, "--namespace=%s" % self.namespace]
+            cmd = [self.kubectl, "delete", "-f", path, "--namespace=%s" % self.namespace]
+            if self.config_file:
+                cmd.append("--kubeconfig=%s" % self.config_file)
             self._call(cmd)

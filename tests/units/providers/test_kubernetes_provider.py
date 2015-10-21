@@ -65,13 +65,13 @@ class TestKubernetesProviderBase(unittest.TestCase):
         provider = self.prepare_provider(data)
 
         self.assertEqual(provider.config_file, provider_config_path)
-        provider.checkConfigFile()
+        provider.checkConfigFile()  # should exist since we just created it
         with open(provider_config_path, "r") as fp:
             self.assertEqual(fp.read(), mock_content)
-    # If we do not provide a configuration file: fail
+
+    # If we call checkConfigFile but do not provide a configuration file: fail
     def test_provider_check_config_fail(self):
         path = self.create_temp_file()
         data = {'namespace': 'testing', 'provider': 'openshift'}
         provider = self.prepare_provider(data)
-        provider.checkConfigFile()
         self.assertRaises(ProviderFailedException, provider.checkConfigFile)
