@@ -14,6 +14,7 @@ from atomicapp.constants import (APP_ENT_PATH,
 from atomicapp.utils import Utils
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
+from atomicapp.nulecule.exceptions import NuleculeException
 
 logger = logging.getLogger(__name__)
 
@@ -337,6 +338,10 @@ class NuleculeComponent(NuleculeBase):
             self._app.render(provider_key=provider_key)
             return
         context = self.get_context()
+        if provider_key and provider_key not in self.artifacts:
+            raise NuleculeException(
+                "Data for provider \"%s\" are not part of this app"
+                % provider_key)
         for provider in self.artifacts:
             if provider_key and provider != provider_key:
                 continue
