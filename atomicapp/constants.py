@@ -23,7 +23,7 @@ Update the below LABELS if ATOMICAPPVERSION & NULECULESPECVERSION are updated:
 2) LABEL io.projectatomic.nulecule.specversion  in app Dockefile
 """
 
-__ATOMICAPPVERSION__ = '0.1.11'
+__ATOMICAPPVERSION__ = '0.1.12'
 __NULECULESPECVERSION__ = '0.0.2'
 
 EXTERNAL_APP_DIR = "external"

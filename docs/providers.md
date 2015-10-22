@@ -5,7 +5,7 @@ This chapter describes how to use and configure the providers included with Atom
 Not all Atomic Apps must support each provider: one Atomic App may only include deployment information for OpenShift3 while another does support OpenShift3 and Kubernetes.
 
 ## List of providers
-Atomic App 0.1.11 includes three providers:
+Atomic App 0.1.12 includes three providers:
 
   * Docker
 
@@ -116,7 +116,7 @@ The OpenShift3 Provider will deploy and run an Atomic App on an OpenShift3 insta
 You need to provide a path to a copy of `.config/openshift/.config` as `providerconfig` so that the provider may use this configuration to deploy and run the Atomic App.
 
 
-As of 0.1.11 of Atomic App, OpenShift3 templates will only be processed by Atomic App during the run phase. The names of the parameters supplied by the OpenShift3 template file will be replaced by the parameters supplied to Atomic App.
+As of 0.1.12 of Atomic App, OpenShift3 templates will only be processed by Atomic App during the run phase. The names of the parameters supplied by the OpenShift3 template file will be replaced by the parameters supplied to Atomic App.
 
 **Configuration values**
 

@@ -1,3 +1,48 @@
+## Atomic App 0.1.12 (10-22-2015)
+
+We have fixed many bugs as well as implemented more enhancements to the Atomic App life cycle with this release. 
+
+Please see below for a summary of commits for the 0.1.12 release.
+
+```
+Aaron Weitekamp <aweiteka@redhat.com> (2):
+      Add openshift LABELs
+      Add OpenShift LABEL information
+
+Charlie Drage <charlie@charliedrage.com> (10):
+      update testing
+      dup code
+      add two new cool maintainers!
+      fix artifact bug
+      added makefile
+      update travis
+      add requirement doc
+      docker stop terminology fix
+
+Christoph Görn <goern@redhat.com> (13):
+      add some issuestats.com stats
+      prepared Atomic App 0.1.11 release
+      added merge rules
+
+Dusty Mabe <dusty@dustymabe.com> (4):
+      Fixes handling of directory for answers argument.
+      Reverts "artifact logic bugfix". Fixes #306
+      Fixes broken builds bc of lockfile dependency.
+
+Subin M <subin@apache.org> (1):
+      add new method find_executable_binary
+
+Swapnil Kulkarni <me@coolsvap.net> (1):
+      Small fix for pep8 error
+
+Václav Pavlín <vaclav.pavlin@gmail.com> (5):
+      Generate provider config for kubernetes if it does not exist
+      Do not use sudo in Docker provider
+      Use DEFAULT_PROVIDER_CONFIG in exception message
+      Mention config file generation in Kubes provider descripion
+      Fix bad indentation issue
+```
+
 # Atomic App Base Container Image
 
 Welcome to Atomic App, this is the reference implementation of the [Container

@@ -7,7 +7,7 @@ Atomic App is a reference implementation of the [Nulecule Specification](http://
 Atomic App is packaged as a container. End-users typically do not install the software from source. Instead use the atomicapp container as the `FROM` line in a Dockerfile and package your application on top. For example:
 
 ```
-FROM projectatomic/atomicapp:0.1.11
+FROM projectatomic/atomicapp:0.1.12
 
 MAINTAINER Your Name <you@example.com>
 
