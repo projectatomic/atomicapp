@@ -362,7 +362,7 @@ class NuleculeComponent(NuleculeBase):
                 path = Utils.sanitizePath(artifact)
                 path = os.path.join(self.basepath, path) \
                     if path[0] != '/' else path
-                artifact_paths.append(path)
+                artifact_paths.extend(self._get_artifact_paths_for_path(path))
             elif isinstance(artifact, dict) and artifact.get('inherit') and \
                     isinstance(artifact.get('inherit'), list):
                 for inherited_provider_key in artifact.get('inherit'):
@@ -403,3 +403,24 @@ class NuleculeComponent(NuleculeBase):
             self.basepath + ('' if self.basepath.endswith('/') else '/'),
             1)[1]
         return render_path
+
+    def _get_artifact_paths_for_path(self, path):
+        """
+        Get artifact paths for a local filesystem path.
+
+        Args:
+            path (str): Local path
+
+        Returns:
+            list: A list of artifact paths
+        """
+        artifact_paths = []
+        if os.path.isfile(path):
+            artifact_paths.append(path)
+        elif os.path.isdir(path):
+            for dir_child in os.listdir(path):
+                dir_child_path = os.path.join(path, dir_child)
+                if dir_child.startswith('.') or os.path.isdir(dir_child_path):
+                    continue
+                artifact_paths.append(dir_child_path)
+        return artifact_paths
