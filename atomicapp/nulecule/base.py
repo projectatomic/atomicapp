@@ -406,7 +406,10 @@ class NuleculeComponent(NuleculeBase):
 
     def _get_artifact_paths_for_path(self, path):
         """
-        Get artifact paths for a local filesystem path.
+        Get artifact paths for a local filesystem path. We support path to
+        an artifact file or a directory containing artifact files as its
+        immediate children, i.e., we do not deal with nested artifact
+        directories at this moment.
 
         Args:
             path (str): Local path
