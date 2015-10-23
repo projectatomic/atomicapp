@@ -11,3 +11,8 @@ Image developers may run the root container and point to a Nulecule directory on
 * `/tmp/<atomicapp_name>`: Host directory for temporary Nulecule files. May be overriden.
 * `/tmp/<atomicapp_name>/.workdir`: Host directory for artifact template files with variable substitution.
 
+## Artifact path
+
+Local path to an artifact file or a directory containing artifact files as its
+immediate children.
+
