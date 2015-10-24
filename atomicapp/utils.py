@@ -19,7 +19,7 @@
 
 from __future__ import print_function
 import copy
-import distutils
+import distutils.dir_util
 import os
 import sys
 import tempfile
@@ -31,8 +31,13 @@ from distutils.spawn import find_executable
 
 import logging
 
-from constants import (APP_ENT_PATH, EXTERNAL_APP_DIR, WORKDIR, HOST_DIR,
-                       ANSWERS_FILE, DEFAULT_ANSWERS)
+from constants import (ANSWERS_FILE,
+                       APP_ENT_PATH,
+                       CACHE_DIR,
+                       DEFAULT_ANSWERS,
+                       EXTERNAL_APP_DIR,
+                       HOST_DIR,
+                       WORKDIR)
 
 __all__ = ('Utils')
 
@@ -117,6 +122,23 @@ class Utils(object):
     @staticmethod
     def sanitizeName(app):
         return app.replace("/", "-")
+
+    @staticmethod
+    def getNewAppCacheDir(image):
+        """
+        Get a new unique dir under CACHE_DIR based on the image name
+
+        Args:
+            image (str): The name of the image the app is in
+
+        Returns:
+            path (str): The path to the unique directory
+        """
+        path = os.path.join(
+            Utils.getRoot(),
+            CACHE_DIR[1:],  # Rip leading / off
+            "%s-%s" % (Utils.sanitizeName(image), Utils.getUniqueUUID()))
+        return path
 
     def getExternalAppDir(self, component):
         return os.path.join(
@@ -240,8 +262,21 @@ class Utils(object):
         return cli
 
     @staticmethod
-    def getRoot():
+    def inContainer():
+        """
+        Determine if we are running inside a container or not.
+
+        Returns:
+            (bool): True == we are in a container
+        """
         if os.path.isdir(HOST_DIR):
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def getRoot():
+        if Utils.inContainer():
             return HOST_DIR
         else:
             return "/"
@@ -287,4 +322,4 @@ class Utils(object):
     @staticmethod
     def copy_dir(src, dest, update=False, dryrun=False):
         if not dryrun:
-            distutils.dir_utils.copy_tree(src, dest, update)
+            distutils.dir_util.copy_tree(src, dest, update)
