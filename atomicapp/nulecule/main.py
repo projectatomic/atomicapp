@@ -10,7 +10,6 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
-                                 CACHE_DIR,
                                  DEFAULT_NAMESPACE,
                                  DEFAULT_PROVIDER,
                                  MAIN_FILE)
@@ -40,25 +39,34 @@ class NuleculeManager(object):
         self.app_path = None  # The path where the app resides or will reside
         self.image = None     # The container image to pull the app from
 
-        # Doesn't make sense to provide a local path and a destination
-        if os.path.exists(app_spec) and destination:
+        # Adjust app_spec and destination paths if absolute.
+        if os.path.isabs(app_spec):
+            app_spec = os.path.join(Utils.getRoot(),
+                                    app_spec.lstrip('/'))
+        if destination and os.path.isabs(destination):
+                destination = os.path.join(Utils.getRoot(),
+                                           destination.lstrip('/'))
+
+        # Determine if the user passed us an image or a path to an app
+        if not os.path.exists(app_spec):
+            self.image = app_spec
+        else:
+            self.app_path = app_spec
+
+        # Doesn't make sense to provide an app path and destination
+        if self.app_path and destination:
             raise NuleculeException(
                 "You can't provide a local path and destination.")
 
-        # Translate the app_spec: a few options:
-        #   - user provided local path to unpacked app
-        #   - user provided container image name (will set app_path
-        #     based on provided destination)
-        if os.path.exists(app_spec):
-            self.app_path = app_spec
-        else:
-            self.image = app_spec
+        # If the user provided an image, make sure we have a destination
+        if self.image:
             if destination:
                 self.app_path = destination
             else:
-                tmpname = "%s-%s" % (Utils.sanitizeName(self.image),
-                                     Utils.getUniqueUUID())
-                self.app_path = os.path.join(CACHE_DIR, tmpname)
+                self.app_path = Utils.getNewAppCacheDir(self.image)
+
+        logger.debug("NuleculeManager init app_path: %s", self.app_path)
+        logger.debug("NuleculeManager init    image: %s", self.image)
 
         # Set where the main nulecule file should be
         self.main_file = os.path.join(self.app_path, MAIN_FILE)
