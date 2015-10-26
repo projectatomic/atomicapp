@@ -27,10 +27,12 @@ from lockfile import LockFile
 from lockfile import AlreadyLocked
 
 from atomicapp import set_logging
-from atomicapp.constants import \
-    ANSWERS_FILE, __ATOMICAPPVERSION__, \
-    __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT, \
-    LOCK_FILE
+from atomicapp.constants import (__ATOMICAPPVERSION__,
+                                 __NULECULESPECVERSION__,
+                                 ANSWERS_FILE,
+                                 ANSWERS_FILE_SAMPLE_FORMAT,
+                                 HOST_DIR,
+                                 LOCK_FILE)
 from atomicapp.nulecule import NuleculeManager
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
@@ -38,9 +40,9 @@ from atomicapp.utils import Utils
 logger = logging.getLogger(__name__)
 
 
-def print_user_msg(app_path):
-    if app_path.startswith('/host'):
-        app_path = app_path[5:]
+def print_app_location(app_path):
+    if app_path.startswith(HOST_DIR):
+        app_path = app_path[len(HOST_DIR):]
     print("\nYour application resides in %s" % app_path)
     print("Please use this directory for managing your application\n")
 
@@ -51,7 +53,7 @@ def cli_install(args):
         nm = NuleculeManager(app_spec=argdict['app_spec'],
                              destination=argdict['destination'])
         nm.install(**argdict)
-        print_user_msg(nm.app_path)
+        print_app_location(nm.app_path)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -67,7 +69,7 @@ def cli_run(args):
         nm = NuleculeManager(app_spec=argdict['app_spec'],
                              destination=argdict['destination'])
         nm.run(**argdict)
-        print_user_msg(nm.app_path)
+        print_app_location(nm.app_path)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)

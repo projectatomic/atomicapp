@@ -136,7 +136,7 @@ class Utils(object):
         """
         path = os.path.join(
             Utils.getRoot(),
-            CACHE_DIR[1:],  # Rip leading / off
+            CACHE_DIR.lstrip('/'),  # Rip leading '/' off
             "%s-%s" % (Utils.sanitizeName(image), Utils.getUniqueUUID()))
         return path
 

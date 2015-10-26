@@ -41,9 +41,11 @@ class NuleculeManager(object):
 
         # Adjust app_spec and destination paths if absolute.
         if os.path.isabs(app_spec):
-            app_spec = os.path.join(Utils.getRoot(), app_spec[1:])
+            app_spec = os.path.join(Utils.getRoot(),
+                                    app_spec.lstrip('/'))
         if destination and os.path.isabs(destination):
-                destination = os.path.join(Utils.getRoot(), destination[1:])
+                destination = os.path.join(Utils.getRoot(),
+                                           destination.lstrip('/'))
 
         # Determine if the user passed us an image or a path to an app
         if not os.path.exists(app_spec):
