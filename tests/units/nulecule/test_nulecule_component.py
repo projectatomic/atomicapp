@@ -77,3 +77,33 @@ class TestNuleculeComponentRun(unittest.TestCase):
         self.assertEqual(mock_provider.artifacts, ['a', 'b', 'c'])
         mock_provider.init.assert_called_once_with()
         mock_provider.deploy.assert_called_once_with()
+
+
+class TestNuleculeComponentStop(unittest.TestCase):
+    """Test Nulecule component stop"""
+
+    def test_stop_external_app(self):
+        """Test stopping an external application"""
+        nc = NuleculeComponent('some-name', 'some/path')
+        mock_nulecule = mock.Mock(name='nulecule')
+        nc._app = mock_nulecule
+        dryrun = False
+
+        nc.stop('some-provider', dryrun)
+        mock_nulecule.stop.assert_called_once_with('some-provider', dryrun)
+
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.get_provider')
+    def test_stop_local_app(self, mock_get_provider):
+        """Test stopping a local application"""
+        nc = NuleculeComponent('some-name', 'some/path')
+        nc.rendered_artifacts = {'some-provider-x': ['a', 'b', 'c']}
+        dryrun = False
+        provider_key = 'some-provider'
+        mock_provider = mock.Mock(name='provider')
+        mock_get_provider.return_value = ('some-provider-x', mock_provider)
+
+        nc.stop(provider_key, dryrun)
+        mock_get_provider.assert_called_once_with(provider_key, dryrun)
+        self.assertEqual(mock_provider.artifacts, ['a', 'b', 'c'])
+        mock_provider.init.assert_called_once_with()
+        mock_provider.undeploy.assert_called_once_with()
