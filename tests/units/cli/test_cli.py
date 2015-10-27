@@ -48,7 +48,11 @@ class TestCli(unittest.TestCase):
         self.examples_dir = os.path.dirname(__file__) + '/test_examples/'
 
     def tearDown(self):
-        pass
+        top = self.examples_dir
+        for root, dirs, files in os.walk(top):
+            for f in files:
+                if f.startswith('.'):
+                    os.remove(os.path.join(root, f))
 
     def test_run_helloapache_app(self):
         # Prepare the CLI arguments
