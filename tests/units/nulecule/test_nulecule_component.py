@@ -155,3 +155,40 @@ class TestNuleculeComponentLoadConfig(unittest.TestCase):
             }, ask=False, skip_asking=False)
         mock_merge_config.assert_called_once_with(
             nc.config, mock_nulecule.config)
+
+
+class TestNuleculeComponentLoadExternalApplication(unittest.TestCase):
+    """
+    Test loading an external Nulecule application from a Nulecule
+    component.
+    """
+
+    @mock.patch('atomicapp.nulecule.base.Nulecule')
+    @mock.patch('atomicapp.nulecule.base.os.path.isdir')
+    def test_loading_existing_app(self, mock_os_path_isdir, mock_Nulecule):
+        nc = NuleculeComponent('some-app', 'some/path')
+        dryrun, update = False, False
+        mock_os_path_isdir.return_value = True
+
+        nc.load_external_application(dryrun=dryrun, update=update)
+        expected_external_app_path = 'some/path/external/some-app'
+        mock_os_path_isdir.assert_called_once_with(
+            expected_external_app_path)
+        mock_Nulecule.load_from_path.assert_called_once_with(
+            expected_external_app_path, dryrun=dryrun, update=update)
+
+    @mock.patch('atomicapp.nulecule.base.Nulecule')
+    @mock.patch('atomicapp.nulecule.base.os.path.isdir')
+    def test_loading_app_by_unpacking(self, mock_os_path_isdir,
+                                      mock_Nulecule):
+        nc = NuleculeComponent('some-app', 'some/path')
+        dryrun, update = False, False
+        mock_os_path_isdir.return_value = False
+
+        nc.load_external_application(dryrun=dryrun, update=update)
+        expected_external_app_path = 'some/path/external/some-app'
+        mock_os_path_isdir.assert_called_once_with(
+            expected_external_app_path)
+        mock_Nulecule.unpack.assert_called_once_with(
+            nc.source, expected_external_app_path,
+            namespace=nc.namespace, dryrun=dryrun, update=update)
