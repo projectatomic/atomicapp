@@ -1,6 +1,7 @@
+import copy
 import mock
 import unittest
-from atomicapp.nulecule.base import NuleculeComponent
+from atomicapp.nulecule.base import NuleculeComponent, Nulecule
 
 
 class TestNuleculeComponentLoadArtifactPathsForPath(unittest.TestCase):
@@ -107,3 +108,50 @@ class TestNuleculeComponentStop(unittest.TestCase):
         self.assertEqual(mock_provider.artifacts, ['a', 'b', 'c'])
         mock_provider.init.assert_called_once_with()
         mock_provider.undeploy.assert_called_once_with()
+
+
+class TestNuleculeComponentLoadConfig(unittest.TestCase):
+    """Test loading config for a Nulecule component"""
+
+    def test_load_config_local_app(self):
+        """Test load config for local app"""
+        params = [
+            {'name': 'key1'},
+            {'name': 'key2'}
+        ]
+        nc = NuleculeComponent('some-app', 'some/path', params=params)
+        initial_config = {
+            'general': {'a': 'b', 'key2': 'val2'},
+            'some-app': {'key1': 'val1'}
+        }
+        nc.load_config(config=copy.deepcopy(initial_config))
+        self.assertEqual(nc.config, {
+            'general': {'a': 'b', 'key2': 'val2'},
+            'some-app': {'key1': 'val1', 'key2': 'val2'}
+        })
+
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.merge_config')
+    def test_load_config_external_app(self, mock_merge_config):
+        """Test load config for external app"""
+        params = [
+            {'name': 'key1'},
+            {'name': 'key2'}
+        ]
+        nc = NuleculeComponent('some-app', 'some/path', params=params)
+        mock_nulecule = mock.Mock(
+            name='nulecule',
+            spec=Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        )
+        nc._app = mock_nulecule
+        initial_config = {
+            'general': {'a': 'b', 'key2': 'val2'},
+            'some-app': {'key1': 'val1'}
+        }
+        nc.load_config(config=copy.deepcopy(initial_config))
+        mock_nulecule.load_config.assert_called_once_with(
+            config={
+                'general': {'a': 'b', 'key2': 'val2'},
+                'some-app': {'key1': 'val1', 'key2': 'val2'}
+            }, ask=False, skip_asking=False)
+        mock_merge_config.assert_called_once_with(
+            nc.config, mock_nulecule.config)
