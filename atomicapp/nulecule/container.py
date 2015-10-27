@@ -19,6 +19,19 @@ class DockerHandler(object):
         self.dryrun = dryrun
         self.docker_cli = docker_cli
 
+        # Check to make sure the docker client in the container and
+        # the server on the host can communicate.
+        if not dryrun:
+            try:
+                subprocess.check_output([docker_cli, 'version'],
+                                        stderr=subprocess.STDOUT)
+            except subprocess.CalledProcessError as e:
+                if "client and server don't have same version" in e.output:
+                    print("\nThe docker version in this Atomic App differs "
+                          "greatly from the host version.\nPlease use a different "
+                          "Atomic App version for this host.\n")
+                raise e
+
     def pull(self, image, update=False):
         """
         Pulls a Docker image if not already present in the host.
