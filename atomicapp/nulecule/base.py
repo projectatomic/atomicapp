@@ -237,7 +237,7 @@ class NuleculeComponent(NuleculeBase):
         """
         Load external application of the Nulecule component.
         """
-        if not self.artifacts:
+        if self.source:
             if nodeps:
                 logger.info(
                     'Skipping to load external application: %s' % self.name)
