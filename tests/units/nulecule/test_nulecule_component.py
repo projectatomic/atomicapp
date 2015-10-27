@@ -49,3 +49,31 @@ class TestNuleculeComponentLoad(unittest.TestCase):
         dryrun = False
         nc.load(True, dryrun)
         self.assertEqual(mock_load_external_application.call_count, 0)
+
+
+class TestNuleculeComponentRun(unittest.TestCase):
+    """Test Nulecule component run"""
+
+    def test_run_external_app(self):
+        nc = NuleculeComponent('some-name', 'some/path')
+        mock_nulecule = mock.Mock(name='nulecule')
+        nc._app = mock_nulecule
+        dryrun = False
+
+        nc.run('some-provider', dryrun)
+        mock_nulecule.run.assert_called_once_with('some-provider', dryrun)
+
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.get_provider')
+    def test_run_local_artifacts(self, mock_get_provider):
+        nc = NuleculeComponent('some-name', 'some/path')
+        nc.rendered_artifacts = {'some-provider-x': ['a', 'b', 'c']}
+        dryrun = False
+        provider_key = 'some-provider'
+        mock_provider = mock.Mock(name='provider')
+        mock_get_provider.return_value = ('some-provider-x', mock_provider)
+
+        nc.run(provider_key, dryrun)
+        mock_get_provider.assert_called_once_with(provider_key, dryrun)
+        self.assertEqual(mock_provider.artifacts, ['a', 'b', 'c'])
+        mock_provider.init.assert_called_once_with()
+        mock_provider.deploy.assert_called_once_with()
