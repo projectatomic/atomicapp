@@ -192,3 +192,17 @@ class TestNuleculeComponentLoadExternalApplication(unittest.TestCase):
         mock_Nulecule.unpack.assert_called_once_with(
             nc.source, expected_external_app_path,
             namespace=nc.namespace, dryrun=dryrun, update=update)
+
+
+class TestNuleculeComponentComponents(unittest.TestCase):
+    """Test accessing components attribute of a Nulecule component"""
+
+    def test_components_for_local_app(self):
+        nc = NuleculeComponent('some-app', 'some/path')
+        self.assertFalse(nc.components)
+
+    def test_components_for_external_app(self):
+        nc = NuleculeComponent('some-app', 'some/path')
+        nc._app = mock.Mock(name='nulecule')
+        nc._app.components = ['a', 'b', 'c']
+        self.assertEqual(nc.components, ['a', 'b', 'c'])
