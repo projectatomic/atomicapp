@@ -275,3 +275,35 @@ class TestNuleculeComponentRender(unittest.TestCase):
             provider_key)
         self.assertEqual(nc.rendered_artifacts[provider_key],
                          expected_rendered_artifacts)
+
+
+class TestNuleculeComponentGetArtifactPathsForProvider(unittest.TestCase):
+    """Test creating artifact paths for a Nulecule component"""
+
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.'
+                '_get_artifact_paths_for_path')
+    def test_artifact_paths_for_provider(
+            self, mock_get_artifact_paths_for_path):
+        nc = NuleculeComponent(name='some-app', basepath='some/path')
+        provider_key = 'some-provider'
+        nc.artifacts = {
+            provider_key: [
+                'file://relative/path/to/artifact1',
+                'file:///abs/path/to/artifact2',
+                {
+                    'inherit': ['x-provider']
+                }
+            ],
+            'x-provider': [
+                'file://x/artifact3'
+            ]
+        }
+        expected_artifact_paths = [
+            'some/path/relative/path/to/artifact1',
+            '/abs/path/to/artifact2',
+            'some/path/x/artifact3'
+        ]
+        mock_get_artifact_paths_for_path.side_effect = lambda path: [path]
+
+        self.assertEqual(nc.get_artifact_paths_for_provider(provider_key),
+                         expected_artifact_paths)
