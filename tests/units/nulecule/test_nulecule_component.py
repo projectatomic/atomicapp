@@ -307,3 +307,40 @@ class TestNuleculeComponentGetArtifactPathsForProvider(unittest.TestCase):
 
         self.assertEqual(nc.get_artifact_paths_for_provider(provider_key),
                          expected_artifact_paths)
+
+
+class TestNuleculeComponentRenderArtifact(unittest.TestCase):
+    """Test rendering an artifact in a NuleculeComponent"""
+
+    @mock.patch('atomicapp.nulecule.base.open')
+    def test_render_artifact(self, mock_open):
+        nc = NuleculeComponent(name='some-name', basepath='some/path')
+
+        source_content = 'some text: $key1'
+        expected_rendered_content = 'some text: val1'
+
+        # Mock context for opening file.
+        mock_open_source_file_context = mock.MagicMock(
+            name='source_artifact_context')
+        mock_open_target_file_context = mock.MagicMock(
+            name='target_artifact_context')
+
+        # Mock file objects
+        mock_source_file = mock_open_source_file_context.__enter__()
+        mock_target_file = mock_open_target_file_context.__enter__()
+        mock_source_file.read.return_value = source_content
+
+        def mock_open_resp(path, mode):
+            if path == 'some/path/artifact':
+                return mock_open_source_file_context
+            elif path == 'some/path/.artifact':
+                return mock_open_target_file_context
+
+        mock_open.side_effect = mock_open_resp
+
+        context = {'key1': 'val1'}
+        self.assertEqual(nc.render_artifact('some/path/artifact', context),
+                         '.artifact')
+        mock_source_file.read.assert_called_once_with()
+        mock_target_file.write.assert_called_once_with(
+            expected_rendered_content)
