@@ -335,7 +335,7 @@ class NuleculeComponent(NuleculeBase):
             None
         """
         if self._app:
-            self._app.render(provider_key=provider_key)
+            self._app.render(provider_key=provider_key, dryrun=dryrun)
             return
         context = self.get_context()
         if provider_key and provider_key not in self.artifacts:
