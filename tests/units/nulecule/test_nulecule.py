@@ -9,11 +9,13 @@ class TestNuleculeRun(unittest.TestCase):
     def test_run(self):
         provider = 'docker'
         dryrun = False
-        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
+
+        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
         n.components = [mock_component_1, mock_component_2]
         n.run(provider)
+
         mock_component_1.run.assert_called_once_with(provider, dryrun)
         mock_component_2.run.assert_called_once_with(provider, dryrun)
 
@@ -24,11 +26,13 @@ class TestNuleculeStop(unittest.TestCase):
     def test_stop(self):
         provider = 'docker'
         dryrun = False
-        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
+
+        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
         n.components = [mock_component_1, mock_component_2]
         n.stop(provider)
+
         mock_component_1.stop.assert_called_once_with(provider, dryrun)
         mock_component_2.stop.assert_called_once_with(provider, dryrun)
 
@@ -38,14 +42,16 @@ class TestNuleculeLoadConfig(unittest.TestCase):
 
     def test_load_config(self):
         config = {'group1': {'a': 'b'}}
-        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
         mock_component_1 = mock.Mock()
-        n.components = [mock_component_1]
         mock_component_1.config = {
             'group1': {'a': 'c', 'k': 'v'},
             'group2': {'1': '2'}
         }
+
+        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        n.components = [mock_component_1]
         n.load_config(config)
+
         self.assertEqual(n.config, {
             'group1': {'a': 'c', 'k': 'v'},
             'group2': {'1': '2'}
@@ -70,8 +76,10 @@ class TestNuleculeLoadComponents(unittest.TestCase):
                 ]
             }
         ]
+
         n = Nulecule('some-id', '0.0.2', {}, graph, 'some/path')
         n.load_components()
+
         MockNuleculeComponent.assert_any_call(
             graph[0]['name'], n.basepath, 'somecontainer',
             graph[0]['params'], None)
@@ -84,13 +92,15 @@ class TestNuleculeRender(unittest.TestCase):
     """Test Nulecule render"""
 
     def test_render(self):
-        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
-        n.components = [mock_component_1, mock_component_2]
         provider_key = 'foo'
         dryrun = True
+
+        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        n.components = [mock_component_1, mock_component_2]
         n.render(provider_key, dryrun)
+
         mock_component_1.render.assert_called_once_with(
             provider_key=provider_key, dryrun=dryrun)
         mock_component_2.render.assert_called_once_with(
