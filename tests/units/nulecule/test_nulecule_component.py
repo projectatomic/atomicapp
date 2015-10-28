@@ -2,6 +2,7 @@ import copy
 import mock
 import unittest
 from atomicapp.nulecule.base import NuleculeComponent, Nulecule
+from atomicapp.nulecule.exceptions import NuleculeException
 
 
 class TestNuleculeComponentLoadArtifactPathsForPath(unittest.TestCase):
@@ -206,3 +207,71 @@ class TestNuleculeComponentComponents(unittest.TestCase):
         nc._app = mock.Mock(name='nulecule')
         nc._app.components = ['a', 'b', 'c']
         self.assertEqual(nc.components, ['a', 'b', 'c'])
+
+
+class TestNuleculeComponentRender(unittest.TestCase):
+    """Test rendering artifacts for a Nulecule component"""
+
+    def test_render_for_external_app(self):
+        """Test rendering a nulecule component pointing to an external app"""
+        nc = NuleculeComponent(name='some-app', basepath='some/path')
+        mock_nulecule = mock.Mock(name='nulecule')
+        nc._app = mock_nulecule
+        provider_key = 'some-provider'
+        dryrun = False
+
+        nc.render(provider_key, dryrun)
+        mock_nulecule.render.assert_called_once_with(
+            provider_key=provider_key, dryrun=dryrun)
+
+    def test_render_for_local_app_with_missing_artifacts_for_provider(self):
+        """
+        Test rendering a Nulecule component with missing artifacts for a
+        provider.
+        """
+        nc = NuleculeComponent(name='some-app', basepath='some/path')
+        provider_key = 'some-provider'
+        dryrun = False
+        nc.config = {}
+        nc.artifacts = {'x': ['some-artifact']}
+
+        self.assertRaises(NuleculeException, nc.render, provider_key, dryrun)
+
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.get_context')
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.'
+                'get_artifact_paths_for_provider')
+    @mock.patch('atomicapp.nulecule.base.NuleculeComponent.render_artifact')
+    def test_render_for_local_app_with_artifacts_for_provider(
+            self, mock_render_artifact, mock_get_artifact_paths_for_provider,
+            mock_get_context):
+        """Test rendering artifacts for a local Nulecule component"""
+        nc = NuleculeComponent(name='some-app', basepath='some/path')
+        provider_key = 'some-provider'
+        dryrun = False
+        nc.config = {'general': {'key1': 'val1'}, 'some-provider': {'a': 'b'}}
+        nc.artifacts = {
+            'some-provider': ['artifact1', 'artifact2'],
+            'x': ['foo']
+        }
+        mock_get_artifact_paths_for_provider.return_value = [
+            'some/path/artifact1', 'some/path/artifact2']
+
+        def render_artifact_response(artifact_path, context):
+            return artifact_path.replace('artifact', '.artifact')
+
+        expected_rendered_artifacts = [
+            'some/path/.artifact1', 'some/path/.artifact2']
+
+        mock_render_artifact.side_effect = render_artifact_response
+        context = {'a': 'b'}
+        mock_get_context.return_value = context
+
+        nc.render(provider_key, dryrun)
+        mock_get_artifact_paths_for_provider.assert_called_once_with(
+            provider_key)
+        mock_render_artifact.assert_any_call('some/path/artifact1', context)
+        mock_render_artifact.assert_any_call('some/path/artifact2', context)
+        mock_get_artifact_paths_for_provider.assert_called_once_with(
+            provider_key)
+        self.assertEqual(nc.rendered_artifacts[provider_key],
+                         expected_rendered_artifacts)
