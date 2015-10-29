@@ -32,6 +32,10 @@ APP_ENT_PATH = "application-entity"
 CACHE_DIR = "/var/lib/atomicapp"
 
 PARAMS_KEY = "params"
+RESOURCE_KEY = "resource"
+INHERIT_KEY = "inherit"
+ARTIFACTS_KEY = "artifacts"
+
 MAIN_FILE = "Nulecule"
 ANSWERS_FILE = "answers.conf"
 ANSWERS_RUNTIME_FILE = "answers.conf.gen"

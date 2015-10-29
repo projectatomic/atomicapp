@@ -10,11 +10,15 @@ from string import Template
 from atomicapp.constants import (APP_ENT_PATH,
                                  EXTERNAL_APP_DIR,
                                  GLOBAL_CONF,
-                                 MAIN_FILE)
+                                 MAIN_FILE,
+                                 RESOURCE_KEY,
+                                 PARAMS_KEY)
 from atomicapp.utils import Utils
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
 from atomicapp.nulecule.exceptions import NuleculeException
+
+from jsonpointer import resolve_pointer, set_pointer, JsonPointerException
 
 logger = logging.getLogger(__name__)
 
@@ -348,7 +352,7 @@ class NuleculeComponent(NuleculeBase):
             for artifact_path in self.get_artifact_paths_for_provider(
                     provider):
                 self.rendered_artifacts[provider].append(
-                    self.render_artifact(artifact_path, context))
+                    self.render_artifact(artifact_path, context, provider))
 
     def get_artifact_paths_for_provider(self, provider_key):
         """
@@ -363,11 +367,19 @@ class NuleculeComponent(NuleculeBase):
         artifact_paths = []
         artifacts = self.artifacts.get(provider_key)
         for artifact in artifacts:
+            # Convert dict if the Nulecule file references "resource"
+            if isinstance(artifact, dict) and artifact.get(RESOURCE_KEY):
+                artifact = artifact[RESOURCE_KEY]
+                logger.debug("Resource xpath added: %s" % artifact)
+
+            # Sanitize the file structure
             if isinstance(artifact, basestring):
                 path = Utils.sanitizePath(artifact)
                 path = os.path.join(self.basepath, path) \
                     if path[0] != '/' else path
                 artifact_paths.extend(self._get_artifact_paths_for_path(path))
+
+            # Inherit if inherit name is referenced
             elif isinstance(artifact, dict) and artifact.get('inherit') and \
                     isinstance(artifact.get('inherit'), list):
                 for inherited_provider_key in artifact.get('inherit'):
@@ -379,7 +391,74 @@ class NuleculeComponent(NuleculeBase):
                 logger.error('Invalid artifact file')
         return artifact_paths
 
-    def render_artifact(self, path, context):
+    def grab_artifact_params(self, provider):
+        """
+        Check to see if params exist in the artifact. If so, return it.
+
+        Args:
+            provider(str): name of the provider
+
+        Returns:
+            str (dict): list of params
+
+        """
+        artifact = self.artifacts.get(provider)[0]
+        if PARAMS_KEY in artifact:
+            return artifact.get(PARAMS_KEY)
+        else:
+            return None
+
+    def apply_pointers(self, content, params):
+        """
+        Let's apply all the json pointers!
+        Valid params in Nulecule:
+
+            param1:
+                - /spec/containers/0/ports/0/hostPort
+                - /spec/containers/0/ports/0/hostPort2
+            or
+            param1:
+                - /spec/containers/0/ports/0/hostPort, /spec/containers/0/ports/0/hostPort2
+
+        Args:
+            content (str): content of artifact file
+            params (dict): list of params with pointers to replace in content
+
+        Returns:
+            str: content with replaced pointers
+
+        Todo:
+            In the future we need to change this to detect haml, yaml, etc as we add more providers
+            Blocked by: github.com/bkabrda/anymarkup-core/blob/master/anymarkup_core/__init__.py#L393
+        """
+        obj = anymarkup.parse(content)
+
+        if type(obj) != dict:
+            logger.debug("Artifact file not json/haml, assuming it's $VARIABLE substitution")
+            return content
+
+        if params is None:
+            # Nothing to do here!
+            return content
+
+        for name, pointers in params.items():
+
+            if not pointers:
+                logger.warning("Could not find pointer for %s" % name)
+                continue
+
+            for pointer in pointers:
+                try:
+                    resolve_pointer(obj, pointer)
+                    set_pointer(obj, pointer, name)
+                    logger.debug("Replaced %s pointer with %s param" % (pointer, name))
+                except JsonPointerException:
+                    logger.debug("Error replacing %s with %s" % (pointer, name))
+                    logger.debug("Artifact content: %s", obj)
+                    raise NuleculeException("Error replacing pointer %s with %s." % (pointer, name))
+        return anymarkup.serialize(obj, format="json")
+
+    def render_artifact(self, path, context, provider):
         """
         Render artifact file at path with context to a file at the same
         level. The rendered file has a name a dot '.' prefixed to the
@@ -388,6 +467,7 @@ class NuleculeComponent(NuleculeBase):
         Args:
             path (str): path to the artifact file
             context (dict): data to render in the artifact file
+            provider (str): what provider is being used
 
         Returns:
             str: Relative path to the rendered artifact file from the
@@ -398,6 +478,9 @@ class NuleculeComponent(NuleculeBase):
 
         with open(path, 'r') as f:
             content = f.read()
+            params = self.grab_artifact_params(provider)
+            if params is not None:
+                content = self.apply_pointers(content, params)
             template = Template(content)
             rendered_content = template.safe_substitute(context)
 
