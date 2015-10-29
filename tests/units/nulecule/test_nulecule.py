@@ -41,7 +41,7 @@ class TestNuleculeLoadConfig(unittest.TestCase):
     """Test Nulecule load_config"""
 
     def test_load_config(self):
-        config = {'group1': {'a': 'b'}}
+        config = {'general': {'a': 'b'}}
         mock_component_1 = mock.Mock()
         mock_component_1.config = {
             'group1': {'a': 'c', 'k': 'v'},
@@ -53,7 +53,7 @@ class TestNuleculeLoadConfig(unittest.TestCase):
         n.load_config(config)
 
         self.assertEqual(n.config, {
-            'group1': {'a': 'c', 'k': 'v'},
+            'group1': {'a': 'b', 'k': 'v'},
             'group2': {'1': '2'}
         })
 
