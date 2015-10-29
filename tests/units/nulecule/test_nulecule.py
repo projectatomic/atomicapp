@@ -41,7 +41,7 @@ class TestNuleculeLoadConfig(unittest.TestCase):
     """Test Nulecule load_config"""
 
     def test_load_config(self):
-        config = {'general': {'a': 'b'}}
+        config = {'group1': {'a': 'b'}}
         mock_component_1 = mock.Mock()
         mock_component_1.config = {
             'group1': {'a': 'c', 'k': 'v'},
