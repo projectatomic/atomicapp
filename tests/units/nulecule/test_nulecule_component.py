@@ -331,7 +331,7 @@ class TestNuleculeComponentGetArtifactPathsForProvider(unittest.TestCase):
 class TestNuleculeComponentRenderArtifact(unittest.TestCase):
     """Test rendering an artifact in a NuleculeComponent"""
 
-    @mock.patch('atomicapp.nulecule.base.open')
+    @mock.patch('atomicapp.nulecule.base.open', create=True)
     def test_render_artifact(self, mock_open):
         source_content = 'some text: $key1'
         expected_rendered_content = 'some text: val1'
