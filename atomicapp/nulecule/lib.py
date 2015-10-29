@@ -66,15 +66,8 @@ class NuleculeBase(object):
         """
         for group, group_vars in from_config.items():
             to_config[group] = to_config.get(group) or {}
-            if group == GLOBAL_CONF:
-                if self.namespace == GLOBAL_CONF:
-                    key = GLOBAL_CONF
-                else:
-                    key = self.namespace
-                to_config[key] = to_config.get(key) or {}
-                to_config[key].update(group_vars or {})
-            else:
-                for key, value in group_vars.items():
+            for key, value in (group_vars or {}).items():
+                if key not in to_config[group]:
                     to_config[group][key] = value
 
     def get_context(self):
