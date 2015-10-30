@@ -15,12 +15,10 @@ WORKDIR /opt/atomicapp
 ADD atomicapp/ /opt/atomicapp/atomicapp/
 ADD setup.py requirements.txt /opt/atomicapp/
 
-# add EPEL repo for pip
-RUN echo -e "[epel]\nname=epel\nenabled=1\nbaseurl=https://dl.fedoraproject.org/pub/epel/7/x86_64/\ngpgcheck=0" > /etc/yum.repos.d/epel.repo
-
 # lets install pip, and gcc for the native extensions
 # and remove all after use
-RUN yum install -y --setopt=tsflags=nodocs python-pip python-setuptools docker gcc && \
+RUN yum -y install epel-release && \
+    yum install -y --setopt=tsflags=nodocs python-pip python-setuptools docker gcc && \
     python setup.py install && \
     yum remove -y gcc cpp glibc-devel glibc-headers kernel-headers libmpc mpfr python-pip && \
     yum clean all
