@@ -13,7 +13,6 @@ class NuleculeBase(object):
     This is the base class for Nulecule and NuleculeComponent in
     atomicapp.nulecule.base.
     """
-
     def __init__(self, basepath, params, namespace):
         self.basepath = basepath
         self.params = params or []

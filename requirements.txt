@@ -1,2 +1,3 @@
-anymarkup>=0.4.1
+anymarkup==0.5.0
 lockfile==0.10.2
+jsonpointer==1.10.0
