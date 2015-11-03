@@ -19,15 +19,31 @@ All providers assume that you install and run the Atomic App on a host that is p
 ## Choosing and configuring a provider
 While deploying an Atomic App you can choose one of the providers by setting it in `answers.conf`:
 
+### OpenShift
+
+For OpenShift a configuration file is required. You need to specify
+something like the following in your `answers.conf` file:
+
 ```
 [general]
 provider: openshift
 providerconfig: /host/home/foo/.kube/config
 ```
 
-You need to provide Atomic App with access to a configuration file to be able to use some providers. By using the `providerconfig` option you will override it's default value (`provider.config`).
+This specifies to Atomic App where to access the configuration file
+by using the `providerconfig` option.
 
-Providers may need additional configuration.
+### Kubernetes
+
+For Kubernetes the configuration file is optional, but you may find
+that you need it for your setup. If you need it, then you can specify
+the file in the same way that was done in the openshift example above:
+
+```
+[general]
+provider: kubernetes
+providerconfig: /host/home/foo/.kube/config
+```
 
 ### Docker
 

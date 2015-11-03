@@ -17,8 +17,6 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from atomicapp.run import Run
-from atomicapp.install import Install
 import os
 import sys
 
@@ -29,40 +27,70 @@ from lockfile import LockFile
 from lockfile import AlreadyLocked
 
 from atomicapp import set_logging
-from atomicapp.constants import \
-    ANSWERS_FILE, __ATOMICAPPVERSION__, \
-    __NULECULESPECVERSION__, ANSWERS_FILE_SAMPLE_FORMAT, \
-    LOCK_FILE
+from atomicapp.constants import (__ATOMICAPPVERSION__,
+                                 __NULECULESPECVERSION__,
+                                 ANSWERS_FILE,
+                                 ANSWERS_FILE_SAMPLE_FORMAT,
+                                 HOST_DIR,
+                                 LOCK_FILE)
+from atomicapp.nulecule import NuleculeManager
+from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(__name__)
 
 
-def cli_install(args):
-    install = Install(**vars(args))
+def print_app_location(app_path):
+    if app_path.startswith(HOST_DIR):
+        app_path = app_path[len(HOST_DIR):]
+    print("\nYour application resides in %s" % app_path)
+    print("Please use this directory for managing your application\n")
 
-    if install.install() is not None:
-        sys.exit(True)
-    else:
-        sys.exit(False)
+
+def cli_install(args):
+    try:
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
+                             destination=argdict['destination'])
+        nm.install(**argdict)
+        print_app_location(nm.app_path)
+        sys.exit(0)
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        sys.exit(1)
 
 
 def cli_run(args):
-    ae = Run(**vars(args))
-
-    if ae.run() is not None:
-        sys.exit(True)
-    else:
-        sys.exit(False)
+    try:
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
+                             destination=argdict['destination'])
+        nm.run(**argdict)
+        print_app_location(nm.app_path)
+        sys.exit(0)
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        sys.exit(1)
 
 
 def cli_stop(args):
-    stop = Run(stop=True, **vars(args))
-
-    if stop.run() is not None:
-        sys.exit(True)
-    else:
-        sys.exit(False)
+    try:
+        argdict = args.__dict__
+        nm = NuleculeManager(app_spec=argdict['app_spec'])
+        nm.stop(**argdict)
+        sys.exit(0)
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        sys.exit(1)
 
 
 class CLI():
@@ -112,13 +140,6 @@ class CLI():
                 "run will be sent to stdout but not run."))
 
         self.parser.add_argument(
-            "-a",
-            "--answers",
-            dest="answers",
-            default=os.path.join(os.getcwd(), ANSWERS_FILE),
-            help="Path to %s" % ANSWERS_FILE)
-
-        self.parser.add_argument(
             "--answers-format",
             dest="answers_format",
             default=ANSWERS_FILE_SAMPLE_FORMAT,
@@ -129,6 +150,13 @@ class CLI():
         subparsers = self.parser.add_subparsers(dest="action")
 
         parser_run = subparsers.add_parser("run")
+
+        parser_run.add_argument(
+            "-a",
+            "--answers",
+            dest="answers",
+            help="Path to %s" % ANSWERS_FILE)
+
         parser_run.add_argument(
             "--write-answers",
             dest="answers_output",
@@ -147,12 +175,26 @@ class CLI():
             help="Ask for params even if the defaul value is provided")
 
         parser_run.add_argument(
-            "APP",
-            help="Path to the directory where the image is installed.")
+            "app_spec",
+            help=(
+                "Application to run. This is a container image or a path "
+                "that contains the metadata describing the whole application."))
+
+        parser_run.add_argument(
+            "--destination",
+            dest="destination",
+            default=None,
+            help="Destination directory for install")
 
         parser_run.set_defaults(func=cli_run)
 
         parser_install = subparsers.add_parser("install")
+
+        parser_install.add_argument(
+            "-a",
+            "--answers",
+            dest="answers",
+            help="Path to %s" % ANSWERS_FILE)
 
         parser_install.add_argument(
             "--no-deps",
@@ -171,12 +213,12 @@ class CLI():
 
         parser_install.add_argument(
             "--destination",
-            dest="target_path",
+            dest="destination",
             default=None,
             help="Destination directory for install")
 
         parser_install.add_argument(
-            "APP",
+            "app_spec",
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
@@ -191,7 +233,7 @@ class CLI():
             help="The provider to use. Overrides provider value in answerfile.")
 
         parser_stop.add_argument(
-            "APP",
+            "app_spec",
             help=(
                 "Path to the directory where the Atomic App is installed or "
                 "an image containing an Atomic App which should be stopped."))

@@ -29,10 +29,16 @@ __NULECULESPECVERSION__ = '0.0.2'
 EXTERNAL_APP_DIR = "external"
 GLOBAL_CONF = "general"
 APP_ENT_PATH = "application-entity"
+CACHE_DIR = "/var/lib/atomicapp"
 
 PARAMS_KEY = "params"
+RESOURCE_KEY = "resource"
+INHERIT_KEY = "inherit"
+ARTIFACTS_KEY = "artifacts"
+
 MAIN_FILE = "Nulecule"
 ANSWERS_FILE = "answers.conf"
+ANSWERS_RUNTIME_FILE = "answers.conf.gen"
 ANSWERS_FILE_SAMPLE = "answers.conf.sample"
 ANSWERS_FILE_SAMPLE_FORMAT = 'ini'
 WORKDIR = ".workdir"
@@ -49,4 +55,3 @@ DEFAULT_ANSWERS = {
     }
 }
 PROVIDER_CONFIG_KEY = "providerconfig"
-DEFAULT_PROVIDER_CONFIG = "provider.config"

@@ -56,7 +56,7 @@ class OpenShiftProvider(Provider):
             else:
                 logger.debug("Using %s to run OpenShift commands.", self.cli)
 
-            # Check if OpenShift config file is accessible
+            # Check if the required OpenShift config file is accessible.
             self.checkConfigFile()
 
     def _callCli(self, path):

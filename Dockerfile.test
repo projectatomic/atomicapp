@@ -3,7 +3,7 @@ FROM fedora:22
 RUN dnf -y install python-pip python-mock && \
     dnf -y clean all
 
-ADD . /opt/atomicapp
+ADD ./requirements.txt /opt/atomicapp/
 
 WORKDIR /opt/atomicapp
 
@@ -18,3 +18,4 @@ ENV PYTHONPATH $PYTHONPATH:/opt/atomicapp/atomicapp
 
 CMD python -m pytest -vv tests --cov atomicapp
 
+ADD . /opt/atomicapp
