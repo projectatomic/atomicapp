@@ -274,7 +274,7 @@ class TestNuleculeComponentRender(unittest.TestCase):
         context = {'a': 'b'}
         mock_get_artifact_paths_for_provider.return_value = [
             'some/path/artifact1', 'some/path/artifact2']
-        mock_render_artifact.side_effect = lambda path, context: path.replace('artifact', '.artifact')
+        mock_render_artifact.side_effect = lambda path, context, provider: path.replace('artifact', '.artifact')
         mock_get_context.return_value = context
 
         nc = NuleculeComponent(name='some-app', basepath='some/path')
@@ -287,8 +287,10 @@ class TestNuleculeComponentRender(unittest.TestCase):
 
         mock_get_artifact_paths_for_provider.assert_called_once_with(
             provider_key)
-        mock_render_artifact.assert_any_call('some/path/artifact1', context)
-        mock_render_artifact.assert_any_call('some/path/artifact2', context)
+        mock_render_artifact.assert_any_call('some/path/artifact1', context,
+                                             'some-provider')
+        mock_render_artifact.assert_any_call('some/path/artifact2', context,
+                                             'some-provider')
         mock_get_artifact_paths_for_provider.assert_called_once_with(
             provider_key)
         self.assertEqual(nc.rendered_artifacts[provider_key],
@@ -357,9 +359,11 @@ class TestNuleculeComponentRenderArtifact(unittest.TestCase):
         mock_open.side_effect = mock_open_resp
 
         nc = NuleculeComponent(name='some-name', basepath='some/path')
+        nc.artifacts = {'some-provider': [{}]}
 
-        self.assertEqual(nc.render_artifact('some/path/artifact', context),
-                         '.artifact')
+        self.assertEqual(
+            nc.render_artifact('some/path/artifact', context, 'some-provider'),
+            '.artifact')
         mock_source_file.read.assert_called_once_with()
         mock_target_file.write.assert_called_once_with(
             expected_rendered_content)
