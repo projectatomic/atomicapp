@@ -357,9 +357,11 @@ class TestNuleculeComponentRenderArtifact(unittest.TestCase):
         mock_open.side_effect = mock_open_resp
 
         nc = NuleculeComponent(name='some-name', basepath='some/path')
+        nc.artifacts = {'some-provider': [{}]}
 
-        self.assertEqual(nc.render_artifact('some/path/artifact', context),
-                         '.artifact')
+        self.assertEqual(
+            nc.render_artifact('some/path/artifact', context, 'some-provider'),
+            '.artifact')
         mock_source_file.read.assert_called_once_with()
         mock_target_file.write.assert_called_once_with(
             expected_rendered_content)
