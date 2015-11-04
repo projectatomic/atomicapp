@@ -22,7 +22,6 @@ import logging
 import os
 from subprocess import Popen, PIPE
 
-from atomicapp.constants import HOST_DIR
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus, Utils
 
@@ -52,11 +51,12 @@ class KubernetesProvider(Provider):
         if self.container:
             self.kubectl = self._find_kubectl(Utils.getRoot())
             kube_conf_path = "/etc/kubernetes"
-            if not os.path.exists(kube_conf_path):
+            host_kube_conf_path = os.path.join(Utils.getRoot(), kube_conf_path.lstrip("/"))
+            if not os.path.exists(kube_conf_path) and os.path.exists(host_kube_conf_path):
                 if self.dryrun:
-                    logger.info("DRY-RUN: link %s from %s%s" % (kube_conf_path, HOST_DIR, kube_conf_path))
+                    logger.info("DRY-RUN: link %s from %s" % (kube_conf_path, host_kube_conf_path))
                 else:
-                    os.symlink(os.path.join(Utils.getRoot(), kube_conf_path.lstrip("/")), kube_conf_path)
+                    os.symlink(host_kube_conf_path, kube_conf_path)
         else:
             self.kubectl = self._find_kubectl()
 
