@@ -1,3 +1,60 @@
+## Atomic App 0.2.1 (11-04-2015)
+
+This is a major release for Atomic App that refactors most of the base code as well as adds numerous features.
+
+  * Complete refactor of the Atomic App core codebase
+  * JSON Pointer xpathing for artifacts
+  * Integration of unpacking to /var/lib/atomicapp rather than `cwd`
+  * Numerous bug fixes && improvements to integration tests
+
+
+Please see the `git shortlog` summary below for all commits since the previous release.
+
+```
+Charlie Drage <charlie@charliedrage.com> (8):
+      Remove dotfiles from tests
+      Sync requirements with master. Fixes lockfile issue.
+      add xpathing
+
+Dusty Mabe <dusty@dustymabe.com> (15):
+      Don't unpack files to cwd
+      Enables running atomicapp from within a container again.
+      Implement a few comments from code review #356.
+      Remove Aaron from MAINTAINERS upon his request.
+      Add Ratnadeep to MAINTAINERS :)
+      Adds preferred email for Dusty to MAINTAINERS.
+      Adds nice error message for Docker client/server out of sync. Closes #174
+      Syncs up run labels in Dockerfiles.
+      Fixes run label in Dockerfiles so that atomic run <image> works.
+
+Jeroen van Meeuwen (Kolab Systems) <vanmeeuwen@kolabsys.com> (1):
+      Use epel-release rather than echo'ing .repo config files
+
+Ratnadeep Debnath <rtnpro@gmail.com> (19):
+      Updated docs for file handling for artifact path. #143
+      Added note on not supporting nested artifact dir. #143
+      Added unittests for Nulecule class.
+      Added tests for NuleculeComponent load
+      Added tests for NuleculeComponent run.
+      Added tests for stopping NuleculeComponent.
+      Added tests for NuleculeComponent load_config.
+      Added tests for loading external app in NuleculeComponent.
+      Added tests for accessing components of a nulecule component.
+      In NuleculeComponent, pass 'dryrun' param when calling render of external Nulecule.
+      Added tests for rendering a NuleculeComponent
+      Added tests for retrieving artifact paths for a NuleculeComponent.
+      Added tests for rendering an artifact in NuleculeComponent.
+      Reorganize and group code in each testcase for atomicapp/nulecule into
+      Bugfix in merging config and updated tests for the same
+      Fix unittest for Nulecule load config.
+      Fix mocking 'open' in nulecule/base.py.
+      Fixed test for rendering artifact.
+      Fixed test for rendering local artifact for provider.
+
+Tomas Kral <tkral@redhat.com> (1):
+      do not create symlink if source doesn't exist
+```
+
 ## Atomic App 0.1.12 (10-22-2015)
 
 We have fixed many bugs as well as implemented more enhancements to the Atomic App life cycle with this release. 
