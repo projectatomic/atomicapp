@@ -26,7 +26,8 @@ class DockerHandler(object):
                 subprocess.check_output([docker_cli, 'version'],
                                         stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
-                if "client and server don't have same version" in e.output:
+                if "client and server don't have same version" in e.output \
+                        or "client is newer than server" in e.output:
                     print("\nThe docker version in this Atomic App differs "
                           "greatly from the host version.\nPlease use a different "
                           "Atomic App version for this host.\n")
