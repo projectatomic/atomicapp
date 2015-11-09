@@ -51,7 +51,8 @@ def cli_install(args):
     try:
         argdict = args.__dict__
         nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=argdict['destination'])
+                             destination=argdict['destination'],
+                             answers_file=argdict['answers'])
         nm.install(**argdict)
         print_app_location(nm.app_path)
         sys.exit(0)
@@ -67,7 +68,8 @@ def cli_run(args):
     try:
         argdict = args.__dict__
         nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=argdict['destination'])
+                             destination=argdict['destination'],
+                             answers_file=argdict['answers'])
         nm.run(**argdict)
         print_app_location(nm.app_path)
         sys.exit(0)
