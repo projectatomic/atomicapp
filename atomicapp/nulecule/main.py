@@ -10,6 +10,7 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
+                                 DEFAULT_ANSWERS,
                                  DEFAULT_NAMESPACE,
                                  DEFAULT_PROVIDER,
                                  MAIN_FILE)
@@ -25,7 +26,7 @@ class NuleculeManager(object):
     Interface to install, run, stop a Nulecule application.
     """
 
-    def __init__(self, app_spec, destination=None):
+    def __init__(self, app_spec, destination=None, answers_file=None):
         """
         init function for NuleculeManager. Sets a few instance variables.
 
@@ -34,18 +35,22 @@ class NuleculeManager(object):
                       container image name where a nulecule can be found
             destination: where to unpack a nulecule to if it isn't local
         """
-        self.answers = {}
+        self.answers = copy.deepcopy(DEFAULT_ANSWERS)
         self.answers_format = None
+        self.answers_file = None  # The path to an answer file
         self.app_path = None  # The path where the app resides or will reside
         self.image = None     # The container image to pull the app from
 
-        # Adjust app_spec and destination paths if absolute.
+        # Adjust app_spec, destination, and answer file paths if absolute.
         if os.path.isabs(app_spec):
             app_spec = os.path.join(Utils.getRoot(),
                                     app_spec.lstrip('/'))
         if destination and os.path.isabs(destination):
-                destination = os.path.join(Utils.getRoot(),
-                                           destination.lstrip('/'))
+            destination = os.path.join(Utils.getRoot(),
+                                       destination.lstrip('/'))
+        if answers_file and os.path.isabs(answers_file):
+            answers_file = os.path.join(Utils.getRoot(),
+                                        answers_file.lstrip('/'))
 
         # Determine if the user passed us an image or a path to an app
         if not os.path.exists(app_spec):
@@ -70,6 +75,17 @@ class NuleculeManager(object):
 
         # Set where the main nulecule file should be
         self.main_file = os.path.join(self.app_path, MAIN_FILE)
+
+        # If user provided a path to answers then make sure it exists. If they
+        # didn't provide one then use the one in the app dir if it exists.
+        if answers_file:
+            self.answers_file = answers_file
+            if not os.path.isfile(self.answers_file):
+                raise NuleculeException(
+                    "Path for answers doesn't exist: %s" % self.answers_file)
+        else:
+            if os.path.isfile(os.path.join(self.app_path, ANSWERS_FILE)):
+                self.answers_file = os.path.join(self.app_path, ANSWERS_FILE)
 
     def unpack(self, update=False,
                dryrun=False, nodeps=False, config=None):
@@ -100,7 +116,7 @@ class NuleculeManager(object):
             return Nulecule.load_from_path(
                 self.app_path, dryrun=dryrun, config=config)
 
-    def install(self, answers, nodeps=False, update=False, dryrun=False,
+    def install(self, nodeps=False, update=False, dryrun=False,
                 answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         """
         Installs (unpacks) a Nulecule application from a Nulecule image
@@ -119,8 +135,8 @@ class NuleculeManager(object):
         Returns:
             None
         """
-        self.answers = Utils.loadAnswers(
-            answers or os.path.join(self.app_path, ANSWERS_FILE))
+        if self.answers_file:
+            self.answers = Utils.loadAnswers(self.answers_file)
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
 
         # Call unpack. If the app doesn't exist it will be pulled. If
@@ -136,7 +152,7 @@ class NuleculeManager(object):
             os.path.join(self.app_path, ANSWERS_FILE_SAMPLE),
             runtime_answers, answers_format, dryrun=dryrun)
 
-    def run(self, answers, cli_provider, answers_output, ask,
+    def run(self, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
         """
         Runs a Nulecule application from a local path or a Nulecule image
@@ -156,8 +172,8 @@ class NuleculeManager(object):
         Returns:
             None
         """
-        self.answers = Utils.loadAnswers(
-            answers or os.path.join(self.app_path, ANSWERS_FILE))
+        if self.answers_file:
+            self.answers = Utils.loadAnswers(self.answers_file)
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
 
@@ -185,6 +201,7 @@ class NuleculeManager(object):
             cli_provider (str): Provider running the Nulecule application
             kwargs (dict): Extra keyword arguments
         """
+        # For stop we use the generated answer file from the run
         self.answers = Utils.loadAnswers(
             os.path.join(self.app_path, ANSWERS_RUNTIME_FILE))
         dryrun = kwargs.get('dryrun') or False

@@ -18,7 +18,6 @@
 """
 
 from __future__ import print_function
-import copy
 import distutils.dir_util
 import os
 import sys
@@ -31,10 +30,8 @@ from distutils.spawn import find_executable
 
 import logging
 
-from constants import (ANSWERS_FILE,
-                       APP_ENT_PATH,
+from constants import (APP_ENT_PATH,
                        CACHE_DIR,
-                       DEFAULT_ANSWERS,
                        EXTERNAL_APP_DIR,
                        HOST_DIR,
                        WORKDIR)
@@ -288,36 +285,13 @@ class Utils(object):
         return data
 
     @staticmethod
-    def loadAnswers(data=None):
-        answers_data = {}
-        write_sample_answers = False
-        if not data:
-            logger.info("No answers data given")
+    def loadAnswers(answers_file):
+        if not os.path.isfile(answers_file):
+            raise AtomicAppUtilsException(
+                "Provided answers file does not exist: %s" % answers_file)
 
-        if type(data) == dict:
-            logger.debug("Data given %s", data)
-        elif os.path.exists(data):
-            logger.debug("Path to answers file given, loading %s", data)
-            if os.path.isdir(data):
-                if os.path.isfile(os.path.join(data, ANSWERS_FILE)):
-                    data = os.path.join(data, ANSWERS_FILE)
-                else:
-                    write_sample_answers = True
-
-            if os.path.isfile(data):
-                data = anymarkup.parse_file(data)
-        else:
-            write_sample_answers = True
-
-        if write_sample_answers:
-            data = copy.deepcopy(DEFAULT_ANSWERS)
-
-        if answers_data:
-            answers_data = Utils.update(answers_data, data)
-        else:
-            answers_data = data
-
-        return answers_data
+        logger.debug("Loading answers from file: %s", answers_file)
+        return anymarkup.parse_file(answers_file)
 
     @staticmethod
     def copy_dir(src, dest, update=False, dryrun=False):
