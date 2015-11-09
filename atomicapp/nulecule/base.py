@@ -108,7 +108,7 @@ class Nulecule(NuleculeBase):
         """
         nulecule_path = os.path.join(src, MAIN_FILE)
         if dryrun and not os.path.exists(nulecule_path):
-            return
+            raise NuleculeException("Installed Nulecule components are required to initiate dry-run")
         nulecule_data = anymarkup.parse_file(nulecule_path)
         nulecule = Nulecule(config=config, basepath=src,
                             namespace=namespace, **nulecule_data)
