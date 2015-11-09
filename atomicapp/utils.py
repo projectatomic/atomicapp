@@ -43,6 +43,10 @@ __all__ = ('Utils')
 
 logger = logging.getLogger(__name__)
 
+
+class AtomicAppUtilsException(Exception):
+    pass
+
 # Following Methods(printStatus, printErrorStatus)
 #  are required for Cockpit or thirdparty management tool integration
 #  DONOT change the atomicapp.status.* prefix in the logger method.
