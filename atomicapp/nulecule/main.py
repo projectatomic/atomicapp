@@ -150,7 +150,7 @@ class NuleculeManager(object):
         # write sample answers file
         self._write_answers(
             os.path.join(self.app_path, ANSWERS_FILE_SAMPLE),
-            runtime_answers, answers_format, dryrun=dryrun)
+            runtime_answers, answers_format)
 
     def run(self, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
@@ -188,10 +188,10 @@ class NuleculeManager(object):
             self.nulecule.config, cli_provider)
         self._write_answers(
             os.path.join(self.app_path, ANSWERS_RUNTIME_FILE),
-            runtime_answers, self.answers_format, dryrun=dryrun)
+            runtime_answers, self.answers_format)
         if answers_output:
             self._write_answers(answers_output, runtime_answers,
-                                self.answers_format, dryrun)
+                                self.answers_format)
 
     def stop(self, cli_provider, **kwargs):
         """
@@ -222,7 +222,7 @@ class NuleculeManager(object):
         distutils.dir_util.remove_tree(self.unpack_path)
         self.initialize()
 
-    def _write_answers(self, path, answers, answers_format, dryrun=False):
+    def _write_answers(self, path, answers, answers_format):
         """
         Write answers data to file.
 
@@ -231,17 +231,13 @@ class NuleculeManager(object):
             answers (dict): Answers data
             answers_format (str): Format to use to dump answers data to file,
                                   e.g., json
-            dryrun (bool): Do not make any change to the host system,
-                           while True
-
         Returns:
             None
         """
-        if not dryrun:
-            anymarkup.serialize_file(
-                answers, path, format=answers_format)
-        else:
-            logger.info('ANSWERS: %s' % answers)
+        logger.debug("Writing answers to file.")
+        logger.debug("FILE: %s", path)
+        logger.debug("ANSWERS: %s", answers)
+        anymarkup.serialize_file(answers, path, format=answers_format)
 
     def _get_runtime_answers(self, config, cli_provider):
         """
