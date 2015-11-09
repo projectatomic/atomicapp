@@ -19,7 +19,7 @@ ADD setup.py requirements.txt /opt/atomicapp/
 # and remove all after use
 RUN dnf install -y --setopt=tsflags=nodocs python-pip python-setuptools docker gcc && \
     python setup.py install && \
-    dnf remove -y gcc cpp glibc-devel glibc-headers kernel-headers libmpc mpfr python-pip && \
+    dnf remove -y gcc cpp glibc-devel glibc-headers kernel-headers libmpc mpfr && \
     dnf clean all
 
 WORKDIR /atomicapp

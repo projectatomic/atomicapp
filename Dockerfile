@@ -20,7 +20,7 @@ ADD setup.py requirements.txt /opt/atomicapp/
 RUN yum -y install epel-release && \
     yum install -y --setopt=tsflags=nodocs python-pip python-setuptools docker gcc && \
     python setup.py install && \
-    yum remove -y gcc cpp glibc-devel glibc-headers kernel-headers libmpc mpfr python-pip && \
+    yum remove -y gcc cpp glibc-devel glibc-headers kernel-headers libmpc mpfr && \
     yum clean all
 
 WORKDIR /atomicapp

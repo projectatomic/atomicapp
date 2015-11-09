@@ -21,7 +21,7 @@ RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/so
 RUN apt-get update && \
     apt-get install -y --no-install-recommends docker.io python-pip python-setuptools gcc && \
     python setup.py install && \
-    apt-get remove --purge -y python-pip gcc python-setuptools && \
+    apt-get remove --purge -y gcc python-setuptools && \
     apt-get autoremove -y && \
     apt-get clean -y
 
