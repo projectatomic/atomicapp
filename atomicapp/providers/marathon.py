@@ -1,0 +1,107 @@
+"""
+ Copyright 2015 Red Hat, Inc.
+
+ This file is part of Atomic App.
+
+ Atomic App is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Lesser General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+
+ Atomic App is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU Lesser General Public License for more details.
+
+ You should have received a copy of the GNU Lesser General Public License
+ along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
+"""
+
+import anymarkup
+import requests
+import urlparse
+import logging
+import os
+from atomicapp.plugin import Provider, ProviderFailedException
+from atomicapp.utils import printErrorStatus
+
+logger = logging.getLogger(__name__)
+
+
+class Marathon(Provider):
+    """ Marathon provider
+    """
+
+    key = "marathon"
+    config_file = None
+    marathon_api_version = "v2"
+    # use localhost as default, when no providerurl is specified
+    marathon_api = "http://localhost:8080/%s/" % marathon_api_version
+    marathon_artifacts = []
+
+    def init(self):
+        logger.debug("Given config: %s", self.config)
+        if self.config.get("providerurl"):
+            self.marathon_api = self.config.get("providerurl")
+            self.marathon_api = urlparse.urljoin(self.marathon_api, "v2/")
+        logger.debug("marathon_api = %s", self.marathon_api)
+        self._process_artifacts()
+
+    def deploy(self):
+        """ Deploy containers
+        """
+        for artifact in self.marathon_artifacts:
+            url = urlparse.urljoin(self.marathon_api, "apps/")
+
+            if self.dryrun:
+                logger.info("DRY-RUN: %s", url)
+                return
+
+            logger.debug("Deploying appid: %s", artifact["id"])
+            res = requests.post(url, json=artifact)
+            if res.status_code == 201:
+                logger.info("Marathon app %s sucessfully deployed.", artifact["id"])
+            else:
+                msg = "Error deploying app: %s, Marathon API response %s - %s" % (artifact["id"], res.status_code, res.text)
+                logger.error(msg)
+                raise ProviderFailedException(msg)
+
+    def undeploy(self):
+        """ Undeploy containers
+        """
+        for artifact in self.marathon_artifacts:
+            url = urlparse.urljoin(self.marathon_api, "apps/%s" % artifact["id"])
+
+            if self.dryrun:
+                logger.info("DRY-RUN: %s", url)
+                return
+
+            logger.debug("Deleting appid: %s", artifact["id"])
+            res = requests.delete(url, json=artifact)
+            if res.status_code == 200:
+                logger.info("Marathon app %s sucessfully deleted.", artifact["id"])
+            else:
+                msg = "Error deleting app: %s, Marathon API response %s - %s" % (artifact["id"], res.status_code, res.text)
+                logger.error(msg)
+                raise ProviderFailedException(msg)
+
+    def _process_artifacts(self):
+        """
+        Parse and validate Marathon artifacts and save them to self.marathon_artifacts
+        """
+        for artifact in self.artifacts:
+            logger.debug("Procesesing artifact: %s", artifact)
+            data = None
+            with open(os.path.join(self.path, artifact), "r") as fp:
+                try:
+                    data = anymarkup.parse(fp)
+                    logger.debug("Parsed artifact %s", data)
+                    # every marathon app has to have id
+                    # 'id' key  is also used for showing messages
+                    if "id" not in data.keys():
+                        raise ProviderFailedException("Error processing %s artifact. There is no id" % artifact)
+                except Exception:
+                    msg = "Error processing %s artifcat. Error:" % os.path.join(self.path, artifact)
+                    printErrorStatus(msg)
+                    raise
+                self.marathon_artifacts.append(data)

@@ -1,12 +1,12 @@
 # Providers
 
-This chapter includes linkes to documentation on how to use and configure the 
+This chapter includes linkes to documentation on how to use and configure the
 providers that are supported by Atomic App. The linked documentation
 will give you a short overview of all available providers and how
 to use them.
 
-**NOTE**: Not all Atomic Apps must support each provider. One Atomic App may 
-only include deployment information for OpenShift while another supports 
+**NOTE**: Not all Atomic Apps must support each provider. One Atomic App may
+only include deployment information for OpenShift while another supports
 OpenShift and Kubernetes.
 
 ## List of providers
