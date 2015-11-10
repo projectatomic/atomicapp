@@ -66,7 +66,7 @@ class NuleculeBase(object):
         for group, group_vars in from_config.items():
             to_config[group] = to_config.get(group) or {}
             for key, value in (group_vars or {}).items():
-                if key not in to_config[group]:
+                if to_config[group].get(key) is None:
                     to_config[group][key] = value
 
     def get_context(self):
