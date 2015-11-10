@@ -11,14 +11,13 @@ Currently, **atomicapp** has support for multiple providers:
 ## Adding a new provider
 
 It's pretty simple to add a new provider to **atomicapp**.
-Create a new file, say, ``your_provider.py`` in this package, i.e.,
-``atomicapp.providers``, and edit it as required, following the snippet
+Create a new file, say, ``your_provider.py`` in the directory
+``atomicapp/providers/`` and edit it as required, following the snippet
 below.
 
 ```
 import logging
 import os
-import subprocess
 from atomicapp.plugins import Provider
 
 logger = logging.getLogger(__name__)
@@ -50,19 +49,20 @@ class YourProvider(Provider):
         ...
         ...
         ...
-        from artifact in self.artifacts:
+        for artifact in self.artifacts:
             artifact_path = os.path.join(self.path, artifact)
             # Do something with artifact file
             ...
             ...
             ...
-            cmd = ['command', 'to', 'deploy', 'artifact', 'on',
-                   'new-provider']
             if self.dryrun:
                 # print log
-                logger.info('DRY-RUN: %s', " ".join(cmd))
+                logger.info(
+                    'DRY-RUN: %s',
+                    'some message about how container will be deployed')
             else:
-                subprocess.check_call(cmd)
+                # deploy container
+                ...
         ...
         ...
         ...
@@ -80,19 +80,20 @@ class YourProvider(Provider):
         ...
         ...
         ...
-        from artifact in self.artifacts:
+        for artifact in self.artifacts:
             artifact_path = os.path.join(self.path, artifact)
             # Do something with artifact file
             ...
             ...
             ...
-            cmd = ['command', 'to', 'undeploy', 'artifact', 'on',
-                   'new-provider']
             if self.dryrun:
                 # print log
-                logger.info('DRY-RUN: %s', " ".join(cmd))
+                logger.info(
+                    'DRY-RUN: %s',
+                    'some message about how container will be undeployed')
             else:
-                subprocess.check_call(cmd)
+                # undeploy container
+                ...
         ...
         ...
         ...
