@@ -1,3 +1,4 @@
-flake8>=2.2.4,<=2.4.1
+flake8
+mock
 pep8
 pytest-cov
