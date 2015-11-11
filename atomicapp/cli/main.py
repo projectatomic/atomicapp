@@ -32,7 +32,8 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
                                  HOST_DIR,
-                                 LOCK_FILE)
+                                 LOCK_FILE,
+                                 PROVIDERS)
 from atomicapp.nulecule import NuleculeManager
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
@@ -167,7 +168,7 @@ class CLI():
         parser_run.add_argument(
             "--provider",
             dest="cli_provider",
-            choices=['docker', 'kubernetes', 'openshift'],
+            choices=PROVIDERS,
             help="The provider to use. Overrides provider value in answerfile.")
 
         parser_run.add_argument(
@@ -231,7 +232,7 @@ class CLI():
         parser_stop.add_argument(
             "--provider",
             dest="cli_provider",
-            choices=['docker', 'kubernetes', 'openshift'],
+            choices=PROVIDERS,
             help="The provider to use. Overrides provider value in answerfile.")
 
         parser_stop.add_argument(
