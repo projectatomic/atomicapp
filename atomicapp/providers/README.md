@@ -5,8 +5,6 @@ Currently, **atomicapp** has support for multiple providers:
 - docker
 - kubernetes
 - openshift
-- docker-compose
-
 
 ## Adding a new provider
 
