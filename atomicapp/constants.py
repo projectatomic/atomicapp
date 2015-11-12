@@ -55,3 +55,5 @@ DEFAULT_ANSWERS = {
     }
 }
 PROVIDER_CONFIG_KEY = "providerconfig"
+
+PROVIDERS = ['docker', 'kubernetes', 'openshift']
