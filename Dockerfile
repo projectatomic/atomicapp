@@ -1,4 +1,4 @@
-FROM centos:centos7
+FROM centos:7
 
 MAINTAINER Red Hat, Inc. <container-tools@redhat.com>
 
@@ -11,20 +11,24 @@ LABEL io.projectatomic.nulecule.atomicappversion="0.2.1" \
 
 WORKDIR /opt/atomicapp
 
-# add all of Atomic App's files to the container image
-ADD atomicapp/ /opt/atomicapp/atomicapp/
-ADD setup.py requirements.txt /opt/atomicapp/
+# Add the requirements file into the container
+ADD requirements.txt /opt/atomicapp/
 
-# lets install pip, and gcc for the native extensions
-# and remove all after use
-RUN yum -y install epel-release && \
-    yum install -y --setopt=tsflags=nodocs python-pip python-setuptools docker gcc && \
-    python setup.py install && \
-    yum remove -y gcc cpp glibc-devel glibc-headers kernel-headers libmpc mpfr python-pip && \
+# Install needed requirements
+RUN yum install -y epel-release \
+    yum install -y --setopt=tsflags=nodocs docker && \
+    yum install -y --setopt=tsflags=nodocs $(sed s/^/python-/ requirements.txt) && \
     yum clean all
 
 WORKDIR /atomicapp
 VOLUME /atomicapp
 
+ENV PYTHONPATH  /opt/atomicapp/
+
 # the entrypoint
-ENTRYPOINT ["/usr/bin/atomicapp"]
+ENTRYPOINT ["/usr/bin/python", "/opt/atomicapp/atomicapp/cli/main.py"]
+
+# Add all of Atomic App's files to the container image
+# NOTE: Do this last so rebuilding after development is fast
+ADD atomicapp/ /opt/atomicapp/atomicapp/
+ADD setup.py requirements.txt /opt/atomicapp/

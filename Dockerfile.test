@@ -1,16 +1,16 @@
-FROM fedora:22
+FROM centos:7
 
-RUN dnf -y install python-pip python-mock && \
-    dnf -y clean all
-
+# Add the requirements files into the container
 ADD ./requirements.txt /opt/atomicapp/
+ADD ./test-requirements.txt /opt/atomicapp/
 
 WORKDIR /opt/atomicapp
 
-RUN pip install -r requirements.txt --use-mirrors && \
-    pip install pytest-cov coveralls --use-mirrors && \
-    pip install pep8 --use-mirrors && \
-    pip install flake8 --use-mirrors
+# Install needed requirements
+RUN yum install -y epel-release && \
+    yum install -y --setopt=tsflags=nodocs $(sed s/^/python-/ requirements.txt) && \
+    yum install -y --setopt=tsflags=nodocs $(sed s/^/python-/ test-requirements.txt) && \
+    yum clean all
 
 RUN mkdir /run/lock
 

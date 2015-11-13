@@ -9,9 +9,8 @@ LABEL io.projectatomic.nulecule.atomicappversion="0.2.1" \
 
 WORKDIR /opt/atomicapp
 
-# add all of Atomic App's files to the container image
-ADD atomicapp/ /opt/atomicapp/atomicapp/
-ADD setup.py requirements.txt /opt/atomicapp/
+# Add the requirements file into the container
+ADD requirements.txt /opt/atomicapp/
 
 # add jessie-backports for Docker package
 RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list
@@ -19,14 +18,21 @@ RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/so
 # lets install pip, and gcc for the native extensions
 # and remove all after use
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends docker.io python-pip python-setuptools gcc && \
-    python setup.py install && \
-    apt-get remove --purge -y python-pip gcc python-setuptools && \
+    apt-get install -y --no-install-recommends docker.io python-pip gcc && \
+    pip install -r /opt/atomicapp/requirements.txt && \
+    apt-get remove --purge -y gcc && \
     apt-get autoremove -y && \
     apt-get clean -y
 
 WORKDIR /atomicapp
 VOLUME /atomicapp
 
+ENV PYTHONPATH  /opt/atomicapp/
+
 # the entrypoint
-ENTRYPOINT ["/usr/bin/atomicapp"]
+ENTRYPOINT ["/usr/bin/python", "/opt/atomicapp/atomicapp/cli/main.py"]
+
+# Add all of Atomic App's files to the container image
+# NOTE: Do this last so rebuilding after development is fast
+ADD atomicapp/ /opt/atomicapp/atomicapp/
+ADD setup.py requirements.txt /opt/atomicapp/
