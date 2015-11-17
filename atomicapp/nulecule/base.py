@@ -12,7 +12,10 @@ from atomicapp.constants import (APP_ENT_PATH,
                                  GLOBAL_CONF,
                                  MAIN_FILE,
                                  RESOURCE_KEY,
-                                 PARAMS_KEY)
+                                 PARAMS_KEY,
+                                 NAME_KEY,
+                                 INHERIT_KEY,
+                                 ARTIFACTS_KEY)
 from atomicapp.utils import Utils
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
@@ -193,11 +196,11 @@ class Nulecule(NuleculeBase):
         """
         components = []
         for node in self.graph:
-            node_name = node['name']
+            node_name = node[NAME_KEY]
             source = Utils.getSourceImage(node)
             component = NuleculeComponent(
                 node_name, self.basepath, source,
-                node.get('params'), node.get('artifacts'))
+                node.get(PARAMS_KEY), node.get(ARTIFACTS_KEY))
             component.load(nodeps, dryrun)
             components.append(component)
         self.components = components
@@ -380,9 +383,9 @@ class NuleculeComponent(NuleculeBase):
                 artifact_paths.extend(self._get_artifact_paths_for_path(path))
 
             # Inherit if inherit name is referenced
-            elif isinstance(artifact, dict) and artifact.get('inherit') and \
-                    isinstance(artifact.get('inherit'), list):
-                for inherited_provider_key in artifact.get('inherit'):
+            elif isinstance(artifact, dict) and artifact.get(INHERIT_KEY) and \
+                    isinstance(artifact.get(INHERIT_KEY), list):
+                for inherited_provider_key in artifact.get(INHERIT_KEY):
                     artifact_paths.extend(
                         self.get_artifact_paths_for_provider(
                             inherited_provider_key)

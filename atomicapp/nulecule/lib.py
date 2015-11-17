@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from atomicapp.constants import (GLOBAL_CONF, DEFAULT_PROVIDER,
-                                 DEFAULT_ANSWERS)
+                                 DEFAULT_ANSWERS, NAME_KEY,
+                                 DEFAULTNAME_KEY, PROVIDER_KEY)
 from atomicapp.utils import Utils
 from atomicapp.plugin import Plugin
 
@@ -38,16 +39,16 @@ class NuleculeBase(object):
         """
         config = config or DEFAULT_ANSWERS
         for param in self.params:
-            value = config.get(self.namespace, {}).get(param['name']) or \
-                config.get(GLOBAL_CONF, {}).get(param['name'])
+            value = config.get(self.namespace, {}).get(param[NAME_KEY]) or \
+                config.get(GLOBAL_CONF, {}).get(param[NAME_KEY])
             if value is None and (ask or (
-                    not skip_asking and param.get('default') is None)):
-                value = Utils.askFor(param['name'], param)
+                    not skip_asking and param.get(DEFAULTNAME_KEY) is None)):
+                value = Utils.askFor(param[NAME_KEY], param)
             elif value is None:
-                value = param.get('default')
+                value = param.get(DEFAULTNAME_KEY)
             if config.get(self.namespace) is None:
                 config[self.namespace] = {}
-            config[self.namespace][param['name']] = value
+            config[self.namespace][param[NAME_KEY]] = value
         self.config = config
 
     def merge_config(self, to_config, from_config):
@@ -74,7 +75,7 @@ class NuleculeBase(object):
         Get context data from config data for rendering an artifact.
         """
         context = {}
-        context.update(self.config.get('general') or {})
+        context.update(self.config.get(GLOBAL_CONF) or {})
         context.update(self.config.get(self.namespace) or {})
         return context
 
@@ -90,8 +91,8 @@ class NuleculeBase(object):
             tuple: (provider key, provider instance)
         """
         if provider_key is None:
-            provider_key = self.config.get('general', {}).get(
-                'provider', DEFAULT_PROVIDER)
+            provider_key = self.config.get(GLOBAL_CONF, {}).get(
+                PROVIDER_KEY, DEFAULT_PROVIDER)
         provider_class = plugin.getProvider(provider_key)
         return provider_key, provider_class(
             self.get_context(), self.basepath, dry)
