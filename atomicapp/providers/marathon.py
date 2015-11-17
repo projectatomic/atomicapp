@@ -60,9 +60,12 @@ class Marathon(Provider):
             logger.debug("Deploying appid: %s", artifact["id"])
             res = requests.post(url, json=artifact)
             if res.status_code == 201:
-                logger.info("Marathon app %s sucessfully deployed.", artifact["id"])
+                logger.info(
+                    "Marathon app %s sucessfully deployed.",
+                    artifact["id"])
             else:
-                msg = "Error deploying app: %s, Marathon API response %s - %s" % (artifact["id"], res.status_code, res.text)
+                msg = "Error deploying app: %s, Marathon API response %s - %s" % (
+                    artifact["id"], res.status_code, res.text)
                 logger.error(msg)
                 raise ProviderFailedException(msg)
 
@@ -70,7 +73,10 @@ class Marathon(Provider):
         """ Undeploy containers
         """
         for artifact in self.marathon_artifacts:
-            url = urlparse.urljoin(self.marathon_api, "apps/%s" % artifact["id"])
+            url = urlparse.urljoin(
+                self.marathon_api,
+                "apps/%s" %
+                artifact["id"])
 
             if self.dryrun:
                 logger.info("DRY-RUN: %s", url)
@@ -79,9 +85,12 @@ class Marathon(Provider):
             logger.debug("Deleting appid: %s", artifact["id"])
             res = requests.delete(url, json=artifact)
             if res.status_code == 200:
-                logger.info("Marathon app %s sucessfully deleted.", artifact["id"])
+                logger.info(
+                    "Marathon app %s sucessfully deleted.",
+                    artifact["id"])
             else:
-                msg = "Error deleting app: %s, Marathon API response %s - %s" % (artifact["id"], res.status_code, res.text)
+                msg = "Error deleting app: %s, Marathon API response %s - %s" % (
+                    artifact["id"], res.status_code, res.text)
                 logger.error(msg)
                 raise ProviderFailedException(msg)
 
@@ -99,9 +108,11 @@ class Marathon(Provider):
                     # every marathon app has to have id
                     # 'id' key  is also used for showing messages
                     if "id" not in data.keys():
-                        raise ProviderFailedException("Error processing %s artifact. There is no id" % artifact)
+                        raise ProviderFailedException(
+                            "Error processing %s artifact. There is no id" % artifact)
                 except Exception:
-                    msg = "Error processing %s artifcat. Error:" % os.path.join(self.path, artifact)
+                    msg = "Error processing %s artifcat. Error:" % os.path.join(
+                        self.path, artifact)
                     printErrorStatus(msg)
                     raise
                 self.marathon_artifacts.append(data)
