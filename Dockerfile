@@ -31,4 +31,3 @@ ENTRYPOINT ["/usr/bin/python", "/opt/atomicapp/atomicapp/cli/main.py"]
 # Add all of Atomic App's files to the container image
 # NOTE: Do this last so rebuilding after development is fast
 ADD atomicapp/ /opt/atomicapp/atomicapp/
-ADD setup.py requirements.txt /opt/atomicapp/
