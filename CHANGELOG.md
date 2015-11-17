@@ -1,3 +1,37 @@
+## Atomic App 0.2.2 (11-17-2015)
+
+This is our first release since our major refactor in 0.2.1.
+
+This release fixes numerous bugs as well as introduces some refactoring to our Dockerfile's and how we handle dependencies.
+
+Please see below for a summary of commits from 0.2.1 to 0.2.2.
+
+```
+Charlie Drage <charlie@charliedrage.com> (1):
+      raise exception when running run --dry-run
+
+Dusty Mabe <dusty@dustymabe.com> (7):
+      Adds more checking for docker client/server sync issues.
+      utils: Adds in AtomicAppUtilsException class.
+      Reworks answers file processing.
+      Removes dryrun from _write_answers() function.
+      Remove specific versions from required libraries.
+      Reworks testing Dockerfile and test requirements.
+      Reworks Dockerfiles.
+
+Ratnadeep Debnath <rtnpro@gmail.com> (4):
+      Added docs for provider and adding a new provider
+      Merge config sets value for key if it or it's value is missing at source.
+      Fixes in README for provider:
+      Removing docker-compose provider from supported providers list.
+
+Subin M <subin@apache.org> (1):
+      remove unused method printAnswerFile
+
+Tomas Kral <tkral@redhat.com> (1):
+      add  PROVIDERS constant
+```
+
 ## Atomic App 0.2.1 (11-04-2015)
 
 This is a major release for Atomic App that refactors most of the base code as well as adds numerous features.
