@@ -24,6 +24,7 @@ import logging
 import os
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus
+from atomicapp.constants import PROVIDER_API_KEY
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ class Marathon(Provider):
     def init(self):
         logger.debug("Given config: %s", self.config)
         if self.config.get("providerurl"):
-            self.marathon_api = self.config.get("providerurl")
+            self.marathon_api = self.config.get(PROVIDER_API_KEY)
             self.marathon_api = urlparse.urljoin(self.marathon_api, "v2/")
         logger.debug("marathon_api = %s", self.marathon_api)
         self._process_artifacts()
