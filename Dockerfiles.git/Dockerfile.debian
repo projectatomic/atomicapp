@@ -12,7 +12,7 @@ LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
 WORKDIR /opt/atomicapp
 
 # Add the requirements file into the container
-ADD requirements.txt /opt/atomicapp/
+ADD requirements.txt ./
 
 # add jessie-backports for Docker package
 RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list

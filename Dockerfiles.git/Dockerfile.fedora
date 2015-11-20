@@ -14,7 +14,7 @@ LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
 WORKDIR /opt/atomicapp
 
 # Add the requirements file into the container
-ADD requirements.txt /opt/atomicapp/
+ADD requirements.txt ./
 
 # Install needed requirements
 RUN dnf install -y --setopt=tsflags=nodocs docker && \

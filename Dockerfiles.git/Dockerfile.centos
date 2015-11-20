@@ -14,10 +14,10 @@ LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
 WORKDIR /opt/atomicapp
 
 # Add the requirements file into the container
-ADD requirements.txt /opt/atomicapp/
+ADD requirements.txt ./
 
 # Install needed requirements
-RUN yum install -y epel-release \
+RUN yum install -y epel-release && \
     yum install -y --setopt=tsflags=nodocs docker && \
     yum install -y --setopt=tsflags=nodocs $(sed s/^/python-/ requirements.txt) && \
     yum clean all
