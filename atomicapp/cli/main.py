@@ -146,9 +146,8 @@ class CLI():
             "--answers-format",
             dest="answers_format",
             default=ANSWERS_FILE_SAMPLE_FORMAT,
-            help=(
-                "The format for the answers.conf.sample file.Default is "
-                "'ini', Valid formats are 'ini', 'json', 'xml', 'yaml'."))
+            choices=['ini', 'json', 'xml', 'yml'],
+            help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
 
         subparsers = self.parser.add_subparsers(dest="action")
 
