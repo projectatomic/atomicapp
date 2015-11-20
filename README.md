@@ -57,7 +57,7 @@ existing path, it looks for `Nulecule` file there instead of pulling anything.
 * `APP` Name of the image containing the application (f.e. `vpavlin/wp-app`)
 * `PATH` Path to a directory with installed (i.e. result of `atomicapp install ...`) app
 
-Action `run` performs `install` prior it's own tasks are executed if `APP` is given. When `run` is selected, providers' code is invoked and containers are deployed.
+Action `run` performs `install` prior its own tasks are executed if `APP` is given. When `run` is selected, providers' code is invoked and containers are deployed.
 
 ## Providers
 

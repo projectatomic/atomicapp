@@ -28,7 +28,7 @@ class Nulecule(NuleculeBase):
     This represents an application compliant with Nulecule specification.
     A Nulecule instance can have instances of Nulecule and Nulecule as
     components. A Nulecule instance knows everything about itself and its
-    componenents, but does not have access to it's parent's scope.
+    componenents, but does not have access to its parent's scope.
     """
     def __init__(self, id, specversion, metadata, graph, basepath,
                  requirements=None, params=None, config=None,
@@ -223,9 +223,9 @@ class Nulecule(NuleculeBase):
 class NuleculeComponent(NuleculeBase):
     """
     Represents a component in a Nulecule application. It receives props
-    from it's parent and can add new props and override props at it's local
+    from its parent and can add new props and override props at its local
     scope. It does not have direct access to props of sibling Nulecule
-    components, but can request the value of sibling's property from it's
+    components, but can request the value of sibling's property from its
     parent.
     """
     def __init__(self, name, basepath, source=None, params=None,
@@ -462,7 +462,7 @@ class NuleculeComponent(NuleculeBase):
         """
         Render artifact file at path with context to a file at the same
         level. The rendered file has a name a dot '.' prefixed to the
-        name of the the source artifact file.
+        name of the source artifact file.
 
         Args:
             path (str): path to the artifact file
