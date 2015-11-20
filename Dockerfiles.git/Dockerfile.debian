@@ -2,7 +2,9 @@ FROM debian:jessie
 
 MAINTAINER Red Hat, Inc. <container-tools@redhat.com>
 
-LABEL io.projectatomic.nulecule.atomicappversion="0.2.2" \
+ENV ATOMICAPPVERSION="0.2.2"
+
+LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
       RUN="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --net=host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} run \${OPT3} \${IMAGE}" \
       STOP="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --net=host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} stop \${OPT3}" \
       INSTALL="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} install \${OPT3} \${IMAGE}"
