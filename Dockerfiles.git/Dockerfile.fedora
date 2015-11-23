@@ -1,8 +1,12 @@
-FROM debian:jessie
+FROM fedora:23
 
 MAINTAINER Red Hat, Inc. <container-tools@redhat.com>
 
-LABEL io.projectatomic.nulecule.atomicappversion="0.2.2" \
+ENV ATOMICAPPVERSION="0.2.2"
+
+LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
+      io.openshift.generate.job=true \
+      io.openshift.generate.token.as=env:TOKEN_ENV_VAR \
       RUN="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --net=host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} run \${OPT3} \${IMAGE}" \
       STOP="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --net=host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} stop \${OPT3}" \
       INSTALL="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} install \${OPT3} \${IMAGE}"
@@ -10,19 +14,12 @@ LABEL io.projectatomic.nulecule.atomicappversion="0.2.2" \
 WORKDIR /opt/atomicapp
 
 # Add the requirements file into the container
-ADD requirements.txt /opt/atomicapp/
+ADD requirements.txt ./
 
-# add jessie-backports for Docker package
-RUN echo "deb http://http.debian.net/debian jessie-backports main" > /etc/apt/sources.list.d/backports.list
-
-# lets install pip, and gcc for the native extensions
-# and remove all after use
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends docker.io python-pip gcc && \
-    pip install -r /opt/atomicapp/requirements.txt && \
-    apt-get remove --purge -y gcc && \
-    apt-get autoremove -y && \
-    apt-get clean -y
+# Install needed requirements
+RUN dnf install -y --setopt=tsflags=nodocs docker && \
+    dnf install -y --setopt=tsflags=nodocs $(sed s/^/python-/ requirements.txt) && \
+    dnf clean all
 
 WORKDIR /atomicapp
 VOLUME /atomicapp
@@ -35,4 +32,3 @@ ENTRYPOINT ["/usr/bin/python", "/opt/atomicapp/atomicapp/cli/main.py"]
 # Add all of Atomic App's files to the container image
 # NOTE: Do this last so rebuilding after development is fast
 ADD atomicapp/ /opt/atomicapp/atomicapp/
-ADD setup.py requirements.txt /opt/atomicapp/
