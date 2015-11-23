@@ -13,7 +13,9 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  DEFAULT_ANSWERS,
                                  DEFAULT_NAMESPACE,
                                  DEFAULT_PROVIDER,
-                                 MAIN_FILE)
+                                 MAIN_FILE,
+                                 NAMESPACE_KEY,
+                                 PROVIDER_KEY)
 from atomicapp.nulecule.base import Nulecule
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
@@ -253,8 +255,8 @@ class NuleculeManager(object):
         """
         _config = copy.deepcopy(config)
         _config[GLOBAL_CONF] = config.get(GLOBAL_CONF) or {}
-        _config[GLOBAL_CONF]['provider'] = cli_provider or \
-            _config[GLOBAL_CONF].get('provider') or DEFAULT_PROVIDER
-        _config[GLOBAL_CONF]['namespace'] = _config[GLOBAL_CONF].get(
-            'namespace') or DEFAULT_NAMESPACE
+        _config[GLOBAL_CONF][PROVIDER_KEY] = cli_provider or \
+            _config[GLOBAL_CONF].get(PROVIDER_KEY) or DEFAULT_PROVIDER
+        _config[GLOBAL_CONF][NAMESPACE_KEY] = _config[GLOBAL_CONF].get(
+            NAMESPACE_KEY) or DEFAULT_NAMESPACE
         return _config
