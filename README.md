@@ -65,7 +65,7 @@ Providers represent various deployment targets. They can be added by placing a f
 
 ## Dependencies
 
-Please see [REQUIREMENTS](https://github.com/projectatomic/atomicapp/master/docs/requirements.md) for current Atomic App dependencies.
+Please see [REQUIREMENTS](https://github.com/projectatomic/atomicapp/blob/master/docs/requirements.md) for current Atomic App dependencies.
 
 ##Communication channels
 
