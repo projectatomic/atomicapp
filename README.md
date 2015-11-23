@@ -65,7 +65,7 @@ Providers represent various deployment targets. They can be added by placing a f
 
 ## Dependencies
 
-As of Version 0.1.1 Atomic App uses [Python 2.7.5](https://docs.python.org/2/) and [Anymarkup](https://github.com/bkabrda/anymarkup) and lockfile.
+Please see [REQUIREMENTS](https://github.com/projectatomic/atomicapp/master/docs/requirements.md) for current Atomic App dependencies.
 
 ##Communication channels
 
