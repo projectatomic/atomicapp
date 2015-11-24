@@ -220,6 +220,7 @@ class Utils(object):
         # we were asked not to.
         if checkexitcode:
             if ec != 0:
+                printErrorStatus("cmd failed: %s" % str(cmd))  # For cockpit
                 raise AtomicAppUtilsException(
                     "cmd: %s failed: \n%s" % (str(cmd), stderr))
 
