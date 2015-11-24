@@ -5,9 +5,6 @@ from atomicapp.constants import (GLOBAL_CONF, DEFAULT_PROVIDER,
 from atomicapp.utils import Utils
 from atomicapp.plugin import Plugin
 
-plugin = Plugin()
-plugin.load_plugins()
-
 
 class NuleculeBase(object):
     """
@@ -15,6 +12,8 @@ class NuleculeBase(object):
     atomicapp.nulecule.base.
     """
     def __init__(self, basepath, params, namespace):
+        self.plugin = Plugin()
+        self.plugin.load_plugins()
         self.basepath = basepath
         self.params = params or []
         self.namespace = namespace
@@ -93,7 +92,7 @@ class NuleculeBase(object):
         if provider_key is None:
             provider_key = self.config.get(GLOBAL_CONF, {}).get(
                 PROVIDER_KEY, DEFAULT_PROVIDER)
-        provider_class = plugin.getProvider(provider_key)
+        provider_class = self.plugin.getProvider(provider_key)
         return provider_key, provider_class(
             self.get_context(), self.basepath, dry)
 
