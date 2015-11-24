@@ -165,14 +165,22 @@ class OpenShiftProvider(Provider):
             url = urlparse.urljoin(self.openshift_api, "namespaces/")
             url = urlparse.urljoin(url, "%s/" % namespace)
             url = urlparse.urljoin(url, "routes/")
-        elif kind == "Service":
-            url = urlparse.urljoin(self.kubernetes_api, "namespaces/")
-            url = urlparse.urljoin(url, "%s/" % namespace)
-            url = urlparse.urljoin(url, "services/")
         elif kind == "Template":
             url = urlparse.urljoin(self.openshift_api, "namespaces/")
             url = urlparse.urljoin(url, "%s/" % namespace)
             url = urlparse.urljoin(url, "templates/")
+        elif kind == "Service":
+            url = urlparse.urljoin(self.kubernetes_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "services/")
+        elif kind == "Pod":
+            url = urlparse.urljoin(self.kubernetes_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "pods/")
+        elif kind == "Persistentvolumeclaim":
+            url = urlparse.urljoin(self.kubernetes_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "persistentvolumeclaims/")
         else:
             logger.error("UNKNOWN kind %s", kind)
 
