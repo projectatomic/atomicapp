@@ -30,6 +30,7 @@ from distutils.spawn import find_executable
 
 import logging
 
+from subprocess import Popen, PIPE
 from constants import (APP_ENT_PATH,
                        CACHE_DIR,
                        EXTERNAL_APP_DIR,
@@ -192,6 +193,37 @@ class Utils(object):
     def sanitizePath(path):
         if path.startswith("file://"):
             return path[7:]
+
+    @staticmethod
+    def run_cmd(cmd, checkexitcode=True, stdin=None):
+        """
+        Runs a command with its arguments and returns the results. If
+        the command gives a bad exit code then a CalledProcessError
+        exceptions is raised, just like if check_call() were called.
+
+        Args:
+            checkexitcode: Raise exception on bad exit code
+            stdin: input string to pass to stdin of the command
+
+        Returns:
+            ec:     The exit code from the command
+            stdout: stdout from the command
+            stderr: stderr from the command
+        """
+        p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate(stdin)
+        ec = p.returncode
+        logger.debug("\n<<< stdout >>>\n%s<<< end >>>\n", stdout)
+        logger.debug("\n<<< stderr >>>\n%s<<< end >>>\n", stderr)
+
+        # If the exit code is an error then raise exception unless
+        # we were asked not to.
+        if checkexitcode:
+            if ec != 0:
+                raise AtomicAppUtilsException(
+                    "cmd: %s failed: \n%s" % (str(cmd), stderr))
+
+        return ec, stdout, stderr
 
     @staticmethod
     def askFor(what, info):
