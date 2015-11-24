@@ -8,21 +8,24 @@ Not all Atomic Apps must support each provider: one Atomic App may only include 
 Atomic App 0.2.3 includes three providers:
 
   * Docker
-
   * Kubernetes
-
   * OpenShift 3
 
+The Docker and Kubernetes providers assume that you install and run the Atomic App on a host that is part of the backend cluster or runs docker directly.
 
-All providers assume that you install and run the Atomic App on a host that is part of the backend cluster or runs docker directly. By now we do not support remote deployments.
+OpenShift may be run in two modes.
+
+1. OpenShift native, using `oc new-app` command
+1. Atomic CLI
+
+In native mode an application may be launched using the `oc new-app` command and it will be deployed on a pod. In Atomic mode applications are run like other providers using a local `answers.conf` file.
 
 ## Choosing and configuring a provider
 While deploying an Atomic App you can choose one of the providers by setting it in `answers.conf`:
 
 ### OpenShift
 
-For OpenShift a configuration file is required. You need to specify
-something like the following in your `answers.conf` file:
+Note: **skip this configuration** if running in *native mode*. To run the application using the Atomic CLI a configuration file is required. You need to specify something like the following in your `answers.conf` file:
 
 ```
 [general]
@@ -125,8 +128,17 @@ This command undeploys the app in Kubernetes cluster in specified namespace. For
 
 **Features**
 
-The OpenShift3 Provider will deploy and run an Atomic App on an OpenShift3 instance provided via an OpenShift3 configuration file. An OpenShift3 configuration file is written to a disk provided that you have logged in see [osc login announcement](http://lists.openshift.redhat.com/openshift-archives/users/2015-March/msg00014.html)
+The primary use case of the OpenShift3 Provider is to run the Atomic App image natively using the `oc new-app` command. Here is a diagram of how it works.
 
+![OpenShift V3 and Atomic App](https://docs.google.com/drawings/d/13mfTkxv_M3jM6WMsgpJtoKkX4nuVuTPcPSfsebN3qKA/pub?w=884&h=320)
+
+1. The Atomic App image has two metadata LABELs (see below).
+1. When `oc new-app` is run the Atomic App image is remotely inspected.
+1. The OpenShift Master run the Atomic App image based on the LABELs.
+1. The user's token is passed into the resulting pod as a secret to authorize API calls.
+1. The Atomic App pod makes API calls to the OpenShift Master to create or run the application.
+
+An Atomic App may also be deployed and run using the `atomic` CLI provided via an OpenShift3 configuration file. An OpenShift3 configuration file is written to a disk provided that you have logged in see [osc login announcement](http://lists.openshift.redhat.com/openshift-archives/users/2015-March/msg00014.html)
 
 You need to provide a path to a copy of `.config/openshift/.config` as `providerconfig` so that the provider may use this configuration to deploy and run the Atomic App.
 
