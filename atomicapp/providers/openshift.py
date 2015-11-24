@@ -18,12 +18,13 @@
 """
 
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.utils import Utils, find_binary
+from atomicapp.utils import printErrorStatus
 
-from collections import OrderedDict
 import os
 import anymarkup
-from distutils.spawn import find_executable
+import requests
+import urlparse
+from atomicapp.constants import PROVIDER_API_KEY, ACCESS_TOKEN_KEY, DEFAULT_NAMESPACE
 
 import logging
 
@@ -36,91 +37,148 @@ class OpenShiftProvider(Provider):
     cli = None
     config_file = None
     template_data = None
+    providerapi = "https://127.0.0.1:8443"
+    openshift_api_version = "v1"
+    openshift_api = None
+    kubernetes_api_version = "v1"
+    kubernetes_api = None
+    access_token = None
+    namespace = DEFAULT_NAMESPACE
+
+    # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
+    openshift_artifacts = {}
 
     def init(self):
-        self.cli = find_executable(self.cli_str)
-        if self.container and not self.cli:
-            host_path = []
-            for path in os.environ.get("PATH").split(":"):
-                host_path.append(os.path.join(Utils.getRoot(), path.lstrip("/")))
-            self.cli = find_binary(self.cli_str, path=":".join(host_path))
-            if not self.cli:
-                # if run as non-root we need a symlink in the container
-                os.symlink(os.path.join(Utils.getRoot(), "usr/bin/oc"), "/usr/bin/oc")
-                self.cli = "/usr/bin/oc"
+        if self.config.get(PROVIDER_API_KEY):
+            self.providerapi = self.config.get(PROVIDER_API_KEY)
 
-        if not self.dryrun:
-            if not self.cli or not os.access(self.cli, os.X_OK):
-                raise ProviderFailedException("Command %s not found" % self.cli)
-            else:
-                logger.debug("Using %s to run OpenShift commands.", self.cli)
+        self.openshift_api = urlparse.urljoin(self.providerapi, "oapi/")
+        self.openshift_api = urlparse.urljoin(self.openshift_api, "%s/" % self.openshift_api_version)
 
-            # Check if the required OpenShift config file is accessible.
-            self.checkConfigFile()
+        self.kubernetes_api = urlparse.urljoin(self.providerapi, "api/")
+        self.kubernetes_api = urlparse.urljoin(self.kubernetes_api, "%s/" % self.kubernetes_api_version)
 
-    def _callCli(self, path):
-        cmd = [self.cli, "--config=%s" % self.config_file, "create", "-f", path]
-
-        if self.dryrun:
-            logger.info("Calling: %s", " ".join(cmd))
+        if self.config.get(ACCESS_TOKEN_KEY):
+            self.access_token = self.config.get(ACCESS_TOKEN_KEY)
         else:
-            Utils.run_cmd(cmd, checkexitcode=True)
+            raise ProviderFailedException("No %s specified" % ACCESS_TOKEN_KEY)
 
-    def _processTemplate(self, path):
-        cmd = [self.cli, "--config=%s" % self.config_file, "process", "-f", path]
+        if self.config.get("namespace"):
+            self.namespace = self.config.get("namespace")
 
-        name = "config-%s" % os.path.basename(path)
-        output_path = os.path.join(self.path, name)
-        if self.cli and not self.dryrun:
-            ec, stdout, stderr = Utils.run_cmd(cmd, checkexitcode=True)
-            logger.debug("Writing processed template to %s", output_path)
-            with open(output_path, "w") as fp:
-                fp.write(stdout)
-        return name
+        logger.debug("openshift_api = %s", self.openshift_api)
 
-    def loadArtifact(self, path):
-        data = super(self.__class__, self).loadArtifact(path)
-        self.template_data = anymarkup.parse(data, force_types=None)
-        if "kind" in self.template_data and \
-                self.template_data["kind"].lower() == "template":
-            if "parameters" in self.template_data:
-                return anymarkup.serialize(
-                    self.template_data["parameters"], format="json")
-
-        return data
-
-    def saveArtifact(self, path, data):
-        if self.template_data:
-            if "kind" in self.template_data and \
-                    self.template_data["kind"].lower() == "template":
-                if "parameters" in self.template_data:
-                    passed_data = anymarkup.parse(data, force_types=None)
-                    self.template_data["parameters"] = passed_data
-                    data = anymarkup.serialize(
-                        self.template_data,
-                        format=os.path.splitext(path)[1].strip("."))  # FIXME
-
-        super(self.__class__, self).saveArtifact(path, data)
+        self._process_artifacts()
 
     def deploy(self):
-        kube_order = OrderedDict(
-            [("service", None), ("rc", None), ("pod", None)])  # FIXME
+        logger.debug("starting deploy")
+        for kind, objects in self.openshift_artifacts.iteritems():
+            for artifact in objects:
+                # use namespace from artifact if is specified tehere
+                # otherwise use namespace from answers.conf or default namespace
+                if "metadata" in artifact and "namespace" in artifact["metadata"]:
+                    namespace = artifact["metadata"]["namespace"]
+                else:
+                    namespace = self.namespace
+
+                url = self._get_url(namespace, kind)
+
+                if self.dryrun:
+                    logger.info("DRY-RUN: %s", url)
+                    continue
+                res = requests.post(url, json=artifact, verify=False)
+                if res.status_code == 201:
+                    logger.info(" %s sucessfully deployed.", res.content)
+                else:
+                    msg = "%s %s" % (res.status_code, res.content)
+                    logger.error(msg)
+                    raise ProviderFailedException(msg)
+
+    def undeploy(self):
+        logger.debug("starting undeploy")
+        for kind, objects in self.openshift_artifacts.iteritems():
+            for artifact in objects:
+                # use namespace from artifact if is specified tehere
+                # otherwise use namespace from answers.conf or default namespace
+                if "metadata" in artifact and "namespace" in artifact["metadata"]:
+                    namespace = artifact["metadata"]["namespace"]
+                else:
+                    namespace = self.namespace
+
+                if "metadata" in artifact and "namespace" in artifact["metadata"]:
+                    name = artifact["metadata"]["name"]
+                else:
+                    raise ProviderFailedException("Cannot undeploy. There is no name in artifact")
+
+                url = self._get_url(namespace, kind, name)
+
+                if self.dryrun:
+                    logger.info("DRY-RUN: %s", url)
+                    continue
+
+                res = requests.delete(url, verify=False)
+                if res.status_code == 200:
+                    logger.info(" %s sucessfully undeployed.", res.content)
+                else:
+                    msg = "%s %s" % (res.status_code, res.content)
+                    logger.error(msg)
+                    raise ProviderFailedException(msg)
+
+    def _process_artifacts(self):
+        """
+        process artifact files
+        save parsed artifacts to self.openshift_artifacts
+        """
         for artifact in self.artifacts:
+            logger.debug("Procesesing artifact: %s", artifact)
             data = None
-            artifact_path = os.path.join(self.path, artifact)
-            with open(artifact_path, "r") as fp:
-                data = anymarkup.parse(fp, force_types=None)
-            if "kind" in data:
-                if data["kind"].lower() == "template":
-                    logger.info("Processing template")
-                    artifact = self._processTemplate(artifact_path)
-                kube_order[data["kind"].lower()] = artifact
-            else:
-                raise ProviderFailedException("Malformed artifact file")
+            with open(os.path.join(self.path, artifact), "r") as fp:
+                try:
+                    data = anymarkup.parse(fp)
+                    # kind has to be specified in artifact
+                    if "kind" not in data.keys():
+                        raise ProviderFailedException(
+                            "Error processing %s artifact. There is no kind" % artifact)
+                    kind = data['kind'].title()
+                except Exception:
+                    msg = "Error processing %s artifact. Error:" % os.path.join(
+                        self.path, artifact)
+                    printErrorStatus(msg)
+                    raise
+                # add parsed artifact to dict
+                if kind not in self.openshift_artifacts.keys():
+                    self.openshift_artifacts[kind] = []
+                self.openshift_artifacts[kind].append(data)
 
-        for artifact in kube_order:
-            if not kube_order[artifact]:
-                continue
+    def _get_url(self, namespace, kind, name=None):
+        """
+        generate url
+        return either openshift api url or kubernetes api url for given kind and namespace
+        """
+        url = None
 
-            k8s_file = os.path.join(self.path, kube_order[artifact])
-            self._callCli(k8s_file)
+        if kind == "Deploymentconfig":
+            url = urlparse.urljoin(self.openshift_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "deploymentconfigs/")
+        elif kind == "Route":
+            url = urlparse.urljoin(self.openshift_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "routes/")
+        elif kind == "Service":
+            url = urlparse.urljoin(self.kubernetes_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "services/")
+        elif kind == "Template":
+            url = urlparse.urljoin(self.openshift_api, "namespaces/")
+            url = urlparse.urljoin(url, "%s/" % namespace)
+            url = urlparse.urljoin(url, "templates/")
+        else:
+            logger.error("UNKNOWN kind %s", kind)
+
+        if name:
+            url = urlparse.urljoin(url, name)
+
+        url = urlparse.urljoin(url, "?access_token={}".format(self.access_token))
+        logger.debug("url: %s", url)
+        return url

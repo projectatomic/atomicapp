@@ -27,11 +27,10 @@ something like the following in your `answers.conf` file:
 ```
 [general]
 provider: openshift
-providerconfig: /host/home/foo/.kube/config
+providerapi: https://10.1.2.2:8443
+accesstoken: sadfasdfasfasfdasfasfasdfsafasfd
 ```
 
-This specifies to Atomic App where to access the configuration file
-by using the `providerconfig` option.
 
 ### Kubernetes
 
