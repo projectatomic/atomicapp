@@ -42,9 +42,10 @@ class Marathon(Provider):
 
     def init(self):
         logger.debug("Given config: %s", self.config)
-        if self.config.get("providerurl"):
+        if self.config.get(PROVIDER_API_KEY):
             self.marathon_api = self.config.get(PROVIDER_API_KEY)
             self.marathon_api = urlparse.urljoin(self.marathon_api, "v2/")
+
         logger.debug("marathon_api = %s", self.marathon_api)
         self._process_artifacts()
 
@@ -56,7 +57,7 @@ class Marathon(Provider):
 
             if self.dryrun:
                 logger.info("DRY-RUN: %s", url)
-                return
+                continue
 
             logger.debug("Deploying appid: %s", artifact["id"])
             res = requests.post(url, json=artifact)
@@ -81,7 +82,7 @@ class Marathon(Provider):
 
             if self.dryrun:
                 logger.info("DRY-RUN: %s", url)
-                return
+                continue
 
             logger.debug("Deleting appid: %s", artifact["id"])
             res = requests.delete(url, json=artifact)
