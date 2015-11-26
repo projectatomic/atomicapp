@@ -41,6 +41,8 @@ class Marathon(Provider):
     marathon_artifacts = []
 
     def init(self):
+        self.marathon_artifacts = []
+
         logger.debug("Given config: %s", self.config)
         if self.config.get(PROVIDER_API_KEY):
             self.marathon_api = self.config.get(PROVIDER_API_KEY)
