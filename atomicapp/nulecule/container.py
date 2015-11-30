@@ -76,8 +76,8 @@ class DockerHandler(object):
 
         # Create dummy container
         run_cmd = [
-            self.docker_cli, 'run', '-d', '--entrypoint', '/bin/true', image]
-        logger.debug('Running Docker container: %s' % ' '.join(run_cmd))
+            self.docker_cli, 'create', '--entrypoint', '/bin/true', image]
+        logger.debug('Creating docker container: %s' % ' '.join(run_cmd))
         container_id = subprocess.check_output(run_cmd).strip()
 
         # Copy files out of dummy container to tmpdir
