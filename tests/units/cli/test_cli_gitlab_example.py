@@ -19,13 +19,12 @@
 
 import os
 import sys
-import logging
-import shutil
 
 import unittest
 import pytest
 
 import atomicapp.cli.main
+
 
 class TestGitLabCli(unittest.TestCase):
 
@@ -36,11 +35,10 @@ class TestGitLabCli(unittest.TestCase):
         sys.argv = saved_args
 
     def setUp(self):
-        logger = logging.getLogger('atomicapp.tests')
         self.examples_dir = os.path.dirname(__file__) + '/test_examples/'
         self.answers_conf = os.path.join(
-                self.examples_dir,
-                "gitlab/answers.conf.sample")
+            self.examples_dir,
+            "gitlab/answers.conf.sample")
 
         # "work dir" of the kubernetes artifacts
         self.work_dir = os.path.join(
@@ -49,26 +47,33 @@ class TestGitLabCli(unittest.TestCase):
 
         # A list of artifacts that should be there during install / run / stop
         self.artifacts_array = [
-                "gitlab-http-service.json",
-                ".gitlab-http-service.json",
-                "gitlab-rc.json",
-                ".gitlab-rc.json",
-                "postgres-rc.json",
-                ".postgres-rc.json",
-                "postgres-service.json",
-                ".postgres-service.json",
-                "redis-rc.json",
-                ".redis-rc.json",
-                "redis-service.json",
-                ".redis-service.json"]
+            "gitlab-http-service.json",
+            ".gitlab-http-service.json",
+            "gitlab-rc.json",
+            ".gitlab-rc.json",
+            "postgres-rc.json",
+            ".postgres-rc.json",
+            "postgres-service.json",
+            ".postgres-service.json",
+            "redis-rc.json",
+            ".redis-rc.json",
+            "redis-service.json",
+            ".redis-service.json"]
 
-    # Remove the examples answers.conf file as well as the dotfiles created 
+    # Remove the examples answers.conf file as well as the dotfiles created
     def tearDown(self):
         if os.path.isfile(self.answers_conf):
-           os.remove(self.answers_conf)
-        for f in os.listdir(self.work_dir):
-            if f.startswith('.'):
-                os.remove(self.work_dir + f)
+            os.remove(self.answers_conf)
+
+    @classmethod
+    def tearDownClass(cls):
+        top = os.path.dirname(__file__) + '/test_examples/'
+        for root, dirs, files in os.walk(top):
+            for f in files:
+                if f.startswith('.'):
+                    os.remove(os.path.join(root, f))
+                elif f == "answers.conf.gen":
+                    os.remove(os.path.join(root, f))
 
     # Installs the gitlab example similarly to `test_cli.py` examples
     def test_install_gitlab_app(self):
