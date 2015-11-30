@@ -104,6 +104,21 @@ class TestCli(unittest.TestCase):
 
         assert exec_info.value.code == 0
 
+    def test_run_helloapache_app_marathon(self):
+        command = [
+            "main.py",
+            "--verbose",
+            "--dry-run",
+            "run",
+            "--provider=marathon",
+            self.examples_dir + 'helloapache'
+        ]
+
+        with pytest.raises(SystemExit) as exec_info:
+            self.exec_cli(command)
+
+        assert exec_info.value.code == 0
+
     def test_install_helloapache_app_docker(self):
         command = [
             "main.py",
