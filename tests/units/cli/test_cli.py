@@ -19,8 +19,6 @@
 
 import os
 import sys
-import logging
-import shutil
 import json
 
 import unittest
@@ -28,8 +26,9 @@ import pytest
 
 import atomicapp.cli.main
 
+
 class TestCli(unittest.TestCase):
-    
+
     def exec_cli(self, command):
         saved_args = sys.argv
         sys.argv = command
@@ -38,20 +37,22 @@ class TestCli(unittest.TestCase):
 
     def is_json(self, myjson):
         try:
-            json_object = json.loads(myjson)
-        except ValueError, e:
+            json.loads(myjson)
+        except ValueError:
             return False
         return True
 
     def setUp(self):
-        logger = logging.getLogger('atomicapp.tests')
         self.examples_dir = os.path.dirname(__file__) + '/test_examples/'
 
-    def tearDown(self):
-        top = self.examples_dir
+    @classmethod
+    def tearDownClass(cls):
+        top = os.path.dirname(__file__) + '/test_examples/'
         for root, dirs, files in os.walk(top):
             for f in files:
                 if f.startswith('.'):
+                    os.remove(os.path.join(root, f))
+                elif f == "answers.conf.gen":
                     os.remove(os.path.join(root, f))
 
     def test_run_helloapache_app(self):
@@ -63,7 +64,7 @@ class TestCli(unittest.TestCase):
             "run",
             self.examples_dir + 'helloapache/'
         ]
-        
+
         # Run the dry-run command
         with pytest.raises(SystemExit) as exec_info:
             self.exec_cli(command)
@@ -97,7 +98,7 @@ class TestCli(unittest.TestCase):
             "--provider=docker",
             self.examples_dir + 'helloapache/'
         ]
-        
+
         with pytest.raises(SystemExit) as exec_info:
             self.exec_cli(command)
 
@@ -167,7 +168,7 @@ class TestCli(unittest.TestCase):
             self.exec_cli(command)
 
         assert exec_info.value.code == 0
-  
+
     def test_run_k8s_app_multiple_artifacts(self):
         command = [
             "main.py",
@@ -197,4 +198,3 @@ class TestCli(unittest.TestCase):
             self.exec_cli(command)
 
         assert exec_info.value.code == 0
-
