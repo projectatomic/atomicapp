@@ -108,7 +108,9 @@ class CLI():
 
     def set_arguments(self):
 
-        self.parser.add_argument(
+        base_parser = ArgumentParser(add_help=False)
+
+        base_parser.add_argument(
             "-V",
             "--version",
             action='version',
@@ -117,7 +119,7 @@ class CLI():
             help="show the version and exit.")
         # TODO refactor program name and version to some globals
 
-        self.parser.add_argument(
+        base_parser.add_argument(
             "-v",
             "--verbose",
             dest="verbose",
@@ -125,7 +127,7 @@ class CLI():
             action="store_true",
             help="Verbose output mode.")
 
-        self.parser.add_argument(
+        base_parser.add_argument(
             "-q",
             "--quiet",
             dest="quiet",
@@ -133,7 +135,7 @@ class CLI():
             action="store_true",
             help="Quiet output mode.")
 
-        self.parser.add_argument(
+        base_parser.add_argument(
             "--dry-run",
             dest="dryrun",
             default=False,
@@ -142,7 +144,7 @@ class CLI():
                 "Don't actually call provider. The commands that should be "
                 "run will be sent to stdout but not run."))
 
-        self.parser.add_argument(
+        base_parser.add_argument(
             "--answers-format",
             dest="answers_format",
             default=ANSWERS_FILE_SAMPLE_FORMAT,
@@ -151,7 +153,7 @@ class CLI():
 
         subparsers = self.parser.add_subparsers(dest="action")
 
-        parser_run = subparsers.add_parser("run")
+        parser_run = subparsers.add_parser("run", parents=[base_parser])
 
         parser_run.add_argument(
             "-a",
@@ -190,7 +192,8 @@ class CLI():
 
         parser_run.set_defaults(func=cli_run)
 
-        parser_install = subparsers.add_parser("install")
+        parser_install = subparsers.add_parser("install",
+                                               parents=[base_parser])
 
         parser_install.add_argument(
             "-a",
@@ -227,7 +230,8 @@ class CLI():
 
         parser_install.set_defaults(func=cli_install)
 
-        parser_stop = subparsers.add_parser("stop")
+        parser_stop = subparsers.add_parser("stop",
+                                            parents=[base_parser])
         parser_stop.add_argument(
             "--provider",
             dest="cli_provider",
