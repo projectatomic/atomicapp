@@ -29,7 +29,7 @@ from atomicapp.providers.docker import DockerProvider
 from atomicapp.constants import DEFAULT_CONTAINER_NAME, DEFAULT_NAMESPACE
 
 def mock_name_get_call(self):
-    return ["atomic_test_e9b9a7bfe8f9"]
+    return ["test_centos-httpd_e9b9a7bfe8f9"]
 
 class TestDockerProviderBase(unittest.TestCase):
     
@@ -61,9 +61,9 @@ class TestDockerProviderBase(unittest.TestCase):
                 ]
         # Mock the effects of 'docker ps -a'. As if each deployment adds the container to the host
         mock_container_list = mock.Mock(side_effect = [
-            ["atomic_default_e9b9a7bfe8f9"], 
-            ["atomic_default_e9b9a7bfe8f9", "atomic_test_e9b9a7bfe8f9"],
-            ["atomic_default_e9b9a7bfe8f9", "atomic_test_e9b9a7bfe8f9", "atomic_test_e9b9a7bfe8f9"]
+            ["test_fedora-httpd_e9b9a7bfe8f9"], 
+            ["test_fedora-httpd_e9b9a7bfe8f9", "test_centos-httpd_e9b9a7bfe8f9"],
+            ["test_fedora-httpd_e9b9a7bfe8f9", "test_centos-httpd_e9b9a7bfe8f9", "test_centos-httpd_e9b9a7bfe8f9"]
             ])
         with mock.patch("atomicapp.providers.docker.DockerProvider._get_containers", mock_container_list):
             provider.deploy()
@@ -72,7 +72,7 @@ class TestDockerProviderBase(unittest.TestCase):
     # Patch in a general container list and make sure it fails if there is already a container with the same name 
     @mock.patch("atomicapp.providers.docker.DockerProvider._get_containers", mock_name_get_call)
     def test_namespace_name_check(self):
-        data = {'namespace': 'test', 'provider': 'docker'}
+        data = {'namespace': 'test', 'provider': 'docker', 'image': 'centos/httpd'}
         provider = self.prepare_provider(data)
         provider.init()
         provider.artifacts = [self.artifact_dir + 'hello-world-one']

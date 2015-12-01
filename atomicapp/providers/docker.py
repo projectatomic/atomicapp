@@ -40,6 +40,13 @@ class DockerProvider(Provider):
             self.namespace = self.config.get("namespace")
         logger.debug("Namespace: %s", self.namespace)
 
+        if "image" in self.config:
+            self.image = Utils.sanitizeName(self.config.get("image"))
+        else:
+            self.image = Utils.getUniqueUUID()
+            logger.warning("The artifact name has not been provided within Nulecule, using a UUID instead")
+            logger.debug("No image name found for artifact, using UUID %s in container name" % self.image)
+
         if self.dryrun:
             logger.info("DRY-RUN: Did not check Docker version compatibility")
         else:
@@ -73,8 +80,8 @@ class DockerProvider(Provider):
     def deploy(self):
         logger.info("Deploying to provider: Docker")
         for container in self._get_containers():
-            if re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.default_name, self.namespace), container):
-                raise ProviderFailedException("Namespace with name %s already deployed in Docker" % self.namespace)
+            if re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.namespace, self.image), container):
+                raise ProviderFailedException("Container with name %s-%s already deployed in Docker" % (self.namespace, self.image))
 
         for artifact in self.artifacts:
             artifact_path = os.path.join(self.path, artifact)
@@ -88,7 +95,7 @@ class DockerProvider(Provider):
             if '--name' in run_args:
                 logger.info("WARNING: Using --name provided within artifact file.")
             else:
-                run_args.insert(run_args.index('run') + 1, "--name=%s_%s_%s" % (self.default_name, self.namespace, Utils.getUniqueUUID()))
+                run_args.insert(run_args.index('run') + 1, "--name=%s_%s_%s" % (self.namespace, self.image, Utils.getUniqueUUID()))
 
             cmd = run_args
             if self.dryrun:
@@ -118,7 +125,7 @@ class DockerProvider(Provider):
             if artifact_names:
                 m = [i for i, x in enumerate(artifact_names) if x == container]
             else:
-                m = re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.default_name, self.namespace), container)
+                m = re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.namespace, self.image), container)
             if m:
                 logger.info("STOPPING CONTAINER: %s", container)
                 cmd = ["docker", "kill", container]
