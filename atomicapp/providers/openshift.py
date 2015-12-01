@@ -49,6 +49,8 @@ class OpenShiftProvider(Provider):
     openshift_artifacts = {}
 
     def init(self):
+        self.openshift_artifacts = {}
+
         if self.config.get(PROVIDER_API_KEY):
             self.providerapi = self.config.get(PROVIDER_API_KEY)
 
