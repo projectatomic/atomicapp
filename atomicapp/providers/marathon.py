@@ -30,8 +30,6 @@ logger = logging.getLogger(__name__)
 
 
 class Marathon(Provider):
-    """ Marathon provider
-    """
 
     key = "marathon"
     config_file = None
@@ -52,8 +50,6 @@ class Marathon(Provider):
         self._process_artifacts()
 
     def deploy(self):
-        """ Deploy containers
-        """
         for artifact in self.marathon_artifacts:
             url = urlparse.urljoin(self.marathon_api, "apps/")
 
@@ -74,8 +70,6 @@ class Marathon(Provider):
                 raise ProviderFailedException(msg)
 
     def undeploy(self):
-        """ Undeploy containers
-        """
         for artifact in self.marathon_artifacts:
             url = urlparse.urljoin(
                 self.marathon_api,
@@ -109,8 +103,7 @@ class Marathon(Provider):
                 try:
                     data = anymarkup.parse(fp)
                     logger.debug("Parsed artifact %s", data)
-                    # every marathon app has to have id
-                    # 'id' key  is also used for showing messages
+                    # every marathon app has to have id. 'id' key  is also used for showing messages
                     if "id" not in data.keys():
                         raise ProviderFailedException(
                             "Error processing %s artifact. There is no id" % artifact)
