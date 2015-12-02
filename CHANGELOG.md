@@ -1,3 +1,35 @@
+## Atomic App 0.2.3 (12-02-2015)
+
+This release fixes numerous bugs as well as introduces some organizational changes to our main code-base.
+
+Please see below for a summary of commits between 0.2.2 and 0.2.3
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Fix constants in nulecule dir
+      Clean up CLI answers-format option
+      Change tmp dir location
+      Update README dependencies
+      fix readme.md link blob
+      Lib.py should load plugins in init
+      Add roadmap doc
+      Fix tests not removing answers.conf.gen
+      Update requirements.md
+
+Dusty Mabe <dusty@dustymabe.com>:
+      Removes RHEL7 dockerfile.
+      Dockerfiles: remove unnecessary line from Dockerfiles.
+      Moves Dockerfiles to Dockerfiles.git/ directory.
+      Adds Dockerfiles.pkgs/ directory.
+      Updates fedora git Dockerfile to use Fedora 23.
+      Updates git Dockerfiles to use env var for version.
+      Updates git Dockerfiles to add reqs to the workdir location.
+      Don't run container to extract files.
+
+Swapnil Kulkarni <me@coolsvap.net>:
+      Updated minor typos
+```
+
 ## Atomic App 0.2.2 (11-17-2015)
 
 This is our first release since our major refactor in 0.2.1.
