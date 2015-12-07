@@ -40,6 +40,7 @@ class OpenShiftProvider(Provider):
     kubernetes_api = None
     access_token = None
     namespace = DEFAULT_NAMESPACE
+    ssl_verify = False
 
     # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
     openshift_artifacts = {}
@@ -67,6 +68,19 @@ class OpenShiftProvider(Provider):
 
         self._process_artifacts()
 
+        # get list of supported resources for each api
+        self.oapi_resources = requests.get(
+            self.openshift_api, verify=self.ssl_verify).json()["resources"]
+        self.kapi_resources = requests.get(
+            self.kubernetes_api, verify=self.ssl_verify).json()["resources"]
+
+        # convert resources list of dicts to list of names
+        self.oapi_resources = [res['name'] for res in self.oapi_resources]
+        self.kapi_resources = [res['name'] for res in self.kapi_resources]
+
+        logger.debug("Openshift resources %s", self.oapi_resources)
+        logger.debug("Kubernetes resources %s", self.kapi_resources)
+
     def _get_namespace(self, artifact):
         """ return artifacts namespace
 
@@ -87,22 +101,23 @@ class OpenShiftProvider(Provider):
                 if self.dryrun:
                     logger.info("DRY-RUN: %s", url)
                     continue
-                res = requests.post(url, json=artifact, verify=False)
+                res = requests.post(url, json=artifact, verify=self.ssl_verify)
                 if res.status_code == 201:
                     logger.info(" %s sucessfully deployed.", res.content)
                 else:
                     msg = "%s %s" % (res.status_code, res.content)
                     logger.error(msg)
+                    # TODO: remove running components (issue: #428)
                     raise ProviderFailedException(msg)
 
     def undeploy(self):
         logger.debug("starting undeploy")
-        # TODO: scale down replicationController before deleting deploymentConfig
+        # TODO: scale down replicationController before deleting deploymentConf
         for kind, objects in self.openshift_artifacts.iteritems():
             for artifact in objects:
                 namespace = self._get_namespace(artifact)
 
-                # get name from metadata so we know which object sould be deleted
+                # get name from metadata so we know which object to be deleted
                 if "metadata" in artifact and \
                         "name" in artifact["metadata"]:
                     name = artifact["metadata"]["name"]
@@ -117,7 +132,7 @@ class OpenShiftProvider(Provider):
                     logger.info("DRY-RUN: %s", url)
                     continue
 
-                res = requests.delete(url, verify=False)
+                res = requests.delete(url, verify=self.ssl_verify)
                 if res.status_code == 200:
                     logger.info(" %s sucessfully undeployed.", res.content)
                 else:
@@ -126,8 +141,8 @@ class OpenShiftProvider(Provider):
                     raise ProviderFailedException(msg)
 
     def _process_artifacts(self):
-        """
-        process artifact files
+        """  parse artifact files
+
         save parsed artifacts to self.openshift_artifacts
         """
         for artifact in self.artifacts:
@@ -140,46 +155,51 @@ class OpenShiftProvider(Provider):
                     raise ProviderFailedException(
                         "Error processing %s artifact. There is no kind" %
                         artifact)
-                kind = data['kind'].title()
+                kind = data['kind'].lower()
                 # add parsed artifact to dict
                 if kind not in self.openshift_artifacts.keys():
                     self.openshift_artifacts[kind] = []
                 self.openshift_artifacts[kind].append(data)
 
+    def _kind_to_resource(self, kind):
+        """ converts kind to resource name
+
+        same logic as in k8s.io/kubernetes/pkg/api/meta/restmapper.go
+        KindToResource
+        """
+        singular = kind.lower()
+        if singular.endswith("status"):
+            plular = singular + "es"
+        else:
+            if singular[-1] == "s":
+                plular = singular
+            elif singular[-1] == "y":
+                plular = singular.rstrip("y") + "ies"
+            else:
+                plular = singular + "s"
+        return plular
+
     def _get_url(self, namespace, kind, name=None):
         """ return url for given kind
 
-        return either openshift or kubernetes url depending on what kind is passed
+        return either openshift or kubernetes url
+        depending on what kind is passed
         """
         url = None
 
-        # TODO: this is ugly :-(
-        if kind == "Deploymentconfig":
-            url = urljoin(self.openshift_api, "namespaces/")
-            url = urljoin(url, "%s/" % namespace)
-            url = urljoin(url, "deploymentconfigs/")
-        elif kind == "Route":
-            url = urljoin(self.openshift_api, "namespaces/")
-            url = urljoin(url, "%s/" % namespace)
-            url = urljoin(url, "routes/")
-        elif kind == "Template":
-            url = urljoin(self.openshift_api, "namespaces/")
-            url = urljoin(url, "%s/" % namespace)
-            url = urljoin(url, "templates/")
-        elif kind == "Service":
-            url = urljoin(self.kubernetes_api, "namespaces/")
-            url = urljoin(url, "%s/" % namespace)
-            url = urljoin(url, "services/")
-        elif kind == "Pod":
-            url = urljoin(self.kubernetes_api, "namespaces/")
-            url = urljoin(url, "%s/" % namespace)
-            url = urljoin(url, "pods/")
-        elif kind == "Persistentvolumeclaim":
-            url = urljoin(self.kubernetes_api, "namespaces/")
-            url = urljoin(url, "%s/" % namespace)
-            url = urljoin(url, "persistentvolumeclaims/")
+        resource = self._kind_to_resource(kind)
+
+        if resource in self.oapi_resources:
+            url = self.openshift_api
+        elif resource in self.kapi_resources:
+            url = self.kubernetes_api
         else:
-            logger.error("UNKNOWN kind %s", kind)
+            msg = "Unsupported resource %s" % resource
+            logger.error(msg)
+            raise ProviderFailedException(msg)
+
+        url = urljoin(url, "namespaces/%s/" % namespace)
+        url = urljoin(url, "%s/" % resource)
 
         if name:
             url = urljoin(url, name)
