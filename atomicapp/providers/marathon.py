@@ -22,6 +22,7 @@ import requests
 import urlparse
 import logging
 import os
+import sys
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus
 from atomicapp.constants import PROVIDER_API_KEY
@@ -58,7 +59,12 @@ class Marathon(Provider):
                 continue
 
             logger.debug("Deploying appid: %s", artifact["id"])
-            res = requests.post(url, json=artifact)
+            try:
+                res = requests.post(url, json=artifact)
+            except requests.exceptions.Timeout, e:
+                printErrorStatus(e)
+                # TODO - raise Exception or do sys.exit(1)
+                sys.exit(1)
             if res.status_code == 201:
                 logger.info(
                     "Marathon app %s sucessfully deployed.",
@@ -81,7 +87,12 @@ class Marathon(Provider):
                 continue
 
             logger.debug("Deleting appid: %s", artifact["id"])
-            res = requests.delete(url, json=artifact)
+            try:
+                res = requests.post(url, json=artifact)
+            except requests.exceptions.Timeout, e:
+                printErrorStatus(e)
+                # TODO - raise Exception or do sys.exit(1)
+                sys.exit(1)
             if res.status_code == 200:
                 logger.info(
                     "Marathon app %s sucessfully deleted.",
