@@ -118,9 +118,7 @@ class Marathon(Provider):
                     if "id" not in data.keys():
                         raise ProviderFailedException(
                             "Error processing %s artifact. There is no id" % artifact)
-                except Exception:
-                    msg = "Error processing %s artifcat. Error:" % os.path.join(
-                        self.path, artifact)
+                except anymarkup.AnyMarkupError, e:
+                    msg = "Error processing artifact - %s" % e
                     printErrorStatus(msg)
-                    raise
                 self.marathon_artifacts.append(data)
