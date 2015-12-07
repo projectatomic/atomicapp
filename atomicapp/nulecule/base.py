@@ -111,7 +111,8 @@ class Nulecule(NuleculeBase):
         """
         nulecule_path = os.path.join(src, MAIN_FILE)
         if dryrun and not os.path.exists(nulecule_path):
-            raise NuleculeException("Installed Nulecule components are required to initiate dry-run")
+            raise NuleculeException("Installed Nulecule components are required to initiate dry-run. "
+                                    "Please specify your app via atomicapp --dry-run /path/to/your-app")
         nulecule_data = anymarkup.parse_file(nulecule_path)
         nulecule = Nulecule(config=config, basepath=src,
                             namespace=namespace, **nulecule_data)
