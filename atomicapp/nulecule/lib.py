@@ -1,16 +1,19 @@
 # -*- coding: utf-8 -*-
-from atomicapp.constants import (GLOBAL_CONF, DEFAULT_PROVIDER,
-                                 DEFAULT_ANSWERS, NAME_KEY,
-                                 DEFAULTNAME_KEY, PROVIDER_KEY)
+from atomicapp.constants import (GLOBAL_CONF,
+                                 NAME_KEY,
+                                 DEFAULTNAME_KEY,
+                                 PROVIDER_KEY)
 from atomicapp.utils import Utils
 from atomicapp.plugin import Plugin
 
 
 class NuleculeBase(object):
+
     """
     This is the base class for Nulecule and NuleculeComponent in
     atomicapp.nulecule.base.
     """
+
     def __init__(self, basepath, params, namespace):
         self.plugin = Plugin()
         self.plugin.load_plugins()
@@ -21,7 +24,7 @@ class NuleculeBase(object):
     def load(self):
         pass
 
-    def load_config(self, config=None, ask=False, skip_asking=False):
+    def load_config(self, config, ask=False, skip_asking=False):
         """
         Load config data. Sets the loaded config data to self.config.
 
@@ -36,7 +39,6 @@ class NuleculeBase(object):
         Returns:
             None
         """
-        config = config or DEFAULT_ANSWERS
         for param in self.params:
             value = config.get(self.namespace, {}).get(param[NAME_KEY]) or \
                 config.get(GLOBAL_CONF, {}).get(param[NAME_KEY])
@@ -89,9 +91,9 @@ class NuleculeBase(object):
         Returns:
             tuple: (provider key, provider instance)
         """
+        # If provider_key isn't provided via CLI, let's grab it the configuration
         if provider_key is None:
-            provider_key = self.config.get(GLOBAL_CONF, {}).get(
-                PROVIDER_KEY, DEFAULT_PROVIDER)
+            provider_key = self.config.get(GLOBAL_CONF)[PROVIDER_KEY]
         provider_class = self.plugin.getProvider(provider_key)
         return provider_key, provider_class(
             self.get_context(), self.basepath, dry)

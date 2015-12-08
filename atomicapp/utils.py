@@ -35,7 +35,8 @@ from constants import (APP_ENT_PATH,
                        CACHE_DIR,
                        EXTERNAL_APP_DIR,
                        HOST_DIR,
-                       WORKDIR)
+                       WORKDIR,
+                       ARTIFACTS_FOLDER)
 
 __all__ = ('Utils')
 
@@ -330,3 +331,8 @@ class Utils(object):
     def copy_dir(src, dest, update=False, dryrun=False):
         if not dryrun:
             distutils.dir_util.copy_tree(src, dest, update)
+
+    @staticmethod
+    def getSupportedProviders(path):
+        providers = os.listdir(path + '/' + ARTIFACTS_FOLDER)
+        return providers
