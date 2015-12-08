@@ -247,8 +247,21 @@ class CLI():
         parser_stop.set_defaults(func=cli_stop)
 
     def run(self):
-        self.set_arguments()
-        args = self.parser.parse_args()
+        self.set_arguments()  # Set our arguments
+        cmdline = sys.argv[1:]  # Grab args from cmdline
+
+        # We want to be able to place options anywhere on the command
+        # line. We have added all global options to each subparser,
+        # but subparsers require all options to be after the 'action'
+        # keyword. In order to handle this we just need to figure out
+        # what subparser will be used and move it's keyword to the front
+        # of the line.
+        args, _ = self.parser.parse_known_args(cmdline)
+        cmdline.remove(args.action)     # Remove 'action' from the cmdline
+        cmdline.insert(0, args.action)  # Place 'action' at front
+
+        # Finally, parse args and give error if necessary
+        args = self.parser.parse_args(cmdline)
         if args.verbose:
             set_logging(level=logging.DEBUG)
         elif args.quiet:
