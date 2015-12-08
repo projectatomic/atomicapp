@@ -149,7 +149,7 @@ class OpenShiftProvider(Provider):
             logger.debug("Procesesing artifact: %s", artifact)
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
-                data = anymarkup.parse(fp)
+                data = anymarkup.parse(fp, force_types=None)
                 # kind has to be specified in artifact
                 if "kind" not in data.keys():
                     raise ProviderFailedException(
