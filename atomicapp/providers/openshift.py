@@ -66,8 +66,6 @@ class OpenShiftProvider(Provider):
         logger.debug("openshift_api = %s", self.openshift_api)
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
 
-        self._process_artifacts()
-
         # get list of supported resources for each api
         self.oapi_resources = requests.get(
             self.openshift_api, verify=self.ssl_verify).json()["resources"]
@@ -80,6 +78,8 @@ class OpenShiftProvider(Provider):
 
         logger.debug("Openshift resources %s", self.oapi_resources)
         logger.debug("Kubernetes resources %s", self.kapi_resources)
+
+        self._process_artifacts()
 
     def _get_namespace(self, artifact):
         """ return artifacts namespace
@@ -155,11 +155,41 @@ class OpenShiftProvider(Provider):
                     raise ProviderFailedException(
                         "Error processing %s artifact. There is no kind" %
                         artifact)
-                kind = data['kind'].lower()
+
+                kind = data["kind"].lower()
+
+                # process templates
+                if kind == "template":
+                    processed_objects = self._process_template(data)
+                    # add all processed object to artifacts dict
+                    for obj in processed_objects:
+                        obj_kind = obj["kind"].lower()
+                        if obj_kind not in self.openshift_artifacts.keys():
+                            self.openshift_artifacts[obj_kind] = []
+                        self.openshift_artifacts[obj_kind].append(obj)
+                    continue
+
                 # add parsed artifact to dict
                 if kind not in self.openshift_artifacts.keys():
                     self.openshift_artifacts[kind] = []
                 self.openshift_artifacts[kind].append(data)
+
+    def _process_template(self, template):
+        """ process tempalate
+
+        return list of templated object from template
+        """
+        logger.debug("processing template: %s", template)
+        url = self._get_url(self._get_namespace(template), 'processedtemplates')
+        res = requests.post(url, json=template, verify=self.ssl_verify)
+        if res.status_code == 201:
+            logger.info("template proccessed %s", template['metadata']['name'])
+            logger.debug("processed template %s", res.json())
+            return res.json()['objects']
+        else:
+            msg = "%s %s" % (res.status_code, res.content)
+            logger.error(msg)
+            raise ProviderFailedException(msg)
 
     def _kind_to_resource(self, kind):
         """ converts kind to resource name
