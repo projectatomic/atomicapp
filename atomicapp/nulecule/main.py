@@ -12,7 +12,6 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_RUNTIME_FILE,
                                  DEFAULT_ANSWERS,
                                  DEFAULT_NAMESPACE,
-                                 DEFAULT_PROVIDER,
                                  MAIN_FILE,
                                  NAMESPACE_KEY,
                                  PROVIDER_KEY)
@@ -24,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 class NuleculeManager(object):
+
     """
     Interface to install, run, stop a Nulecule application.
     """
@@ -37,6 +37,7 @@ class NuleculeManager(object):
                       container image name where a nulecule can be found
             destination: where to unpack a nulecule to if it isn't local
         """
+        # Let's pass in a default format for our answers
         self.answers = copy.deepcopy(DEFAULT_ANSWERS)
         self.answers_format = None
         self.answers_file = None  # The path to an answer file
@@ -183,6 +184,12 @@ class NuleculeManager(object):
         # it does exist it will be just be loaded and returned
         self.nulecule = self.unpack(dryrun=dryrun, config=self.answers)
 
+        # Unless otherwise specified with CLI arguments we will
+        # default to the first provider available
+        providers = Utils.getSupportedProviders(self.app_path)
+        if cli_provider is None and len(providers) == 1:
+            self.answers[GLOBAL_CONF][PROVIDER_KEY] = providers[0]
+
         self.nulecule.load_config(config=self.nulecule.config, ask=ask)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
@@ -206,6 +213,7 @@ class NuleculeManager(object):
         # For stop we use the generated answer file from the run
         self.answers = Utils.loadAnswers(
             os.path.join(self.app_path, ANSWERS_RUNTIME_FILE))
+
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(
             self.app_path, config=self.answers, dryrun=dryrun)
@@ -255,8 +263,10 @@ class NuleculeManager(object):
         """
         _config = copy.deepcopy(config)
         _config[GLOBAL_CONF] = config.get(GLOBAL_CONF) or {}
-        _config[GLOBAL_CONF][PROVIDER_KEY] = cli_provider or \
-            _config[GLOBAL_CONF].get(PROVIDER_KEY) or DEFAULT_PROVIDER
         _config[GLOBAL_CONF][NAMESPACE_KEY] = _config[GLOBAL_CONF].get(
             NAMESPACE_KEY) or DEFAULT_NAMESPACE
+        # If a provider is provided via CLI, override the config parameter
+        if cli_provider:
+            _config[GLOBAL_CONF][PROVIDER_KEY] = cli_provider
+
         return _config

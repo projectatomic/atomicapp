@@ -2,7 +2,9 @@
 
 ## Providers
 
-Providers may be specified using the `answers.conf` file or the `--provider <provider>` option. If not specified the kubernetes provider will be used by default.
+Providers may be specified using the `answers.conf` file or the `--provider <provider>` option. 
+If a provider is not explicitly implied and only one provider exists within the Nulecule container, Atomic App will use said provider.
+If neither are detected, Atomic App will use Kubernetes by default.
 
 Sample `answers.conf` file specifying provider
 
