@@ -22,8 +22,10 @@ import anymarkup
 import requests
 from urlparse import urljoin
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.constants import (PROVIDER_API_KEY, ACCESS_TOKEN_KEY,
-                                 DEFAULT_NAMESPACE, NAMESPACE_KEY)
+from atomicapp.constants import (PROVIDER_API_KEY,
+                                 ACCESS_TOKEN_KEY,
+                                 DEFAULT_NAMESPACE,
+                                 NAMESPACE_KEY)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -82,16 +84,23 @@ class OpenShiftProvider(Provider):
         self._process_artifacts()
 
     def _get_namespace(self, artifact):
-        """ return artifacts namespace
+        """
+        Return namespace for artifact. If namespace is specified inside
+        artifact use that, if not return default namespace (as specfied in
+        answers.conf)
 
-        if specified use namespace from artificaft else return self.namespace
+        Args:
+            artifact (dict): OpenShift/Kubernetes object
+
+        Returns:
+            namespace (str)
         """
         if "metadata" in artifact and "namespace" in artifact["metadata"]:
             return artifact["metadata"]["namespace"]
         return self.namespace
 
     def deploy(self):
-        logger.debug("starting deploy")
+        logger.debug("Deploying to OpenShift")
         # TODO: remove running components if one component fails issue:#428
         for kind, objects in self.openshift_artifacts.iteritems():
             for artifact in objects:
@@ -103,7 +112,8 @@ class OpenShiftProvider(Provider):
                     continue
                 res = requests.post(url, json=artifact, verify=self.ssl_verify)
                 if res.status_code == 201:
-                    logger.info(" %s sucessfully deployed.", res.content)
+                    logger.info("Object %s sucessfully deployed.",
+                                artifact['metadata']['name'])
                 else:
                     msg = "%s %s" % (res.status_code, res.content)
                     logger.error(msg)
@@ -141,43 +151,52 @@ class OpenShiftProvider(Provider):
                     raise ProviderFailedException(msg)
 
     def _process_artifacts(self):
-        """  parse artifact files
-
-        save parsed artifacts to self.openshift_artifacts
+        """
+        Parse OpenShift manifests files and checks if manifest under
+        process is valid. Reads self.artifacts and saves parsed artifacts
+        to self.openshift_artifacts
         """
         for artifact in self.artifacts:
-            logger.debug("Procesesing artifact: %s", artifact)
+            logger.debug("Processing artifact: %s", artifact)
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
                 data = anymarkup.parse(fp, force_types=None)
-                # kind has to be specified in artifact
-                if "kind" not in data.keys():
-                    raise ProviderFailedException(
-                        "Error processing %s artifact. There is no kind" %
-                        artifact)
+            # kind has to be specified in artifact
+            if "kind" not in data.keys():
+                raise ProviderFailedException(
+                    "Error processing %s artifact. There is no kind" %
+                    artifact)
 
-                kind = data["kind"].lower()
+            kind = data["kind"].lower()
 
-                # process templates
-                if kind == "template":
-                    processed_objects = self._process_template(data)
-                    # add all processed object to artifacts dict
-                    for obj in processed_objects:
-                        obj_kind = obj["kind"].lower()
-                        if obj_kind not in self.openshift_artifacts.keys():
-                            self.openshift_artifacts[obj_kind] = []
-                        self.openshift_artifacts[obj_kind].append(obj)
-                    continue
+            # process templates
+            if kind == "template":
+                processed_objects = self._process_template(data)
+                # add all processed object to artifacts dict
+                for obj in processed_objects:
+                    obj_kind = obj["kind"].lower()
+                    if obj_kind not in self.openshift_artifacts.keys():
+                        self.openshift_artifacts[obj_kind] = []
+                    self.openshift_artifacts[obj_kind].append(obj)
+                continue
 
-                # add parsed artifact to dict
-                if kind not in self.openshift_artifacts.keys():
-                    self.openshift_artifacts[kind] = []
-                self.openshift_artifacts[kind].append(data)
+            # add parsed artifact to dict
+            if kind not in self.openshift_artifacts.keys():
+                self.openshift_artifacts[kind] = []
+            self.openshift_artifacts[kind].append(data)
 
     def _process_template(self, template):
-        """ process tempalate
+        """
+        Call OpenShift api and process template.
+        Templates allow parameterization of resources prior to being sent to
+        the server for creation or update. Templates have "parameters",
+        which may either be generated on creation or set by the user.
 
-        return list of templated object from template
+        Args:
+            template (dict): template to process
+
+        Returns:
+            List of objects from processed template.
         """
         logger.debug("processing template: %s", template)
         url = self._get_url(self._get_namespace(template), 'processedtemplates')
@@ -192,28 +211,49 @@ class OpenShiftProvider(Provider):
             raise ProviderFailedException(msg)
 
     def _kind_to_resource(self, kind):
-        """ converts kind to resource name
+        """
+        Converts kind to resource name. It is same logics
+        as in k8s.io/kubernetes/pkg/api/meta/restmapper.go (func KindToResource)
+        Example:
+            Pod -> pods
+            Policy - > policies
+            BuildConfig - > buildconfigs
 
-        same logic as in k8s.io/kubernetes/pkg/api/meta/restmapper.go
-        KindToResource
+        Args:
+            kind (str): Kind of the object
+
+        Returns:
+            Resource name (str) (kind in plural form)
         """
         singular = kind.lower()
         if singular.endswith("status"):
-            plular = singular + "es"
+            plural = singular + "es"
         else:
             if singular[-1] == "s":
-                plular = singular
+                plural = singular
             elif singular[-1] == "y":
-                plular = singular.rstrip("y") + "ies"
+                plural = singular.rstrip("y") + "ies"
             else:
-                plular = singular + "s"
-        return plular
+                plural = singular + "s"
+        return plural
 
     def _get_url(self, namespace, kind, name=None):
-        """ return url for given kind
+        """
+        Some kinds/resources are managed by OpensShift and some by Kubernetes.
+        Here we compose right url (Kubernets or OpenShift) for given kind.
+        If resource is managed by Kubernetes or OpenShift is determined by
+        self.kapi_resources/self.oapi_resources lists
+        Example:
+            For namespace=project1, kind=DeploymentConfig, name=dc1 result
+            would be http://example.com:8443/oapi/v1/namespaces/project1/deploymentconfigs/dc1
 
-        return either openshift or kubernetes url
-        depending on what kind is passed
+        Args:
+            namespace (str): Kubernetes namespace or Openshift project name
+            kind (str): kind of the object
+            name (str): object name if modifying or deleting specific object (optional)
+
+        Returns:
+            Full url (str) for given kind, namespace and name
         """
         url = None
 
@@ -228,8 +268,7 @@ class OpenShiftProvider(Provider):
             logger.error(msg)
             raise ProviderFailedException(msg)
 
-        url = urljoin(url, "namespaces/%s/" % namespace)
-        url = urljoin(url, "%s/" % resource)
+        url = urljoin(url, "namespaces/%s/%s/" % (namespace, resource))
 
         if name:
             url = urljoin(url, name)
