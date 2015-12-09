@@ -62,9 +62,7 @@ class Marathon(Provider):
             try:
                 res = requests.post(url, json=artifact)
             except requests.exceptions.Timeout, e:
-                printErrorStatus(e)
-                # TODO - raise Exception or do sys.exit(1)
-                sys.exit(1)
+                raise ProviderFailedException(e.message)
             if res.status_code == 201:
                 logger.info(
                     "Marathon app %s sucessfully deployed.",
@@ -90,9 +88,7 @@ class Marathon(Provider):
             try:
                 res = requests.post(url, json=artifact)
             except requests.exceptions.Timeout, e:
-                printErrorStatus(e)
-                # TODO - raise Exception or do sys.exit(1)
-                sys.exit(1)
+                raise ProviderFailedException(e.message)
             if res.status_code == 200:
                 logger.info(
                     "Marathon app %s sucessfully deleted.",
