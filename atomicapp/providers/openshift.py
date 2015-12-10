@@ -164,10 +164,16 @@ class OpenShiftProvider(Provider):
             # kind has to be specified in artifact
             if "kind" not in data.keys():
                 raise ProviderFailedException(
-                    "Error processing %s artifact. There is no kind" %
-                    artifact)
+                    "Error processing %s artifact. There is no kind" % artifact)
 
             kind = data["kind"].lower()
+            resource = self._kind_to_resource(kind)
+
+            # check if resource is supported by apis
+            if resource not in self.oapi_resources \
+                    and resource not in self.kapi_resources:
+                raise ProviderFailedException(
+                    "Unsupported kind %s in artifact %s" % (kind, artifact))
 
             # process templates
             if kind == "template":
@@ -263,10 +269,6 @@ class OpenShiftProvider(Provider):
             url = self.openshift_api
         elif resource in self.kapi_resources:
             url = self.kubernetes_api
-        else:
-            msg = "Unsupported resource %s" % resource
-            logger.error(msg)
-            raise ProviderFailedException(msg)
 
         url = urljoin(url, "namespaces/%s/%s/" % (namespace, resource))
 
