@@ -50,16 +50,21 @@ class OpenShiftProvider(Provider):
     def init(self):
         self.openshift_artifacts = {}
 
-        if self.config.get(ACCESS_TOKEN_KEY):
-            self.access_token = self.config.get(ACCESS_TOKEN_KEY)
+        if self.config_file:
+            (self.providerapi, self.access_token, self.namespace) = \
+                self._parse_kubeconf(self.config_file)
         else:
-            raise ProviderFailedException("No %s specified" % ACCESS_TOKEN_KEY)
+            if self.config.get(ACCESS_TOKEN_KEY):
+                self.access_token = self.config.get(ACCESS_TOKEN_KEY)
+            else:
+                raise ProviderFailedException(
+                    "No %s specified" % ACCESS_TOKEN_KEY)
 
-        if self.config.get(PROVIDER_API_KEY):
-            self.providerapi = self.config.get(PROVIDER_API_KEY)
+            if self.config.get(PROVIDER_API_KEY):
+                self.providerapi = self.config.get(PROVIDER_API_KEY)
 
-        if self.config.get(NAMESPACE_KEY):
-            self.namespace = self.config.get(NAMESPACE_KEY)
+            if self.config.get(NAMESPACE_KEY):
+                self.namespace = self.config.get(NAMESPACE_KEY)
 
         # construct full urls for api endpoints
         self.openshift_api = urljoin(self.providerapi, "oapi/v1/")
@@ -278,3 +283,56 @@ class OpenShiftProvider(Provider):
         url = urljoin(url, "?access_token={}".format(self.access_token))
         logger.debug("url: %s", url)
         return url
+
+    def _parse_kubeconf(self, f):
+        """"
+        Parse kubectl config file
+
+        Args:
+            f (string): path to configuration file (e.g. ./kube/config)
+
+        Returns:
+            tuple with server url, oauth token and namespace
+            (url, token, namespace)
+        """
+
+        url = None
+        token = None
+        namespace = None
+
+        logger.debug("Parsing %s", f)
+
+        with open(f, 'r') as fp:
+            kubecfg = anymarkup.parse(fp.read())
+
+        current_context = kubecfg["current-context"]
+
+        logger.debug("current context: %s", current_context)
+
+        context = None
+        for co in kubecfg["contexts"]:
+            if co["name"] == current_context:
+                context = co
+
+        cluster = None
+        for cl in kubecfg["clusters"]:
+            if cl["name"] == context["context"]["cluster"]:
+                cluster = cl
+
+        user = None
+        for usr in kubecfg["users"]:
+            if usr["name"] == context["context"]["user"]:
+                user = usr
+
+        if not context or not cluster or not user:
+            raise ProviderFailedException("Invalid %s", f)
+
+        logger.debug("context: %s", context)
+        logger.debug("cluster: %s", cluster)
+        logger.debug("user: %s", user)
+
+        url = cluster["cluster"]["server"]
+        token = user["user"]["token"]
+        namespace = context["context"]["namespace"]
+
+        return (url, token, namespace)
