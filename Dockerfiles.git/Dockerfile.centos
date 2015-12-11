@@ -23,7 +23,6 @@ RUN yum install -y epel-release && \
     yum clean all
 
 WORKDIR /atomicapp
-VOLUME /atomicapp
 
 ENV PYTHONPATH  /opt/atomicapp/
 

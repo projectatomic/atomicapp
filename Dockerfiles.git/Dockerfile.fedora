@@ -22,7 +22,6 @@ RUN dnf install -y --setopt=tsflags=nodocs docker && \
     dnf clean all
 
 WORKDIR /atomicapp
-VOLUME /atomicapp
 
 ENV PYTHONPATH  /opt/atomicapp/
 

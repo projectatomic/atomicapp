@@ -15,7 +15,6 @@ LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
       INSTALL="docker run -it --rm \${OPT1} --privileged -v `pwd`:/atomicapp -v /run:/run -v /:/host --name \${NAME} -e NAME=\${NAME} -e IMAGE=\${IMAGE} \${IMAGE} -v \${OPT2} install \${OPT3} \${IMAGE}"
 
 WORKDIR /atomicapp
-VOLUME /atomicapp
 
 RUN dnf install -y atomicapp-${ATOMICAPPVERSION} ${TESTING} --setopt=tsflags=nodocs && \
     dnf clean all
