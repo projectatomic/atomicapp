@@ -22,10 +22,11 @@ import anymarkup
 import requests
 from urlparse import urljoin
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.constants import (PROVIDER_API_KEY,
-                                 ACCESS_TOKEN_KEY,
+from atomicapp.constants import (ACCESS_TOKEN_KEY,
+                                 ANSWERS_FILE,
                                  DEFAULT_NAMESPACE,
-                                 NAMESPACE_KEY)
+                                 NAMESPACE_KEY,
+                                 PROVIDER_API_KEY)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -50,21 +51,8 @@ class OpenShiftProvider(Provider):
     def init(self):
         self.openshift_artifacts = {}
 
-        if self.config_file:
-            (self.providerapi, self.access_token, self.namespace) = \
-                self._parse_kubeconf(self.config_file)
-        else:
-            if self.config.get(ACCESS_TOKEN_KEY):
-                self.access_token = self.config.get(ACCESS_TOKEN_KEY)
-            else:
-                raise ProviderFailedException(
-                    "No %s specified" % ACCESS_TOKEN_KEY)
-
-            if self.config.get(PROVIDER_API_KEY):
-                self.providerapi = self.config.get(PROVIDER_API_KEY)
-
-            if self.config.get(NAMESPACE_KEY):
-                self.namespace = self.config.get(NAMESPACE_KEY)
+        (self.providerapi, self.access_token, self.namespace) = \
+            self._get_config_values()
 
         # construct full urls for api endpoints
         self.openshift_api = urljoin(self.providerapi, "oapi/v1/")
@@ -284,25 +272,45 @@ class OpenShiftProvider(Provider):
         logger.debug("url: %s", url)
         return url
 
-    def _parse_kubeconf(self, f):
+    def _parse_kubeconf(self, filename):
         """"
         Parse kubectl config file
 
         Args:
-            f (string): path to configuration file (e.g. ./kube/config)
+            filename (string): path to configuration file (e.g. ./kube/config)
 
         Returns:
             tuple with server url, oauth token and namespace
             (url, token, namespace)
+
+        Example of expected file format:
+            apiVersion: v1
+            clusters:
+            - cluster:
+                server: https://10.1.2.2:8443
+              name: 10-1-2-2:8443
+            contexts:
+            - context:
+                cluster: 10-1-2-2:8443
+                namespace: test
+                user: test-admin/10-1-2-2:8443
+              name: test/10-1-2-2:8443/test-admin
+            current-context: test/10-1-2-2:8443/test-admin
+            kind: Config
+            preferences: {}
+            users:
+            - name: test-admin/10-1-2-2:8443
+            user:
+                token: abcdefghijklmnopqrstuvwxyz0123456789ABCDEF
         """
 
         url = None
         token = None
         namespace = None
 
-        logger.debug("Parsing %s", f)
+        logger.debug("Parsing %s", filename)
 
-        with open(f, 'r') as fp:
+        with open(filename, 'r') as fp:
             kubecfg = anymarkup.parse(fp.read())
 
         current_context = kubecfg["current-context"]
@@ -325,7 +333,7 @@ class OpenShiftProvider(Provider):
                 user = usr
 
         if not context or not cluster or not user:
-            raise ProviderFailedException("Invalid %s", f)
+            raise ProviderFailedException("Invalid %s", filename)
 
         logger.debug("context: %s", context)
         logger.debug("cluster: %s", cluster)
@@ -333,6 +341,61 @@ class OpenShiftProvider(Provider):
 
         url = cluster["cluster"]["server"]
         token = user["user"]["token"]
-        namespace = context["context"]["namespace"]
+        if "namespace" in context["context"]:
+            namespace = context["context"]["namespace"]
 
         return (url, token, namespace)
+
+    def _get_config_values(self):
+        """
+        Reads providerapi, namespace and accesstoken from answers.conf and
+        corresponding values from providerconfig (if set).
+        Use one that is set, if both are set and have conflicting values raise
+        exception.
+
+        Returns:
+            tuple (providerapi, accesstoken, providerapi)
+
+        Raises:
+            ProviderFailedException: values in providerconfig and answers.conf
+                are in conflict
+
+        """
+        result = {"namespace": self.namespace,
+                  "access_token": self.access_token,
+                  "providerapi": self.providerapi}
+
+        answers = {"namespace": None,
+                   "access_token": None,
+                   "providerapi": None}
+        providerconfig = {"namespace": None,
+                          "access_token": None,
+                          "providerapi": None}
+
+        answers["namespace"] = self.config.get(NAMESPACE_KEY)
+        answers["access_token"] = self.config.get(ACCESS_TOKEN_KEY)
+        answers["providerapi"] = self.config.get(PROVIDER_API_KEY)
+
+        if self.config_file:
+            (providerconfig["providerapi"], providerconfig["access_token"],
+             providerconfig["namespace"]) = self._parse_kubeconf(self.config_file)
+
+        # decide between values from answers.conf and providerconfig
+        # if only one is set use that, report if they are in conflict
+        for k in ["namespace", "access_token", "providerapi"]:
+            if answers[k] and not providerconfig[k]:
+                result[k] = answers[k]
+            if not answers[k] and providerconfig[k]:
+                result[k] = providerconfig[k]
+            if answers[k] and providerconfig[k]:
+                if answers[k] == providerconfig[k]:
+                    result[k] = answers[k]
+                else:
+                    msg = "There are conflicting values in %s (%s) and %s (%s)"\
+                        % (self.config_file, providerconfig[k], ANSWERS_FILE,
+                           answers[k])
+                    logger.error(msg)
+                    raise ProviderFailedException(msg)
+        return (result["providerapi"],
+                result["access_token"],
+                result["namespace"])
