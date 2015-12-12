@@ -4,6 +4,7 @@ from atomicapp.nulecule.base import Nulecule
 
 
 class TestNuleculeRun(unittest.TestCase):
+
     """Test Nulecule run"""
 
     def test_run(self):
@@ -12,7 +13,7 @@ class TestNuleculeRun(unittest.TestCase):
         mock_component_1 = mock.Mock()
         mock_component_2 = mock.Mock()
 
-        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        n = Nulecule('some-id', '0.0.2', {}, [{}], 'some/path')
         n.components = [mock_component_1, mock_component_2]
         n.run(provider)
 
@@ -21,6 +22,7 @@ class TestNuleculeRun(unittest.TestCase):
 
 
 class TestNuleculeStop(unittest.TestCase):
+
     """Test Nulecule stop"""
 
     def test_stop(self):
@@ -38,6 +40,7 @@ class TestNuleculeStop(unittest.TestCase):
 
 
 class TestNuleculeLoadConfig(unittest.TestCase):
+
     """Test Nulecule load_config"""
 
     def test_load_config(self):
@@ -59,6 +62,7 @@ class TestNuleculeLoadConfig(unittest.TestCase):
 
 
 class TestNuleculeLoadComponents(unittest.TestCase):
+
     """Test loading NuleculeComponents for a Nulecule"""
 
     @mock.patch('atomicapp.nulecule.base.NuleculeComponent')
@@ -89,6 +93,7 @@ class TestNuleculeLoadComponents(unittest.TestCase):
 
 
 class TestNuleculeRender(unittest.TestCase):
+
     """Test Nulecule render"""
 
     def test_render(self):
