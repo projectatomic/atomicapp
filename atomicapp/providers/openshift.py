@@ -62,10 +62,19 @@ class OpenShiftProvider(Provider):
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
 
         # get list of supported resources for each api
-        self.oapi_resources = requests.get(
-            self.openshift_api, verify=self.ssl_verify).json()["resources"]
-        self.kapi_resources = requests.get(
-            self.kubernetes_api, verify=self.ssl_verify).json()["resources"]
+        (status_code, return_data) = self._make_request("get",
+                                                        self.openshift_api)
+        if status_code == 200:
+            self.oapi_resources = return_data["resources"]
+        else:
+            raise ProviderFailedException("Cannot get OpenShift resource list")
+
+        (status_code, return_data) = self._make_request("get",
+                                                        self.kubernetes_api)
+        if status_code == 200:
+            self.kapi_resources = return_data["resources"]
+        else:
+            raise ProviderFailedException("Cannot get Kubernetes resource list")
 
         # convert resources list of dicts to list of names
         self.oapi_resources = [res['name'] for res in self.oapi_resources]
@@ -103,12 +112,13 @@ class OpenShiftProvider(Provider):
                 if self.dryrun:
                     logger.info("DRY-RUN: %s", url)
                     continue
-                res = requests.post(url, json=artifact, verify=self.ssl_verify)
-                if res.status_code == 201:
+                (status_code, return_data) = \
+                    self._make_request("post", url, data=artifact)
+                if status_code == 201:
                     logger.info("Object %s sucessfully deployed.",
                                 artifact['metadata']['name'])
                 else:
-                    msg = "%s %s" % (res.status_code, res.content)
+                    msg = "%s %s" % (status_code, return_data)
                     logger.error(msg)
                     # TODO: remove running components (issue: #428)
                     raise ProviderFailedException(msg)
@@ -135,11 +145,11 @@ class OpenShiftProvider(Provider):
                     logger.info("DRY-RUN: %s", url)
                     continue
 
-                res = requests.delete(url, verify=self.ssl_verify)
-                if res.status_code == 200:
-                    logger.info(" %s sucessfully undeployed.", res.content)
+                (status_code, return_data) = self._make_request("delete", url)
+                if status_code == 200:
+                    logger.info(" %s sucessfully undeployed.", return_data)
                 else:
-                    msg = "%s %s" % (res.status_code, res.content)
+                    msg = "%s %s" % (status_code, return_data)
                     logger.error(msg)
                     raise ProviderFailedException(msg)
 
@@ -198,14 +208,14 @@ class OpenShiftProvider(Provider):
             List of objects from processed template.
         """
         logger.debug("processing template: %s", template)
-        url = self._get_url(self._get_namespace(template), 'processedtemplates')
-        res = requests.post(url, json=template, verify=self.ssl_verify)
-        if res.status_code == 201:
+        url = self._get_url(self._get_namespace(template), "processedtemplates")
+        (status_code, return_data) = self._make_request("post", url, data=template)
+        if status_code == 201:
             logger.info("template proccessed %s", template['metadata']['name'])
-            logger.debug("processed template %s", res.json())
-            return res.json()['objects']
+            logger.debug("processed template %s", return_data)
+            return return_data['objects']
         else:
-            msg = "%s %s" % (res.status_code, res.content)
+            msg = "%s %s" % (status_code, return_data)
             logger.error(msg)
             raise ProviderFailedException(msg)
 
@@ -399,3 +409,49 @@ class OpenShiftProvider(Provider):
         return (result["providerapi"],
                 result["access_token"],
                 result["namespace"])
+
+    def _make_request(self, method, url, data=None):
+        """
+        Make HTTP request to url
+
+        Args:
+            method (str): http method (post/get/delete)
+            url (str): url
+            data (dict/list): object to be serialised to json and send as http data
+                              (when method=post)
+
+        Returns:
+            tuple (status_code, return_data): status_code - http status code
+                                              return_data - deserialised json object
+
+        Raises:
+            ProviderFailedException: connect or read timeout when communicating
+                                     with api
+        """
+
+        status_code = None
+        return_data = None
+
+        try:
+            if method.lower() == "get":
+                res = requests.get(url, verify=self.ssl_verify)
+            elif method.lower() == "post":
+                res = requests.post(url, json=data, verify=self.ssl_verify)
+            elif method.lower() == "delete":
+                res = requests.delete(url, json=data, verify=self.ssl_verify)
+
+            status_code = res.status_code
+            return_data = res.json()
+        except requests.exceptions.ConnectTimeout:
+            msg = "Timeout when connecting to  %s" % url
+            logger.error(msg)
+            raise ProviderFailedException(msg)
+        except requests.exceptions.ReadTimeout:
+            msg = "Timeout when reading from %s" % url
+            logger.error(msg)
+            raise ProviderFailedException(msg)
+        except ValueError:
+            # invalid json
+            return_data = None
+
+        return (status_code, return_data)
