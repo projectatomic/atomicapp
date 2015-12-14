@@ -8,7 +8,7 @@
       "portMappings": [
         {
           "containerPort": 80,
-          "servicePort": "$hostport",
+          "servicePort": $hostport,
           "hostPort": 0,
           "protocol": "tcp"
         }

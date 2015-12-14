@@ -22,7 +22,6 @@ import requests
 import urlparse
 import logging
 import os
-import sys
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus
 from atomicapp.constants import PROVIDER_API_KEY
