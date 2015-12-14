@@ -123,36 +123,6 @@ class OpenShiftProvider(Provider):
                     # TODO: remove running components (issue: #428)
                     raise ProviderFailedException(msg)
 
-    def undeploy(self):
-        logger.debug("starting undeploy")
-        # TODO: scale down replicationController before deleting deploymentConf
-        for kind, objects in self.openshift_artifacts.iteritems():
-            for artifact in objects:
-                namespace = self._get_namespace(artifact)
-
-                # get name from metadata so we know which object to be deleted
-                if "metadata" in artifact and \
-                        "name" in artifact["metadata"]:
-                    name = artifact["metadata"]["name"]
-                else:
-                    raise ProviderFailedException("Cannot undeploy. There is no"
-                                                  " name in artifacts metadata "
-                                                  "artifact=%s" % artifact)
-
-                url = self._get_url(namespace, kind, name)
-
-                if self.dryrun:
-                    logger.info("DRY-RUN: %s", url)
-                    continue
-
-                (status_code, return_data) = self._make_request("delete", url)
-                if status_code == 200:
-                    logger.info(" %s sucessfully undeployed.", return_data)
-                else:
-                    msg = "%s %s" % (status_code, return_data)
-                    logger.error(msg)
-                    raise ProviderFailedException(msg)
-
     def _process_artifacts(self):
         """
         Parse OpenShift manifests files and checks if manifest under
