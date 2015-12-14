@@ -12,3 +12,6 @@ image:
 
 syntax-check:
 	flake8 atomicapp
+
+clean:
+	python setup.py clean --all
