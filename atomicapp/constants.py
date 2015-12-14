@@ -62,3 +62,5 @@ DEFAULT_ANSWERS = {
 PROVIDER_CONFIG_KEY = "providerconfig"
 
 PROVIDERS = ['docker', 'kubernetes', 'openshift']
+PROVIDER_API_KEY = "providerapi"
+ACCESS_TOKEN_KEY = "accesstoken"

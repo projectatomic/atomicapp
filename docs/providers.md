@@ -8,30 +8,74 @@ Not all Atomic Apps must support each provider: one Atomic App may only include 
 Atomic App 0.2.3 includes three providers:
 
   * Docker
-
   * Kubernetes
-
   * OpenShift 3
 
+The Docker and Kubernetes providers assume that you install and run the Atomic App on a host that is part of the backend cluster or runs docker directly.
 
-All providers assume that you install and run the Atomic App on a host that is part of the backend cluster or runs docker directly. By now we do not support remote deployments.
+OpenShift may be run in two modes.
+
+1. OpenShift native, using `oc new-app` command
+1. Atomic CLI
+
+In native mode an application may be launched using the `oc new-app` command and it will be deployed on a pod. In Atomic mode applications are run like other providers using a local `answers.conf` file.
 
 ## Choosing and configuring a provider
 While deploying an Atomic App you can choose one of the providers by setting it in `answers.conf`:
 
-### OpenShift
+### OpenShift 3.0
 
-For OpenShift a configuration file is required. You need to specify
-something like the following in your `answers.conf` file:
+Note: **skip this configuration** if running in *native mode*. To run the application using the Atomic CLI a configuration file is required. You need to specify something like the following in your `answers.conf` file:
 
+There are two options how to configure OpenShift provider. You have to choose one of them (either `providerconfig` or `providerapi` & `accesstoken`).
+
+#### Option 1: providerconfig
+Specify `provoviderconfig` in your `answers.conf` file.
+`providerconfig` should be path to CLI configuration file for `oc` command.
+For more information see [OpenShift documentation](https://docs.openshift.com/enterprise/3.0/cli_reference/get_started_cli.html#cli-configuration-files)
+
+##### Openshift configuration values
+Keyword        | Required  | Description                                           | Default value
+---------------|-----------|-------------------------------------------------------|--------------
+providerconfig |   yes     | path to `oc configuration file                        |
+namespace     *|   no      | OpenShift project name                                | default
+
+\* If `namespace` is already set in `providerconfig` (by calling `oc project <project_name>` or `oc new-project <project_name>` ), 
+do not set it in `answers.conf` or value of `namespace` in `answers.conf` must match `namespace` from `providerconfig`.
+This is true only if there is no `namespace` in artifact metadata otherwise `namespace` from artifacts  metadata is used.
+
+
+##### answers.conf example
 ```
 [general]
-provider: openshift
-providerconfig: /host/home/foo/.kube/config
+provider = openshift
+providerconfig = /home/user/.kube/config
 ```
 
-This specifies to Atomic App where to access the configuration file
-by using the `providerconfig` option.
+#### Option 2: providerapi and accesstoken
+Manually set `providerapi` and `accesstoken` for OpenShift.
+
+##### Openshift configuration values
+Keyword     | Required  | Description                                           | Default value
+------------|-----------|-------------------------------------------------------|--------------
+providerapi |   yes     | full URL for OpenShift server                         | `https://localhost:8443`
+accesstoken |   yes     | session token for authentication to OpenShift         |
+namespace * |   no      | OpenShift project name                                | default
+
+\* This is used only when there is no `namespace` in artifact metadata.
+
+You can get session token from console by running `oc whoami -t` or if you are not using `oc` client
+you can get it via web browser on `https://<openshift server>/oauth/token/request`
+
+##### answers.conf example
+```
+[general]
+provider = openshift
+providerapi = https://10.1.2.2:8443
+accesstoken = sadfasdfasfasfdasfasfasdfsafasfd
+namespace = proj1
+```
+
 
 ### Kubernetes
 
@@ -126,8 +170,17 @@ This command undeploys the app in Kubernetes cluster in specified namespace. For
 
 **Features**
 
-The OpenShift3 Provider will deploy and run an Atomic App on an OpenShift3 instance provided via an OpenShift3 configuration file. An OpenShift3 configuration file is written to a disk provided that you have logged in see [osc login announcement](http://lists.openshift.redhat.com/openshift-archives/users/2015-March/msg00014.html)
+The primary use case of the OpenShift3 Provider is to run the Atomic App image natively using the `oc new-app` command. Here is a diagram of how it works.
 
+![OpenShift V3 and Atomic App](https://docs.google.com/drawings/d/13mfTkxv_M3jM6WMsgpJtoKkX4nuVuTPcPSfsebN3qKA/pub?w=884&h=320)
+
+1. The Atomic App image has two metadata LABELs (see below).
+1. When `oc new-app` is run the Atomic App image is remotely inspected.
+1. The OpenShift Master run the Atomic App image based on the LABELs.
+1. The user's token is passed into the resulting pod as a secret to authorize API calls.
+1. The Atomic App pod makes API calls to the OpenShift Master to create or run the application.
+
+An Atomic App may also be deployed and run using the `atomic` CLI provided via an OpenShift3 configuration file. An OpenShift3 configuration file is written to a disk provided that you have logged in see [osc login announcement](http://lists.openshift.redhat.com/openshift-archives/users/2015-March/msg00014.html)
 
 You need to provide a path to a copy of `.config/openshift/.config` as `providerconfig` so that the provider may use this configuration to deploy and run the Atomic App.
 
