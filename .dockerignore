@@ -1,0 +1,7 @@
+# Initially Ignore everything 
+*
+# Except for these few things we want to include
+!atomicapp/*
+!requirements.txt
+!test-requirements.txt
+!tests/*
