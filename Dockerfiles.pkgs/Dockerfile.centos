@@ -16,6 +16,11 @@ LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
 
 WORKDIR /atomicapp
 
+# If a volume doesn't get mounted over /atomicapp (like when running in 
+# an openshift pod) then open up permissions so files can be copied into
+# the directory by non-root.
+RUN chmod 777 /atomicapp
+
 RUN yum install -y epel-release && \
     yum install -y atomicapp-${ATOMICAPPVERSION} ${TESTING} --setopt=tsflags=nodocs && \
     yum clean all
