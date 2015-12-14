@@ -23,15 +23,57 @@ In native mode an application may be launched using the `oc new-app` command and
 ## Choosing and configuring a provider
 While deploying an Atomic App you can choose one of the providers by setting it in `answers.conf`:
 
-### OpenShift
+### OpenShift 3.0
 
 Note: **skip this configuration** if running in *native mode*. To run the application using the Atomic CLI a configuration file is required. You need to specify something like the following in your `answers.conf` file:
 
+There are two options how to configure OpenShift provider. You have to choose one of them (either `providerconfig` or `providerapi` & `accesstoken`).
+
+#### Option 1: providerconfig
+Specify `provoviderconfig` in your `answers.conf` file.
+`providerconfig` should be path to CLI configuration file for `oc` command.
+For more information see [OpenShift documentation](https://docs.openshift.com/enterprise/3.0/cli_reference/get_started_cli.html#cli-configuration-files)
+
+##### Openshift configuration values
+Keyword        | Required  | Description                                           | Default value
+---------------|-----------|-------------------------------------------------------|--------------
+providerconfig |   yes     | path to `oc configuration file                        |
+namespace     *|   no      | OpenShift project name                                | default
+
+\* If `namespace` is already set in `providerconfig` (by calling `oc project <project_name>` or `oc new-project <project_name>` ), 
+do not set it in `answers.conf` or value of `namespace` in `answers.conf` must match `namespace` from `providerconfig`.
+This is true only if there is no `namespace` in artifact metadata otherwise `namespace` from artifacts  metadata is used.
+
+
+##### answers.conf example
 ```
 [general]
-provider: openshift
-providerapi: https://10.1.2.2:8443
-accesstoken: sadfasdfasfasfdasfasfasdfsafasfd
+provider = openshift
+providerconfig = /home/user/.kube/config
+```
+
+#### Option 2: providerapi and accesstoken
+Manually set `providerapi` and `accesstoken` for OpenShift.
+
+##### Openshift configuration values
+Keyword     | Required  | Description                                           | Default value
+------------|-----------|-------------------------------------------------------|--------------
+providerapi |   yes     | full URL for OpenShift server                         | `https://localhost:8443`
+accesstoken |   yes     | session token for authentication to OpenShift         |
+namespace * |   no      | OpenShift project name                                | default
+
+\* This is used only when there is no `namespace` in artifact metadata.
+
+You can get session token from console by running `oc whoami -t` or if you are not using `oc` client
+you can get it via web browser on `https://<openshift server>/oauth/token/request`
+
+##### answers.conf example
+```
+[general]
+provider = openshift
+providerapi = https://10.1.2.2:8443
+accesstoken = sadfasdfasfasfdasfasfasdfsafasfd
+namespace = proj1
 ```
 
 
