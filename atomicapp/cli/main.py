@@ -31,6 +31,7 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  __NULECULESPECVERSION__,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
+                                 APP_ENT_PATH,
                                  HOST_DIR,
                                  LOCK_FILE,
                                  PROVIDERS)
@@ -249,6 +250,13 @@ class CLI():
     def run(self):
         self.set_arguments()  # Set our arguments
         cmdline = sys.argv[1:]  # Grab args from cmdline
+
+        # If we are running in an openshift pod (via `oc new-app`) then
+        # there is no cmdline but we want to default to "atomicapp run".
+        # In this case copy files to cwd and use the working directory.
+        if Utils.running_on_openshift():
+            Utils.copy_dir(os.path.join('/', APP_ENT_PATH), './')
+            cmdline = 'run --verbose ./'.split()
 
         # We want to be able to place options anywhere on the command
         # line. We have added all global options to each subparser,
