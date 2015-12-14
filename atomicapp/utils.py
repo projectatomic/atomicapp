@@ -26,6 +26,7 @@ import re
 import collections
 import anymarkup
 import uuid
+import requests
 from distutils.spawn import find_executable
 
 import logging
@@ -112,6 +113,45 @@ class Utils(object):
         self.target_path = target_path
         if workdir:
             self.__workdir = workdir
+
+    @staticmethod
+    def running_on_openshift():
+        """
+        If we can detect the openshift api endpoint from the
+        environment and connect to it then we are running in
+        openshift.
+        """
+
+        # Detect possible openshift api url, if none then not in openshift env
+        url = Utils.get_openshift_api_endpoint_from_env()
+        if not url:
+            return False
+
+        # Validate it as an openshift endpoint (could just be
+        # kubernetes). Don't worry about ssl verification for now
+        # as the openshift provider will do that.
+        try:
+            response = requests.get(url, verify=False)
+            if response.status_code == 200:
+                logger.debug("Detected environment: openshift pod")
+                return True
+        except:
+            return False
+        return False
+
+    @staticmethod
+    def get_openshift_api_endpoint_from_env():
+        """
+        The KUBERNETES_SERVICE_HOST env var should only exist
+        on an openshift or kubernetes environment. Here we check that
+        variable and return the url of the openshift api endpoint that
+        will exist if we are in openshift.
+        """
+        service_host = os.getenv("KUBERNETES_SERVICE_HOST")
+        if service_host:
+            return "https://%s/oapi" % service_host
+        else:
+            return False
 
     @staticmethod
     def isTrue(val):
