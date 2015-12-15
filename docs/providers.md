@@ -10,11 +10,12 @@ only include deployment information for OpenShift while another supports
 OpenShift and Kubernetes.
 
 ## List of providers
-Atomic App includes three providers:
+Atomic App includes four providers:
 
   * Docker
   * Kubernetes
   * OpenShift 3
+  * Marathon
 
 You can run any of the providers via the Atomic App CLI.
 
@@ -28,3 +29,4 @@ below:
    * [Docker](./providers/docker/overview.md)
    * [Kubernetes](./providers/kubernetes/overview.md)
    * [OpenShift](./providers/openshift/overview.md)
+   * [Marathon](./providers/marathon/overview.md)
