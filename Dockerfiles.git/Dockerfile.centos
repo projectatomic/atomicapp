@@ -23,7 +23,16 @@ RUN yum install -y epel-release && \
     yum clean all
 
 WORKDIR /atomicapp
-VOLUME /atomicapp
+
+# If a volume doesn't get mounted over /atomicapp (like when running in 
+# an openshift pod) then open up permissions so files can be copied into
+# the directory by non-root.
+RUN chmod 777 /atomicapp
+
+# If a volume doesn't get mounted over /run (like when running in an
+# openshift pod) then open up permissions so the lock file can be
+# created by non-root.
+RUN chmod 777 /run/lock
 
 ENV PYTHONPATH  /opt/atomicapp/
 
