@@ -90,16 +90,6 @@ class NuleculeManager(object):
             if os.path.isfile(os.path.join(self.app_path, ANSWERS_FILE)):
                 self.answers_file = os.path.join(self.app_path, ANSWERS_FILE)
 
-        # TODO: put this in a better place in the future.
-        # If we are running inside of an openshift pod then override
-        # some of the config by detecting some values from the environment
-        if Utils.running_on_openshift():
-            self.answers[GLOBAL_CONF]['provider'] = 'openshift'
-            self.answers[GLOBAL_CONF]['accesstoken'] = os.environ['TOKEN_ENV_VAR']
-            self.answers[GLOBAL_CONF]['namespace'] = os.environ['POD_NAMESPACE']
-            self.answers[GLOBAL_CONF]['providerapi'] = \
-                Utils.get_openshift_api_endpoint_from_env()
-
     def unpack(self, update=False,
                dryrun=False, nodeps=False, config=None):
         """
