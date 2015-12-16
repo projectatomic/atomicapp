@@ -15,7 +15,7 @@ Atomic App includes four providers:
   * Docker
   * Kubernetes
   * OpenShift 3
-  * Marathon
+  * Marathon (Mesos)
 
 You can run any of the providers via the Atomic App CLI.
 
@@ -29,4 +29,4 @@ below:
    * [Docker](./providers/docker/overview.md)
    * [Kubernetes](./providers/kubernetes/overview.md)
    * [OpenShift](./providers/openshift/overview.md)
-   * [Marathon](./providers/marathon/overview.md)
+   * [Marathon (Mesos)](./providers/marathon/overview.md)
