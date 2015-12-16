@@ -19,8 +19,8 @@
 
 import os
 import anymarkup
-import requests
 from urlparse import urljoin
+from atomicapp.utils import Utils
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.constants import (ACCESS_TOKEN_KEY,
                                  ANSWERS_FILE,
@@ -62,15 +62,19 @@ class OpenShiftProvider(Provider):
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
 
         # get list of supported resources for each api
-        (status_code, return_data) = self._make_request("get",
-                                                        self.openshift_api)
+        (status_code, return_data) = \
+            Utils.make_rest_request("get",
+                                    self.openshift_api,
+                                    verify=self.ssl_verify)
         if status_code == 200:
             self.oapi_resources = return_data["resources"]
         else:
             raise ProviderFailedException("Cannot get OpenShift resource list")
 
-        (status_code, return_data) = self._make_request("get",
-                                                        self.kubernetes_api)
+        (status_code, return_data) = \
+            Utils.make_rest_request("get",
+                                    self.kubernetes_api,
+                                    verify=self.ssl_verify)
         if status_code == 200:
             self.kapi_resources = return_data["resources"]
         else:
@@ -113,7 +117,10 @@ class OpenShiftProvider(Provider):
                     logger.info("DRY-RUN: %s", url)
                     continue
                 (status_code, return_data) = \
-                    self._make_request("post", url, data=artifact)
+                    Utils.make_rest_request("post",
+                                            url,
+                                            verify=self.ssl_verify,
+                                            data=artifact)
                 if status_code == 201:
                     logger.info("Object %s sucessfully deployed.",
                                 artifact['metadata']['name'])
@@ -179,7 +186,11 @@ class OpenShiftProvider(Provider):
         """
         logger.debug("processing template: %s", template)
         url = self._get_url(self._get_namespace(template), "processedtemplates")
-        (status_code, return_data) = self._make_request("post", url, data=template)
+        (status_code, return_data) = \
+            Utils.make_rest_request("post",
+                                    url,
+                                    verify=self.ssl_verify,
+                                    data=template)
         if status_code == 201:
             logger.info("template proccessed %s", template['metadata']['name'])
             logger.debug("processed template %s", return_data)
@@ -379,49 +390,3 @@ class OpenShiftProvider(Provider):
         return (result["providerapi"],
                 result["access_token"],
                 result["namespace"])
-
-    def _make_request(self, method, url, data=None):
-        """
-        Make HTTP request to url
-
-        Args:
-            method (str): http method (post/get/delete)
-            url (str): url
-            data (dict/list): object to be serialised to json and send as http data
-                              (when method=post)
-
-        Returns:
-            tuple (status_code, return_data): status_code - http status code
-                                              return_data - deserialised json object
-
-        Raises:
-            ProviderFailedException: connect or read timeout when communicating
-                                     with api
-        """
-
-        status_code = None
-        return_data = None
-
-        try:
-            if method.lower() == "get":
-                res = requests.get(url, verify=self.ssl_verify)
-            elif method.lower() == "post":
-                res = requests.post(url, json=data, verify=self.ssl_verify)
-            elif method.lower() == "delete":
-                res = requests.delete(url, json=data, verify=self.ssl_verify)
-
-            status_code = res.status_code
-            return_data = res.json()
-        except requests.exceptions.ConnectTimeout:
-            msg = "Timeout when connecting to  %s" % url
-            logger.error(msg)
-            raise ProviderFailedException(msg)
-        except requests.exceptions.ReadTimeout:
-            msg = "Timeout when reading from %s" % url
-            logger.error(msg)
-            raise ProviderFailedException(msg)
-        except ValueError:
-            # invalid json
-            return_data = None
-
-        return (status_code, return_data)
