@@ -59,8 +59,8 @@ DEFAULT_ANSWERS = {
         "namespace": DEFAULT_NAMESPACE
     }
 }
-PROVIDER_CONFIG_KEY = "providerconfig"
 
-PROVIDERS = ['docker', 'kubernetes', 'openshift']
+PROVIDERS = ["docker", "kubernetes", "openshift", "marathon"]
 PROVIDER_API_KEY = "providerapi"
 ACCESS_TOKEN_KEY = "accesstoken"
+PROVIDER_CONFIG_KEY = "providerconfig"
