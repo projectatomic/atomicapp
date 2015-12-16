@@ -1,3 +1,75 @@
+## Atomic App 0.3.0 (12-16-2015)
+
+This release introduces a new provider (Mesos) as well as a major refactor of the OpenShift provider.
+
+For an extended list of changes please see the git log below of the changes between 0.2.3 and 0.3.0
+
+```
+Aaron Weitekamp <aweiteka@redhat.com>:
+      Update OpenShift docs to describe how native mode works
+
+Charlie Drage <charlie@charliedrage.com>:
+      Adds some more information when running --dry-run
+      Default to a reasonable provider in /artifacts
+      Minor fix in nulecule testing and flake8
+      Add clean to Makefile
+
+Dharmit Shah <shahdharmit@gmail.com>:
+      Common place for list of Providers
+      PEP8
+      Adds Marathon provider data for `helloapache` example
+      Nulecule for `helloapache` app now contains information about marathon artifacts
+      CLI tests for marathon provider using `helloapache` atomic app
+      Information about where to specify `providerapi` for Marathon provider
+      Changes suggested in PR review
+      Added try..except block for request
+      Catch `AnyMarkupError` instead of `Exception` for invalid artifacts
+      Use `ProviderFailedException` instead of `sys.exit`
+
+Dusty Mabe <dusty@dustymabe.com>:
+      Support for options anywhere on command line.
+      Adds dockerignore file.
+      Removes VOLUME from Dockerfiles.
+      Update working dir to have broader permissions.
+      Provider documentation update/re-organization.
+      utils: adds function to detect if running in openshift pod.
+      Act accordingly if run via `oc new-app`.
+      Allow non-root in openshift pod to grab lockfile.
+      Revert "Remove container on stopping on Docker provider. Fixes #389"
+
+Ratnadeep Debnath <rtnpro@gmail.com>:
+      Move global cli options to sub command level.
+      Remove container on stopping on Docker provider. Fixes #389
+
+Tomas Kral <tkral@redhat.com>:
+      first attempt to use OpenShift api instead of oc command
+      openshift - add pods and persistentvolumeclaims
+      add requests as dependency
+      openshift provider - fix duplicate deployment with composite apps
+      openshift provider cleanup and working undeploy
+      openshift-api refactoring
+      openshift-api add template processing
+      openshift-api keep types specified in json
+      openshift-api fix issues raised in code review #420
+      openshift-api validate artifact in _process_artifacts
+      openshift-api add providerconfig support
+      openshift-api fail if providerconfig and answers.conf are in conflict
+      openshift-api handle timeouts when communicating with remote api
+      openshift-api update docs
+      openshift-api remove undeploy() for now as it is not working properly
+      move openshift._make_request() to Utils.make_rest_request()
+      first draft of marathon provider
+      change providerurl to providerapi
+      fix dry-run for marathon
+      empty marathon_artifacts array in init()
+      marathon fixes
+      add Marathon to list of supported providers
+      raise exeption on AnyMarkupError in Marathon provider
+      mention Mesos with Marathon in docs
+      use Utils.make_rest_request in Marathon provider
+      add more docs to functions in Marathon provider
+```
+
 ## Atomic App 0.2.3 (12-02-2015)
 
 This release fixes numerous bugs as well as introduces some organizational changes to our main code-base.

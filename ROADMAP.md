@@ -11,13 +11,10 @@ We rank all ROADMAP objectives by order of priority. These are subject to freque
 #### High priority
  - __Persistent storage__
  - Implement stop for OpenShift provider
- - Refactoring OpenShift provider
  - Support running Kubernetes from an Openshift template
 
 #### Medium priority
  - Refactor logging 
- - Mesos provider 
- - Fix ordering arguments of CLI
  - AWS provider support
  - Docker compose provider
 
