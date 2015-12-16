@@ -50,6 +50,8 @@ class Marathon(Provider):
         self._process_artifacts()
 
     def deploy(self):
+        """ Deploys the app by given resource manifests.
+        """
         for artifact in self.marathon_artifacts:
             url = urlparse.urljoin(self.marathon_api, "apps/")
 
@@ -71,6 +73,9 @@ class Marathon(Provider):
                 raise ProviderFailedException(msg)
 
     def undeploy(self):
+        """ Undeploys the app by given resource manifests.
+        Undeploy operation deletes Marathon apps from cluster.
+        """
         for artifact in self.marathon_artifacts:
             url = urlparse.urljoin(
                 self.marathon_api,
@@ -95,8 +100,8 @@ class Marathon(Provider):
                 raise ProviderFailedException(msg)
 
     def _process_artifacts(self):
-        """
-        Parse and validate Marathon artifacts and save them to self.marathon_artifacts
+        """ Parse and validate Marathon artifacts
+        Parsed artifacts are saved  to self.marathon_artifacts
         """
         for artifact in self.artifacts:
             logger.debug("Procesesing artifact: %s", artifact)
