@@ -18,12 +18,12 @@
 """
 
 import anymarkup
-import requests
 import urlparse
 import logging
 import os
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus
+from atomicapp.utils import Utils
 from atomicapp.constants import PROVIDER_API_KEY
 
 logger = logging.getLogger(__name__)
@@ -58,17 +58,15 @@ class Marathon(Provider):
                 continue
 
             logger.debug("Deploying appid: %s", artifact["id"])
-            try:
-                res = requests.post(url, json=artifact)
-            except requests.exceptions.Timeout, e:
-                raise ProviderFailedException(e.message)
-            if res.status_code == 201:
+            (status_code, return_data) = \
+                Utils.make_rest_request("post", url, data=artifact)
+            if status_code == 201:
                 logger.info(
                     "Marathon app %s sucessfully deployed.",
                     artifact["id"])
             else:
                 msg = "Error deploying app: %s, Marathon API response %s - %s" % (
-                    artifact["id"], res.status_code, res.text)
+                    artifact["id"], status_code, return_data)
                 logger.error(msg)
                 raise ProviderFailedException(msg)
 
@@ -84,17 +82,15 @@ class Marathon(Provider):
                 continue
 
             logger.debug("Deleting appid: %s", artifact["id"])
-            try:
-                res = requests.post(url, json=artifact)
-            except requests.exceptions.Timeout, e:
-                raise ProviderFailedException(e.message)
-            if res.status_code == 200:
+            (status_code, return_data) =  \
+                Utils.make_rest_request("delete", url, data=artifact)
+            if status_code == 200:
                 logger.info(
                     "Marathon app %s sucessfully deleted.",
                     artifact["id"])
             else:
                 msg = "Error deleting app: %s, Marathon API response %s - %s" % (
-                    artifact["id"], res.status_code, res.text)
+                    artifact["id"], status_code, return_data)
                 logger.error(msg)
                 raise ProviderFailedException(msg)
 
