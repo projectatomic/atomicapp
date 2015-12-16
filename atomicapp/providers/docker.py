@@ -127,9 +127,18 @@ class DockerProvider(Provider):
             else:
                 m = re.match("%s_+%s+_+[a-zA-Z0-9]{12}" % (self.namespace, self.image), container)
             if m:
-                logger.info("STOPPING CONTAINER: %s", container)
-                cmd = ["docker", "kill", container]
+                logger.info("STOPPING AND REMOVING CONTAINER: %s", container)
+                cmd_list = [
+                    ["docker", "kill", container],
+                    ["docker", "rm", container]
+                ]
                 if self.dryrun:
-                    logger.info("DRY-RUN: STOPPING CONTAINER %s", " ".join(cmd))
+                    logger.info(
+                        "DRY-RUN: STOPPING CONTAINER %s", " ".join(
+                            cmd_list[0]))
+                    logger.info(
+                        "DRY-RUN: REMOVING CONTAINER %s", " ".join(
+                            cmd_list[1]))
                 else:
-                    subprocess.check_call(cmd)
+                    for cmd in cmd_list:
+                        subprocess.check_call(cmd)
