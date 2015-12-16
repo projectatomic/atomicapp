@@ -376,3 +376,55 @@ class Utils(object):
     def getSupportedProviders(path):
         providers = os.listdir(path + '/' + ARTIFACTS_FOLDER)
         return providers
+
+    @staticmethod
+    def make_rest_request(method, url, verify=True, data=None):
+        """
+        Make HTTP request to url
+
+        Args:
+            method (str): http method (post/get/delete)
+            url (str): url
+            verify (bool/string): wheter to verify ssl certificate or path
+                                  to CA_BUNDLE or direcotry with certifactes
+                                  of trusted CAs
+            data (dict/list): object to be serialised to json and send as http
+                              data (when method=post/put/delete)
+
+        Returns:
+            tuple (status_code, return_data): status_code - http status code
+                                              return_data - deserialised json object
+
+        Raises:
+            ProviderFailedException: connect or read timeout when communicating
+                                     with api
+        """
+
+        status_code = None
+        return_data = None
+
+        try:
+            if method.lower() == "get":
+                res = requests.get(url, verify=verify)
+            elif method.lower() == "post":
+                res = requests.post(url, json=data, verify=verify)
+            elif method.lower() == "put":
+                res = requests.put(url, json=data, verify=verify)
+            elif method.lower() == "delete":
+                res = requests.delete(url, json=data, verify=verify)
+
+            status_code = res.status_code
+            return_data = res.json()
+        except requests.exceptions.ConnectTimeout:
+            msg = "Timeout when connecting to  %s" % url
+            logger.error(msg)
+            raise AtomicAppUtilsException(msg)
+        except requests.exceptions.ReadTimeout:
+            msg = "Timeout when reading from %s" % url
+            logger.error(msg)
+            raise AtomicAppUtilsException(msg)
+        except ValueError:
+            # invalid json
+            return_data = None
+
+        return (status_code, return_data)
