@@ -111,9 +111,11 @@ class Marathon(Provider):
                     logger.debug("Parsed artifact %s", data)
                     # every marathon app has to have id. 'id' key  is also used for showing messages
                     if "id" not in data.keys():
-                        raise ProviderFailedException(
-                            "Error processing %s artifact. There is no id" % artifact)
+                        msg = "Error processing %s artifact. There is no id" % artifact
+                        printErrorStatus(msg)
+                        raise ProviderFailedException(msg)
                 except anymarkup.AnyMarkupError, e:
                     msg = "Error processing artifact - %s" % e
                     printErrorStatus(msg)
+                    raise ProviderFailedException(msg)
                 self.marathon_artifacts.append(data)
