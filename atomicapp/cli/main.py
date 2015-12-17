@@ -156,6 +156,18 @@ class CLI():
             action="store_true",
             help="Quiet output mode.")
         globals_parser.add_argument(
+            "--mode",
+            dest="mode",
+            default=None,
+            choices=['install', 'run', 'stop'],
+            help=('''
+                 The mode Atomic App is run in. This option has the
+                 effect of switching the 'verb' that was passed by the
+                 user as the first positional argument. This is useful
+                 in cases where a user is not using the Atomic App cli
+                 directly, but through another interface such as the
+                 Atomic CLI.'''))
+        globals_parser.add_argument(
             "--dry-run",
             dest="dryrun",
             default=False,
@@ -280,12 +292,18 @@ class CLI():
         # keyword. In order to handle this we just need to figure out
         # what subparser will be used and move it's keyword to the front
         # of the line.
+        # NOTE: Also allow "mode" to override 'action' if specified
         args, _ = self.parser.parse_known_args(cmdline)
         cmdline.remove(args.action)     # Remove 'action' from the cmdline
+        if args.mode:
+            args.action = args.mode     # Allow mode to override 'action'
         cmdline.insert(0, args.action)  # Place 'action' at front
+        logger.info("Action/Mode Selected is: %s" % args.action)
 
         # Finally, parse args and give error if necessary
         args = self.parser.parse_args(cmdline)
+
+        # Set logging level
         if args.verbose:
             set_logging(level=logging.DEBUG)
         elif args.quiet:
