@@ -32,6 +32,85 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class OpenshiftClient(object):
+
+    def __init__(self, openshift_api, kubernetes_api):
+        self.openshift_api = openshift_api
+        self.kubernetes_api = kubernetes_api
+
+    def get_oapi_resources(self):
+        """
+        Get Openshift API resources
+        """
+        # get list of supported resources for each api
+        (status_code, return_data) = \
+            Utils.make_rest_request("get",
+                                    self.openshift_api,
+                                    verify=self.ssl_verify)
+        if status_code == 200:
+            oapi_resources = return_data["resources"]
+        else:
+            raise ProviderFailedException("Cannot get OpenShift resource list")
+
+        # convert resources list of dicts to list of names
+        oapi_resources = [res['name'] for res in oapi_resources]
+
+        logger.debug("Openshift resources %s", oapi_resources)
+
+        return oapi_resources
+
+    def get_kapi_resources(self):
+        """
+        Get kubernetes API resources
+        """
+        # get list of supported resources for each api
+        (status_code, return_data) = \
+            Utils.make_rest_request("get",
+                                    self.kubernetes_api,
+                                    verify=self.ssl_verify)
+        if status_code == 200:
+            kapi_resources = return_data["resources"]
+        else:
+            raise ProviderFailedException("Cannot get Kubernetes resource list")
+
+        # convert resources list of dicts to list of names
+        kapi_resources = [res['name'] for res in kapi_resources]
+
+        logger.debug("Kubernetes resources %s", kapi_resources)
+
+        return kapi_resources
+
+    def deploy(self, url, artifact):
+        (status_code, return_data) = \
+            Utils.make_rest_request("post",
+                                    url,
+                                    verify=self.ssl_verify,
+                                    data=artifact)
+        if status_code == 201:
+            logger.info("Object %s sucessfully deployed.",
+                        artifact['metadata']['name'])
+        else:
+            msg = "%s %s" % (status_code, return_data)
+            logger.error(msg)
+            # TODO: remove running components (issue: #428)
+            raise ProviderFailedException(msg)
+
+    def process_template(self, url, template):
+        (status_code, return_data) = \
+            Utils.make_rest_request("post",
+                                    url,
+                                    verify=self.ssl_verify,
+                                    data=template)
+        if status_code == 201:
+            logger.info("template proccessed %s", template['metadata']['name'])
+            logger.debug("processed template %s", return_data)
+            return return_data['objects']
+        else:
+            msg = "%s %s" % (status_code, return_data)
+            logger.error(msg)
+            raise ProviderFailedException(msg)
+
+
 class OpenShiftProvider(Provider):
     key = "openshift"
     cli_str = "oc"
@@ -61,52 +140,11 @@ class OpenShiftProvider(Provider):
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
         logger.debug("openshift_api = %s", self.openshift_api)
 
-        self.oapi_resources = self._get_oapi_resources(self.providerapi)
-        self.kapi_resources = self._get_kapi_resources(self.providerapi)
+        self.oc = OpenshiftClient(self.openshift_api, self.kubernetes_api)
+        self.oapi_resources = self.oc.get_oapi_resources()
+        self.kapi_resources = self.oc.get_kapi_resources()
 
         self._process_artifacts()
-
-    def _get_kapi_resources(self):
-        """
-        Get kubernetes API resources
-        """
-        # get list of supported resources for each api
-        (status_code, return_data) = \
-            Utils.make_rest_request("get",
-                                    self.kubernetes_api,
-                                    verify=self.ssl_verify)
-        if status_code == 200:
-            kapi_resources = return_data["resources"]
-        else:
-            raise ProviderFailedException("Cannot get Kubernetes resource list")
-
-        # convert resources list of dicts to list of names
-        kapi_resources = [res['name'] for res in kapi_resources]
-
-        logger.debug("Kubernetes resources %s", kapi_resources)
-
-        return kapi_resources
-
-    def _get_oapi_resources(self):
-        """
-        Get Openshift API resources
-        """
-        # get list of supported resources for each api
-        (status_code, return_data) = \
-            Utils.make_rest_request("get",
-                                    self.openshift_api,
-                                    verify=self.ssl_verify)
-        if status_code == 200:
-            oapi_resources = return_data["resources"]
-        else:
-            raise ProviderFailedException("Cannot get OpenShift resource list")
-
-        # convert resources list of dicts to list of names
-        oapi_resources = [res['name'] for res in oapi_resources]
-
-        logger.debug("Openshift resources %s", oapi_resources)
-
-        return oapi_resources
 
     def _get_namespace(self, artifact):
         """
@@ -135,19 +173,7 @@ class OpenShiftProvider(Provider):
                 if self.dryrun:
                     logger.info("DRY-RUN: %s", url)
                     continue
-                (status_code, return_data) = \
-                    Utils.make_rest_request("post",
-                                            url,
-                                            verify=self.ssl_verify,
-                                            data=artifact)
-                if status_code == 201:
-                    logger.info("Object %s sucessfully deployed.",
-                                artifact['metadata']['name'])
-                else:
-                    msg = "%s %s" % (status_code, return_data)
-                    logger.error(msg)
-                    # TODO: remove running components (issue: #428)
-                    raise ProviderFailedException(msg)
+                self.oc.deploy(url, artifact)
 
     def _process_artifacts(self):
         """
@@ -205,19 +231,7 @@ class OpenShiftProvider(Provider):
         """
         logger.debug("processing template: %s", template)
         url = self._get_url(self._get_namespace(template), "processedtemplates")
-        (status_code, return_data) = \
-            Utils.make_rest_request("post",
-                                    url,
-                                    verify=self.ssl_verify,
-                                    data=template)
-        if status_code == 201:
-            logger.info("template proccessed %s", template['metadata']['name'])
-            logger.debug("processed template %s", return_data)
-            return return_data['objects']
-        else:
-            msg = "%s %s" % (status_code, return_data)
-            logger.error(msg)
-            raise ProviderFailedException(msg)
+        return self.oc.process_template(url, template)
 
     def _kind_to_resource(self, kind):
         """
