@@ -4,6 +4,7 @@ import copy
 import distutils.dir_util
 import logging
 import os
+import tempfile
 
 from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
@@ -54,6 +55,13 @@ class NuleculeManager(object):
         if answers_file and os.path.isabs(answers_file):
             answers_file = os.path.join(Utils.getRoot(),
                                         answers_file.lstrip('/'))
+
+        # If the user doesn't want the files copied to a permanent
+        # location then he provides 'none'. If that is the case we'll
+        # use a temporary directory
+        if destination and destination.lower() == 'none':
+            logger.debug("'none' destination requested. Using tmp dir")
+            destination = tempfile.mkdtemp(prefix='atomicapp')
 
         # Determine if the user passed us an image or a path to an app
         if not os.path.exists(app_spec):

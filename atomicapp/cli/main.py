@@ -31,6 +31,7 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
                                  APP_ENT_PATH,
+                                 CACHE_DIR,
                                  HOST_DIR,
                                  LOCK_FILE,
                                  PROVIDERS)
@@ -51,11 +52,17 @@ def print_app_location(app_path):
 def cli_install(args):
     try:
         argdict = args.__dict__
+        destination = argdict['destination']
         nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=argdict['destination'],
+                             destination=destination,
                              answers_file=argdict['answers'])
         nm.install(**argdict)
-        print_app_location(nm.app_path)
+        # Clean up the files if the user asked us to. Otherwise
+        # notify the user where they can manage the application
+        if destination and destination.lower() == 'none':
+            Utils.rm_dir(nm.app_path)
+        else:
+            print_app_location(nm.app_path)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -68,11 +75,17 @@ def cli_install(args):
 def cli_run(args):
     try:
         argdict = args.__dict__
+        destination = argdict['destination']
         nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=argdict['destination'],
+                             destination=destination,
                              answers_file=argdict['answers'])
         nm.run(**argdict)
-        print_app_location(nm.app_path)
+        # Clean up the files if the user asked us to. Otherwise
+        # notify the user where they can manage the application
+        if destination and destination.lower() == 'none':
+            Utils.rm_dir(nm.app_path)
+        else:
+            print_app_location(nm.app_path)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -213,7 +226,10 @@ class CLI():
             "--destination",
             dest="destination",
             default=None,
-            help="Destination directory for install")
+            help=('''
+                Destination directory for install. This defaults to a
+                directory under %s. Specify 'none' to not persist
+                files and have them cleaned up when finished.''' % CACHE_DIR))
         run_subparser.set_defaults(func=cli_run)
 
         # === "install" SUBPARSER ===
@@ -241,7 +257,10 @@ class CLI():
             "--destination",
             dest="destination",
             default=None,
-            help="Destination directory for install")
+            help=('''
+                Destination directory for install. This defaults to a
+                directory under %s. Specify 'none' to not persist
+                files and have them cleaned up when finished.''' % CACHE_DIR))
         install_subparser.add_argument(
             "app_spec",
             help=(
