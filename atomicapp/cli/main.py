@@ -20,8 +20,7 @@
 import os
 import sys
 
-from argparse import ArgumentParser
-from argparse import RawDescriptionHelpFormatter
+import argparse
 import logging
 from lockfile import LockFile
 from lockfile import AlreadyLocked
@@ -100,16 +99,16 @@ def cli_stop(args):
 class CLI():
 
     def __init__(self):
-        self.parser = ArgumentParser(
+        self.parser = argparse.ArgumentParser(
             prog='atomicapp',
             description=(
                 "This will install and run an Atomic App, "
                 "a containerized application conforming to the Nulecule Specification"),
-            formatter_class=RawDescriptionHelpFormatter)
+            formatter_class=argparse.RawDescriptionHelpFormatter)
 
     def set_arguments(self):
 
-        base_parser = ArgumentParser(add_help=False)
+        base_parser = argparse.ArgumentParser(add_help=False)
 
         base_parser.add_argument(
             "-V",
