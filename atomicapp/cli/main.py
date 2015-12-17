@@ -113,10 +113,19 @@ class CLI():
         toplevel_parser = argparse.ArgumentParser(
             prog='atomicapp',
             formatter_class=argparse.RawDescriptionHelpFormatter,
+            add_help=False,
             description=(
                 "This will install and run an Atomic App, "
                 "a containerized application conforming to the Nulecule Specification"))
-
+        # Add a help function to the toplevel parser but don't output
+        # help information for it. We need this because of the way we
+        # are stitching help output together from multiple parsers
+        toplevel_parser.add_argument(
+            "-h",
+            "--help"
+            "--version",
+            action='help',
+            help=argparse.SUPPRESS)
         # Allow for subparsers of the toplevel_parser. Store the name
         # in the "action" attribute
         toplevel_subparsers = toplevel_parser.add_subparsers(dest="action")
@@ -242,6 +251,15 @@ class CLI():
                 "Path to the directory where the Atomic App is installed or "
                 "an image containing an Atomic App which should be stopped."))
         stop_subparser.set_defaults(func=cli_stop)
+
+        # Some final fixups.. We want the "help" from the global
+        # parser to be output when someone runs 'atomicapp --help'
+        # To get that functionality we will add the help from the
+        # globals parser to the epilog of the toplevel parser and also
+        # suppress the usage message from being output from the
+        # globals parser.
+        globals_parser.usage = argparse.SUPPRESS
+        toplevel_parser.epilog = globals_parser.format_help()
 
         # Return the toplevel parser
         return toplevel_parser
