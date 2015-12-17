@@ -99,43 +99,54 @@ def cli_stop(args):
 class CLI():
 
     def __init__(self):
-        self.parser = argparse.ArgumentParser(
+        self.parser = self.create_parser()
+
+    def create_parser(self):
+
+        # We will have a few parsers that we use. The toplevel parser
+        # will be the parser that ultimately gets called. It will consist
+        # of subparsers for each "action" and each of those subparsers will
+        # inherit from a parser for all global options.
+
+        # === TOPLEVEL PARSER ===
+        # Create the toplevel parser. This is the one we will return
+        toplevel_parser = argparse.ArgumentParser(
             prog='atomicapp',
+            formatter_class=argparse.RawDescriptionHelpFormatter,
             description=(
                 "This will install and run an Atomic App, "
-                "a containerized application conforming to the Nulecule Specification"),
-            formatter_class=argparse.RawDescriptionHelpFormatter)
+                "a containerized application conforming to the Nulecule Specification"))
 
-    def set_arguments(self):
+        # Allow for subparsers of the toplevel_parser. Store the name
+        # in the "action" attribute
+        toplevel_subparsers = toplevel_parser.add_subparsers(dest="action")
 
-        base_parser = argparse.ArgumentParser(add_help=False)
-
-        base_parser.add_argument(
+        # === GLOBAL OPTIONS PARSER ===
+        # Create the globals argument parser next. This will be a
+        # parent parser for the subparsers
+        globals_parser = argparse.ArgumentParser(add_help=False)
+        globals_parser.add_argument(
             "-V",
             "--version",
             action='version',
             version='atomicapp %s, Nulecule Specification %s' % (
                 __ATOMICAPPVERSION__, __NULECULESPECVERSION__),
             help="show the version and exit.")
-        # TODO refactor program name and version to some globals
-
-        base_parser.add_argument(
+        globals_parser.add_argument(
             "-v",
             "--verbose",
             dest="verbose",
             default=False,
             action="store_true",
             help="Verbose output mode.")
-
-        base_parser.add_argument(
+        globals_parser.add_argument(
             "-q",
             "--quiet",
             dest="quiet",
             default=False,
             action="store_true",
             help="Quiet output mode.")
-
-        base_parser.add_argument(
+        globals_parser.add_argument(
             "--dry-run",
             dest="dryrun",
             default=False,
@@ -143,111 +154,99 @@ class CLI():
             help=(
                 "Don't actually call provider. The commands that should be "
                 "run will be sent to stdout but not run."))
-
-        base_parser.add_argument(
+        globals_parser.add_argument(
             "--answers-format",
             dest="answers_format",
             default=ANSWERS_FILE_SAMPLE_FORMAT,
             choices=['ini', 'json', 'xml', 'yml'],
             help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
 
-        subparsers = self.parser.add_subparsers(dest="action")
-
-        parser_run = subparsers.add_parser("run", parents=[base_parser])
-
-        parser_run.add_argument(
+        # === "run" SUBPARSER ===
+        run_subparser = toplevel_subparsers.add_parser(
+            "run", parents=[globals_parser])
+        run_subparser.add_argument(
             "-a",
             "--answers",
             dest="answers",
             help="Path to %s" % ANSWERS_FILE)
-
-        parser_run.add_argument(
+        run_subparser.add_argument(
             "--write-answers",
             dest="answers_output",
             help="A file which will contain anwsers provided in interactive mode")
-
-        parser_run.add_argument(
+        run_subparser.add_argument(
             "--provider",
             dest="cli_provider",
             choices=PROVIDERS,
             help="The provider to use. Overrides provider value in answerfile.")
-
-        parser_run.add_argument(
+        run_subparser.add_argument(
             "--ask",
             default=False,
             action="store_true",
             help="Ask for params even if the defaul value is provided")
-
-        parser_run.add_argument(
+        run_subparser.add_argument(
             "app_spec",
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
-
-        parser_run.add_argument(
+        run_subparser.add_argument(
             "--destination",
             dest="destination",
             default=None,
             help="Destination directory for install")
+        run_subparser.set_defaults(func=cli_run)
 
-        parser_run.set_defaults(func=cli_run)
-
-        parser_install = subparsers.add_parser("install",
-                                               parents=[base_parser])
-
-        parser_install.add_argument(
+        # === "install" SUBPARSER ===
+        install_subparser = toplevel_subparsers.add_parser(
+            "install", parents=[globals_parser])
+        install_subparser.add_argument(
             "-a",
             "--answers",
             dest="answers",
             help="Path to %s" % ANSWERS_FILE)
-
-        parser_install.add_argument(
+        install_subparser.add_argument(
             "--no-deps",
             dest="nodeps",
             default=False,
             action="store_true",
             help="Skip pulling dependencies of the app")
-
-        parser_install.add_argument(
+        install_subparser.add_argument(
             "-u",
             "--update",
             dest="update",
             default=False,
             action="store_true",
             help="Re-pull images and overwrite existing files")
-
-        parser_install.add_argument(
+        install_subparser.add_argument(
             "--destination",
             dest="destination",
             default=None,
             help="Destination directory for install")
-
-        parser_install.add_argument(
+        install_subparser.add_argument(
             "app_spec",
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
+        install_subparser.set_defaults(func=cli_install)
 
-        parser_install.set_defaults(func=cli_install)
-
-        parser_stop = subparsers.add_parser("stop",
-                                            parents=[base_parser])
-        parser_stop.add_argument(
+        # === "stop" SUBPARSER ===
+        stop_subparser = toplevel_subparsers.add_parser(
+            "stop", parents=[globals_parser])
+        stop_subparser.add_argument(
             "--provider",
             dest="cli_provider",
             choices=PROVIDERS,
             help="The provider to use. Overrides provider value in answerfile.")
-
-        parser_stop.add_argument(
+        stop_subparser.add_argument(
             "app_spec",
             help=(
                 "Path to the directory where the Atomic App is installed or "
                 "an image containing an Atomic App which should be stopped."))
+        stop_subparser.set_defaults(func=cli_stop)
 
-        parser_stop.set_defaults(func=cli_stop)
+        # Return the toplevel parser
+        return toplevel_parser
 
     def run(self):
-        self.set_arguments()  # Set our arguments
         cmdline = sys.argv[1:]  # Grab args from cmdline
 
         # If we are running in an openshift pod (via `oc new-app`) then
