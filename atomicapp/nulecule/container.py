@@ -1,4 +1,3 @@
-import distutils.dir_util
 import os
 import subprocess
 import uuid
@@ -118,9 +117,9 @@ class DockerHandler(object):
 
         # Copy files
         logger.debug('Copying nulecule data from %s to %s' % (src, dest))
-        distutils.dir_util.copy_tree(src, dest, update)
+        Utils.copy_dir(src, dest, update)
         logger.debug('Removing tmp dir: %s' % tmpdir)
-        distutils.dir_util.remove_tree(tmpdir)
+        Utils.rm_dir(tmpdir)
 
         # Clean up dummy container
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]

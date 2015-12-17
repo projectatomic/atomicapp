@@ -373,6 +373,11 @@ class Utils(object):
             distutils.dir_util.copy_tree(src, dest, update)
 
     @staticmethod
+    def rm_dir(directory):
+        logger.debug('Recursively removing directory: %s' % directory)
+        distutils.dir_util.remove_tree(directory)
+
+    @staticmethod
     def getSupportedProviders(path):
         providers = os.listdir(path + '/' + ARTIFACTS_FOLDER)
         return providers
