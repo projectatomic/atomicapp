@@ -186,35 +186,46 @@ class OpenShiftProvider(Provider):
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
                 data = anymarkup.parse(fp, force_types=None)
-            # kind has to be specified in artifact
-            if "kind" not in data.keys():
-                raise ProviderFailedException(
-                    "Error processing %s artifact. There is no kind" % artifact)
 
-            kind = data["kind"].lower()
-            resource = self._kind_to_resource(kind)
+            self._process_artifact_data(artifact, data)
 
-            # check if resource is supported by apis
-            if resource not in self.oapi_resources \
-                    and resource not in self.kapi_resources:
-                raise ProviderFailedException(
-                    "Unsupported kind %s in artifact %s" % (kind, artifact))
+    def _process_artifact_data(self, artifact, data):
+        """
+        Process the data for an artifact
 
-            # process templates
-            if kind == "template":
-                processed_objects = self._process_template(data)
-                # add all processed object to artifacts dict
-                for obj in processed_objects:
-                    obj_kind = obj["kind"].lower()
-                    if obj_kind not in self.openshift_artifacts.keys():
-                        self.openshift_artifacts[obj_kind] = []
-                    self.openshift_artifacts[obj_kind].append(obj)
-                continue
+        Args:
+            artifact (str): Artifact name
+            data (dict): Artifact data
+        """
+        # kind has to be specified in artifact
+        if "kind" not in data.keys():
+            raise ProviderFailedException(
+                "Error processing %s artifact. There is no kind" % artifact)
 
-            # add parsed artifact to dict
-            if kind not in self.openshift_artifacts.keys():
-                self.openshift_artifacts[kind] = []
-            self.openshift_artifacts[kind].append(data)
+        kind = data["kind"].lower()
+        resource = self._kind_to_resource(kind)
+
+        # check if resource is supported by apis
+        if resource not in self.oapi_resources \
+                and resource not in self.kapi_resources:
+            raise ProviderFailedException(
+                "Unsupported kind %s in artifact %s" % (kind, artifact))
+
+        # process templates
+        if kind == "template":
+            processed_objects = self._process_template(data)
+            # add all processed object to artifacts dict
+            for obj in processed_objects:
+                obj_kind = obj["kind"].lower()
+                if obj_kind not in self.openshift_artifacts.keys():
+                    self.openshift_artifacts[obj_kind] = []
+                self.openshift_artifacts[obj_kind].append(obj)
+            return
+
+        # add parsed artifact to dict
+        if kind not in self.openshift_artifacts.keys():
+            self.openshift_artifacts[kind] = []
+        self.openshift_artifacts[kind].append(data)
 
     def _process_template(self, template):
         """
