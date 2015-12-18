@@ -138,5 +138,104 @@ class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unitt
             op._process_artifact_data, 'foo', artifact_data)
 
 
-class TestOpenshiftProviderProcessTemplate(unittest.TestCase):
-    pass
+class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittest.TestCase):
+
+    def test_parse_kubeconf_data(self):
+        kubecfg_data = {
+            'current-context': 'context2',
+            'contexts': [
+                {
+                    'name': 'context1',
+                },
+                {
+                    'name': 'context2',
+                    'context': {
+                        'cluster': 'cluster1',
+                        'user': 'user1',
+                        'namespace': 'namespace1'
+                    }
+                }
+            ],
+            'clusters': [
+                {
+                    'name': 'cluster1',
+                    'cluster': {
+                        'server': 'server1'
+                    }
+                }
+            ],
+            'users': [
+                {
+                    'name': 'user1',
+                    'user': {
+                        'token': 'token1'
+                    }
+                }
+            ]
+        }
+
+        op = self.get_oc_provider()
+        self.assertEqual(op._parse_kubeconf_data(kubecfg_data),
+                         ('server1', 'token1', 'namespace1'))
+
+    def test_parse_kubeconf_data_no_context(self):
+        kubecfg_data = {
+            'current-context': 'context2',
+            'contexts': [
+                {
+                    'name': 'context1',
+                }
+            ],
+            'clusters': [
+                {
+                    'name': 'cluster1',
+                    'cluster': {
+                        'server': 'server1'
+                    }
+                }
+            ],
+            'users': [
+                {
+                    'name': 'user1',
+                    'user': {
+                        'token': 'token1'
+                    }
+                }
+            ]
+        }
+
+        op = self.get_oc_provider()
+        self.assertRaises(ProviderFailedException,
+                          op._parse_kubeconf_data, kubecfg_data)
+
+    def test_parse_kubeconf_data_no_user(self):
+        kubecfg_data = {
+            'current-context': 'context2',
+            'contexts': [
+                {
+                    'name': 'context1',
+                },
+                {
+                    'name': 'context2',
+                    'context': {
+                        'cluster': 'cluster1',
+                        'user': 'user1',
+                        'namespace': 'namespace1'
+                    }
+                }
+            ],
+            'clusters': [
+                {
+                    'name': 'cluster1',
+                    'cluster': {
+                        'server': 'server1'
+                    }
+                }
+            ],
+            'users': [
+            ]
+        }
+
+        op = self.get_oc_provider()
+        self.assertRaises(ProviderFailedException,
+                          op._parse_kubeconf_data, kubecfg_data)

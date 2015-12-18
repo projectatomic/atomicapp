@@ -338,15 +338,29 @@ class OpenShiftProvider(Provider):
             user:
                 token: abcdefghijklmnopqrstuvwxyz0123456789ABCDEF
         """
-
-        url = None
-        token = None
-        namespace = None
-
         logger.debug("Parsing %s", filename)
 
         with open(filename, 'r') as fp:
             kubecfg = anymarkup.parse(fp.read())
+
+        try:
+            return self._parse_kubeconf_data(kubecfg)
+        except ProviderFailedException:
+            raise ProviderFailedException('Invalid %s' % filename)
+
+    def _parse_kubeconf_data(self, kubecfg):
+        """
+        Parse kubeconf data.
+
+        Args:
+            kubecfg (dict): Kubernetes config data
+
+        Returns:
+            A tuple: (url, token, namespace)
+        """
+        url = None
+        token = None
+        namespace = None
 
         current_context = kubecfg["current-context"]
 
@@ -356,6 +370,9 @@ class OpenShiftProvider(Provider):
         for co in kubecfg["contexts"]:
             if co["name"] == current_context:
                 context = co
+
+        if not context:
+            raise ProviderFailedException()
 
         cluster = None
         for cl in kubecfg["clusters"]:
@@ -367,8 +384,8 @@ class OpenShiftProvider(Provider):
             if usr["name"] == context["context"]["user"]:
                 user = usr
 
-        if not context or not cluster or not user:
-            raise ProviderFailedException("Invalid %s", filename)
+        if not cluster or not user:
+            raise ProviderFailedException()
 
         logger.debug("context: %s", context)
         logger.debug("cluster: %s", cluster)
