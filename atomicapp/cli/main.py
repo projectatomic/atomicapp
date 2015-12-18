@@ -302,8 +302,7 @@ class CLI():
         # there is no cmdline but we want to default to "atomicapp run".
         # In this case copy files to cwd and use the working directory.
         if Utils.running_on_openshift():
-            Utils.copy_dir(os.path.join('/', APP_ENT_PATH), './')
-            cmdline = 'run --verbose ./'.split()
+            cmdline = 'run -v --dest=none /{}'.format(APP_ENT_PATH).split()
 
         # We want to be able to place options anywhere on the command
         # line. We have added all global options to each subparser,
