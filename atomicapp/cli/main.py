@@ -179,7 +179,7 @@ class CLI():
             "--answers-format",
             dest="answers_format",
             default=ANSWERS_FILE_SAMPLE_FORMAT,
-            choices=['ini', 'json', 'xml', 'yml'],
+            choices=['ini', 'json', 'xml', 'yaml'],
             help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
 
         # === "run" SUBPARSER ===
