@@ -15,8 +15,10 @@ from atomicapp.constants import (APP_ENT_PATH,
                                  PARAMS_KEY,
                                  NAME_KEY,
                                  INHERIT_KEY,
-                                 ARTIFACTS_KEY)
+                                 ARTIFACTS_KEY,
+                                 REQUIREMENTS_KEY)
 from atomicapp.utils import Utils
+from atomicapp.requirements import Requirements
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
 from atomicapp.nulecule.exceptions import NuleculeException
@@ -27,12 +29,14 @@ logger = logging.getLogger(__name__)
 
 
 class Nulecule(NuleculeBase):
+
     """
     This represents an application compliant with Nulecule specification.
     A Nulecule instance can have instances of Nulecule and Nulecule as
     components. A Nulecule instance knows everything about itself and its
     componenents, but does not have access to its parent's scope.
     """
+
     def __init__(self, id, specversion, metadata, graph, basepath,
                  requirements=None, params=None, config=None,
                  namespace=GLOBAL_CONF):
@@ -132,6 +136,17 @@ class Nulecule(NuleculeBase):
             None
         """
         provider_key, provider = self.get_provider(provider_key, dryrun)
+
+        # Process preliminary requirements
+        # Pass configuration, path of the app, graph, provider as well as dry-run
+        # for provider init()
+        if REQUIREMENTS_KEY in self.graph[0]:
+            logger.debug("Requirements key detected. Running action.")
+            r = Requirements(self.config, self.basepath, self.graph[0][REQUIREMENTS_KEY],
+                             provider_key, dryrun)
+            r.run()
+
+        # Process components
         for component in self.components:
             component.run(provider_key, dryrun)
 
@@ -152,8 +167,8 @@ class Nulecule(NuleculeBase):
         for component in self.components:
             component.stop(provider_key, dryrun)
 
+    # TODO: NOT YET IMPLEMENTED
     def uninstall(self):
-        # uninstall the Nulecule application
         for component in self.components:
             component.uninstall()
 
@@ -225,6 +240,7 @@ class Nulecule(NuleculeBase):
 
 
 class NuleculeComponent(NuleculeBase):
+
     """
     Represents a component in a Nulecule application. It receives props
     from its parent and can add new props and override props at its local
@@ -232,6 +248,7 @@ class NuleculeComponent(NuleculeBase):
     components, but can request the value of sibling's property from its
     parent.
     """
+
     def __init__(self, name, basepath, source=None, params=None,
                  artifacts=None, config=None):
         super(NuleculeComponent, self).__init__(basepath, params, name)

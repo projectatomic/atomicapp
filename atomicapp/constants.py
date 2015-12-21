@@ -40,6 +40,12 @@ NAME_KEY = "name"
 DEFAULTNAME_KEY = "default"
 PROVIDER_KEY = "provider"
 NAMESPACE_KEY = "namespace"
+REQUIREMENTS_KEY = "requirements"
+
+# Nulecule spec terminology vs the function within /providers
+REQUIREMENT_FUNCTIONS = {
+    "persistentVolume": "persistent_storage"
+}
 
 MAIN_FILE = "Nulecule"
 ANSWERS_FILE = "answers.conf"
