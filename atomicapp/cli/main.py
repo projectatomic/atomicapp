@@ -300,14 +300,14 @@ class CLI():
         stop_subparser.set_defaults(func=cli_stop)
 
         # === "genanswers" SUBPARSER ===
-        stop_subparser = toplevel_subparsers.add_parser(
+        gena_subparser = toplevel_subparsers.add_parser(
             "genanswers", parents=[globals_parser])
-        stop_subparser.add_argument(
+        gena_subparser.add_argument(
             "app_spec",
             help=(
                 "Path to the directory where the Atomic App is installed or "
                 "an image containing an Atomic App which should be stopped."))
-        stop_subparser.set_defaults(func=cli_genanswers)
+        gena_subparser.set_defaults(func=cli_genanswers)
 
         # Some final fixups.. We want the "help" from the global
         # parser to be output when someone runs 'atomicapp --help'
