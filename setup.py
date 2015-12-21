@@ -40,16 +40,18 @@ def _install_requirements():
     return requirements
 
 setup(
-    name = 'atomicapp',
-    version = '0.3.0',
-    description = 'A tool to install and run Nulecule apps',
-    author = 'Red Hat, Inc.',
-    author_email = 'container-tools@redhat.com',
-    url = 'https://github.com/projectatomic/atomicapp',
-    license = "LGPL3",
-    entry_points = {
+    name='atomicapp',
+    version='0.3.0',
+    description='A tool to install and run Nulecule apps',
+    author='Red Hat, Inc.',
+    author_email='container-tools@redhat.com',
+    url='https://github.com/projectatomic/atomicapp',
+    license="LGPL3",
+    entry_points={
         'console_scripts': ['atomicapp=atomicapp.cli.main:main'],
     },
-    packages = find_packages(),
-    install_requires = _install_requirements()
+    packages=find_packages(),
+    package_data={'atomicapp': ['providers/external/kubernetes/*.yaml']},
+    include_package_data=True,
+    install_requires=_install_requirements()
 )

@@ -186,6 +186,15 @@ class Utils(object):
     def getTmpAppDir(self):
         return os.path.join(self.tmpdir, APP_ENT_PATH)
 
+    # Create a temporary file with data in order to use kubectl, openshift, etc.
+    # Returns the tmp dir and name of the file
+    @staticmethod
+    def getTmpFile(data, suffix=''):
+        f = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        f.write(data)
+        f.close()
+        return f.name
+
     @staticmethod
     def getComponentName(graph_item):
         # logger.debug("Getting name for %s", graph_item)

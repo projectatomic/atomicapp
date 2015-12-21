@@ -20,6 +20,7 @@
 import anymarkup
 import logging
 import os
+from string import Template
 
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus, Utils
@@ -204,3 +205,37 @@ class KubernetesProvider(Provider):
             if self.config_file:
                 cmd.append("--kubeconfig=%s" % self.config_file)
             self._call(cmd)
+
+    def persistent_storage(self, graph, action):
+        """
+        Actions are either: run, stop or uninstall as per the Requirements class
+        Curently run is the only function implemented for k8s persistent storage
+        """
+
+        logger.debug("Persistent storage enabled! Running action: %s" % action)
+
+        if action not in ['run']:
+            logger.warning(
+                "%s action is not available for provider %s. Doing nothing." %
+                (action, self.key))
+            return
+
+        # Get the path of the persistent storage yaml file includes in /external
+        # Plug the information from the graph into the persistent storage file
+        base_path = os.path.dirname(os.path.realpath(__file__))
+        template_path = os.path.join(base_path,
+                                     'external/kubernetes/persistent_storage.yaml')
+        with open(template_path, 'r') as f:
+            content = f.read()
+        template = Template(content)
+        rendered_template = template.safe_substitute(graph)
+
+        tmp_file = Utils.getTmpFile(rendered_template, '.yaml')
+
+        # Pass the .yaml file and execute
+        if action is "run":
+            cmd = [self.kubectl, "create", "-f", tmp_file, "--namespace=%s" % self.namespace]
+            if self.config_file:
+                cmd.append("--kubeconfig=%s" % self.config_file)
+            self._call(cmd)
+            os.unlink(tmp_file)

@@ -1,0 +1,10 @@
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: $name
+spec:
+  accessModes:
+    - $accessMode
+  resources:
+    requests:
+      storage: $size
