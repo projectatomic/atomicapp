@@ -294,9 +294,9 @@ class CLI():
             help="The provider to use. Overrides provider value in answerfile.")
         stop_subparser.add_argument(
             "app_spec",
-            help=(
-                "Path to the directory where the Atomic App is installed or "
-                "an image containing an Atomic App which should be stopped."))
+            help=('''
+                Path to the directory where the Atomic App is installed
+                that is to be stopped.'''))
         stop_subparser.set_defaults(func=cli_stop)
 
         # === "genanswers" SUBPARSER ===
@@ -304,9 +304,7 @@ class CLI():
             "genanswers", parents=[globals_parser])
         gena_subparser.add_argument(
             "app_spec",
-            help=(
-                "Path to the directory where the Atomic App is installed or "
-                "an image containing an Atomic App which should be stopped."))
+            help='The name of a container image containing an Atomic App.')
         gena_subparser.set_defaults(func=cli_genanswers)
 
         # Some final fixups.. We want the "help" from the global
