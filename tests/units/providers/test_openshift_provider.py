@@ -1,4 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Unittests for atomicapp/providers/openshift.py
+
+We test most functionalities of OpenshiftProvider by
+mocking out OpenshiftClient which interacts with
+the external world openshift and kubernetes API.
+"""
+
 import unittest
 import mock
 from atomicapp.providers.openshift import OpenShiftProvider
@@ -8,11 +16,15 @@ from atomicapp.plugin import ProviderFailedException
 class OpenshiftProviderTestMixin(object):
 
     def setUp(self):
+        # Patch OpenshiftClient to test OpenShiftProvider
         self.patcher = mock.patch('atomicapp.providers.openshift.OpenshiftClient')
         self.mock_OpenshiftClient = self.patcher.start()
         self.mock_oc = self.mock_OpenshiftClient()
 
     def get_oc_provider(self, dryrun=False, artifacts=[]):
+        """
+        Get OpenShiftProvider instance
+        """
         op = OpenShiftProvider({}, '.', dryrun)
         op.artifacts = artifacts
         op.init()
@@ -22,9 +34,15 @@ class OpenshiftProviderTestMixin(object):
         self.patcher.stop()
 
 
-class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase,):
+class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase):
+    """
+    Test OpenShiftProvider.deploy
+    """
 
     def test_deploy(self):
+        """
+        Test calling OpenshiftClient.deploy from OpenShiftProvider.deploy
+        """
         op = self.get_oc_provider()
         op.oapi_resources = ['foo']
         op.openshift_artifacts = {
@@ -44,6 +62,9 @@ class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase,
             op.openshift_artifacts['pods'][0])
 
     def test_deploy_dryrun(self):
+        """
+        Test running OpenShiftProvider.deploy as dryrun
+        """
         op = self.get_oc_provider(dryrun=True)
         op.oapi_resources = ['foo']
         op.openshift_artifacts = {
@@ -62,8 +83,14 @@ class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase,
 
 
 class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unittest.TestCase):
+    """
+    Test processing Openshift artifact data
+    """
 
     def test_process_artifact_data_non_template_kind(self):
+        """
+        Test processing non template artifact data
+        """
         artifact_data = {
             'kind': 'Pod',
             'pods': [
@@ -84,6 +111,9 @@ class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unitt
                          {'pod': [artifact_data]})
 
     def test_process_artifact_data_template_kind(self):
+        """
+        Test processing non template artifact data
+        """
         artifact_data = {
             'kind': 'Template',
             'objects': [
@@ -119,6 +149,9 @@ class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unitt
         )
 
     def test_process_artifact_data_error_resource_not_in_resources(self):
+        """
+        Test processing artifact data with kind not in resources
+        """
         artifact_data = {
             'kind': 'foobar'
         }
@@ -130,6 +163,9 @@ class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unitt
             op._process_artifact_data, 'foo', artifact_data)
 
     def test_process_artifact_data_error_kind_key_missing(self):
+        """
+        Test processing artifact data with missing key 'kind'
+        """
         artifact_data = {}
         op = self.get_oc_provider()
 
@@ -141,6 +177,10 @@ class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unitt
 class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittest.TestCase):
 
     def test_parse_kubeconf_data(self):
+        """
+        Test parsing kubeconf data with current context containing
+        cluster, user and namespace info
+        """
         kubecfg_data = {
             'current-context': 'context2',
             'contexts': [
@@ -179,6 +219,10 @@ class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittes
                          ('server1', 'token1', 'namespace1'))
 
     def test_parse_kubeconf_data_no_context(self):
+        """
+        Test parsing kubeconf data with missing context data for
+        current context.
+        """
         kubecfg_data = {
             'current-context': 'context2',
             'contexts': [
@@ -209,6 +253,10 @@ class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittes
                           op._parse_kubeconf_data, kubecfg_data)
 
     def test_parse_kubeconf_data_no_user(self):
+        """
+        Test parsing kubeconf data with missing user data in current
+        context.
+        """
         kubecfg_data = {
             'current-context': 'context2',
             'contexts': [
