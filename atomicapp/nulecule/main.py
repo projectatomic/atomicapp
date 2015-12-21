@@ -4,6 +4,7 @@ import copy
 import distutils.dir_util
 import logging
 import os
+import tempfile
 
 from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
@@ -54,6 +55,13 @@ class NuleculeManager(object):
         if answers_file and os.path.isabs(answers_file):
             answers_file = os.path.join(Utils.getRoot(),
                                         answers_file.lstrip('/'))
+
+        # If the user doesn't want the files copied to a permanent
+        # location then he provides 'none'. If that is the case we'll
+        # use a temporary directory
+        if destination and destination.lower() == 'none':
+            logger.debug("'none' destination requested. Using tmp dir")
+            destination = tempfile.mkdtemp(prefix='atomicapp')
 
         # Determine if the user passed us an image or a path to an app
         if not os.path.exists(app_spec):
@@ -129,6 +137,37 @@ class NuleculeManager(object):
         else:
             return Nulecule.load_from_path(
                 self.app_path, dryrun=dryrun, config=config)
+
+    def genanswers(self, dryrun=False, answers_format=None, **kwargs):
+        """
+        Renders artifacts and then generates an answer file. Finally
+        copies answer file to the current working directory.
+
+        Args:
+            dryrun (bool): Do not make any change to the host system if True
+            answers_format (str): File format for writing sample answers file
+            kwargs (dict): Extra keyword arguments
+
+        Returns:
+            None
+        """
+        self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
+
+        # Check to make sure an answers.conf file doesn't exist already
+        answers_file = os.path.join(os.getcwd(), ANSWERS_FILE)
+        if os.path.exists(answers_file):
+            raise NuleculeException(
+                "Can't generate answers.conf over existing file")
+
+        # Call unpack to get the app code
+        self.nulecule = self.unpack(update=False, dryrun=dryrun, config=self.answers)
+
+        self.nulecule.load_config(config=self.nulecule.config,
+                                  skip_asking=True)
+        # Get answers and write them out to answers.conf in cwd
+        answers = self._get_runtime_answers(
+            self.nulecule.config, None)
+        self._write_answers(answers_file, answers, answers_format)
 
     def install(self, nodeps=False, update=False, dryrun=False,
                 answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):

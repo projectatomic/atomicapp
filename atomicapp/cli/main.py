@@ -31,6 +31,7 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  ANSWERS_FILE,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
                                  APP_ENT_PATH,
+                                 CACHE_DIR,
                                  HOST_DIR,
                                  LOCK_FILE,
                                  PROVIDERS)
@@ -48,14 +49,36 @@ def print_app_location(app_path):
     print("Please use this directory for managing your application\n")
 
 
-def cli_install(args):
+def cli_genanswers(args):
     try:
         argdict = args.__dict__
         nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=argdict['destination'],
+                             destination='none')
+        nm.genanswers(**argdict)
+        Utils.rm_dir(nm.app_path)  # clean up files
+        sys.exit(0)
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        sys.exit(1)
+
+
+def cli_install(args):
+    try:
+        argdict = args.__dict__
+        destination = argdict['destination']
+        nm = NuleculeManager(app_spec=argdict['app_spec'],
+                             destination=destination,
                              answers_file=argdict['answers'])
         nm.install(**argdict)
-        print_app_location(nm.app_path)
+        # Clean up the files if the user asked us to. Otherwise
+        # notify the user where they can manage the application
+        if destination and destination.lower() == 'none':
+            Utils.rm_dir(nm.app_path)
+        else:
+            print_app_location(nm.app_path)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -68,11 +91,17 @@ def cli_install(args):
 def cli_run(args):
     try:
         argdict = args.__dict__
+        destination = argdict['destination']
         nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=argdict['destination'],
+                             destination=destination,
                              answers_file=argdict['answers'])
         nm.run(**argdict)
-        print_app_location(nm.app_path)
+        # Clean up the files if the user asked us to. Otherwise
+        # notify the user where they can manage the application
+        if destination and destination.lower() == 'none':
+            Utils.rm_dir(nm.app_path)
+        else:
+            print_app_location(nm.app_path)
         sys.exit(0)
     except NuleculeException as e:
         logger.error(e)
@@ -166,7 +195,7 @@ class CLI():
                  user as the first positional argument. This is useful
                  in cases where a user is not using the Atomic App cli
                  directly, but through another interface such as the
-                 Atomic CLI.'''))
+                 Atomic CLI. EX: `atomic run <IMAGE> --mode=genanswers`'''))
         globals_parser.add_argument(
             "--dry-run",
             dest="dryrun",
@@ -179,7 +208,7 @@ class CLI():
             "--answers-format",
             dest="answers_format",
             default=ANSWERS_FILE_SAMPLE_FORMAT,
-            choices=['ini', 'json', 'xml', 'yml'],
+            choices=['ini', 'json', 'xml', 'yaml'],
             help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
 
         # === "run" SUBPARSER ===
@@ -213,7 +242,10 @@ class CLI():
             "--destination",
             dest="destination",
             default=None,
-            help="Destination directory for install")
+            help=('''
+                Destination directory for install. This defaults to a
+                directory under %s. Specify 'none' to not persist
+                files and have them cleaned up when finished.''' % CACHE_DIR))
         run_subparser.set_defaults(func=cli_run)
 
         # === "install" SUBPARSER ===
@@ -241,7 +273,10 @@ class CLI():
             "--destination",
             dest="destination",
             default=None,
-            help="Destination directory for install")
+            help=('''
+                Destination directory for install. This defaults to a
+                directory under %s. Specify 'none' to not persist
+                files and have them cleaned up when finished.''' % CACHE_DIR))
         install_subparser.add_argument(
             "app_spec",
             help=(
@@ -264,6 +299,16 @@ class CLI():
                 "an image containing an Atomic App which should be stopped."))
         stop_subparser.set_defaults(func=cli_stop)
 
+        # === "genanswers" SUBPARSER ===
+        stop_subparser = toplevel_subparsers.add_parser(
+            "genanswers", parents=[globals_parser])
+        stop_subparser.add_argument(
+            "app_spec",
+            help=(
+                "Path to the directory where the Atomic App is installed or "
+                "an image containing an Atomic App which should be stopped."))
+        stop_subparser.set_defaults(func=cli_genanswers)
+
         # Some final fixups.. We want the "help" from the global
         # parser to be output when someone runs 'atomicapp --help'
         # To get that functionality we will add the help from the
@@ -283,8 +328,7 @@ class CLI():
         # there is no cmdline but we want to default to "atomicapp run".
         # In this case copy files to cwd and use the working directory.
         if Utils.running_on_openshift():
-            Utils.copy_dir(os.path.join('/', APP_ENT_PATH), './')
-            cmdline = 'run --verbose ./'.split()
+            cmdline = 'run -v --dest=none /{}'.format(APP_ENT_PATH).split()
 
         # We want to be able to place options anywhere on the command
         # line. We have added all global options to each subparser,
