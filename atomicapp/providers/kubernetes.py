@@ -220,6 +220,8 @@ class KubernetesProvider(Provider):
                 (action, self.key))
             return
 
+        self._check_persistent_volumes()
+
         # Get the path of the persistent storage yaml file includes in /external
         # Plug the information from the graph into the persistent storage file
         base_path = os.path.dirname(os.path.realpath(__file__))
@@ -239,3 +241,14 @@ class KubernetesProvider(Provider):
                 cmd.append("--kubeconfig=%s" % self.config_file)
             self._call(cmd)
             os.unlink(tmp_file)
+
+    def _check_persistent_volumes(self):
+            cmd = [self.kubectl, "get", "pv"]
+            if self.config_file:
+                cmd.append("--kubeconfig=%s" % self.config_file)
+            lines = self._call(cmd)
+
+            # If there are no persistent volumes to claim, warn the user
+            if not self.dryrun and len(lines.split("\n")) == 2:
+                logger.warning("No persistent volumes detected in Kubernetes. Volume claim will not "
+                               "initialize unless persistent volumes exist.")
