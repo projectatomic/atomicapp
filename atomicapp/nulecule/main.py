@@ -61,10 +61,11 @@ class NuleculeManager(object):
         else:
             self.app_path = app_spec
 
-        # Doesn't make sense to provide an app path and destination
+        # Doesn't really make much sense to provide an app path and destination,
+        # but if they want to we'll simply just copy the files for them
         if self.app_path and destination:
-            raise NuleculeException(
-                "You can't provide a local path and destination.")
+            Utils.copy_dir(self.app_path, destination, update=True)
+            self.app_path = destination
 
         # If the user provided an image, make sure we have a destination
         if self.image:
