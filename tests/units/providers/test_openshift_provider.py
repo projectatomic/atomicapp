@@ -226,10 +226,10 @@ class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unitt
 
 class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittest.TestCase):
 
-    def test_parse_kubeconf_data(self):
+    def test_parse_kubeconf_data_insecure(self):
         """
         Test parsing kubeconf data with current context containing
-        cluster, user and namespace info
+        cluster, user, namespace info and skiping tls verification
         """
         kubecfg_data = {
             'current-context': 'context2',
@@ -250,6 +250,7 @@ class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittes
                 {
                     'name': 'cluster1',
                     'cluster': {
+                        'insecure-skip-tls-verify': 'true',
                         'server': 'server1'
                     }
                 }
@@ -266,7 +267,58 @@ class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittes
 
         op = self.get_oc_provider()
         self.assertEqual(op._parse_kubeconf_data(kubecfg_data),
-                         ('server1', 'token1', 'namespace1'))
+                         {'providerapi': 'server1',
+                          'accesstoken': 'token1',
+                          'namespace': 'namespace1',
+                          'providertlsverify': False,
+                          'providercafile': None})
+
+    def test_parse_kubeconf_data_cafile(self):
+        """
+        Test parsing kubeconf data with current context containing
+        cluster, user, namespace info and certificate-authority
+        """
+        kubecfg_data = {
+            'current-context': 'context2',
+            'contexts': [
+                {
+                    'name': 'context1',
+                },
+                {
+                    'name': 'context2',
+                    'context': {
+                        'cluster': 'cluster1',
+                        'user': 'user1',
+                        'namespace': 'namespace1'
+                    }
+                }
+            ],
+            'clusters': [
+                {
+                    'name': 'cluster1',
+                    'cluster': {
+                        'certificate-authority': '/foo/bar',
+                        'server': 'server1'
+                    }
+                }
+            ],
+            'users': [
+                {
+                    'name': 'user1',
+                    'user': {
+                        'token': 'token1'
+                    }
+                }
+            ]
+        }
+
+        op = self.get_oc_provider()
+        self.assertEqual(op._parse_kubeconf_data(kubecfg_data),
+                         {'providerapi': 'server1',
+                          'accesstoken': 'token1',
+                          'namespace': 'namespace1',
+                          'providertlsverify': True,
+                          'providercafile': '/foo/bar'})
 
     def test_parse_kubeconf_data_no_context(self):
         """

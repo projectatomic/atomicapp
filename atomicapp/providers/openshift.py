@@ -27,7 +27,9 @@ from atomicapp.constants import (ACCESS_TOKEN_KEY,
                                  ANSWERS_FILE,
                                  DEFAULT_NAMESPACE,
                                  NAMESPACE_KEY,
-                                 PROVIDER_API_KEY)
+                                 PROVIDER_API_KEY,
+                                 PROVIDER_TLS_VERIFY_KEY,
+                                 PROVIDER_CA_KEY)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -145,7 +147,7 @@ class OpenShiftProvider(Provider):
     kubernetes_api = None
     access_token = None
     namespace = DEFAULT_NAMESPACE
-    ssl_verify = False
+    ssl_verify = True
 
     # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
     openshift_artifacts = {}
@@ -153,8 +155,7 @@ class OpenShiftProvider(Provider):
     def init(self):
         self.openshift_artifacts = {}
 
-        (self.providerapi, self.access_token, self.namespace) = \
-            self._get_config_values()
+        self._set_config_values()
 
         # construct full urls for api endpoints
         self.kubernetes_api = urljoin(self.providerapi, "api/v1/")
@@ -435,14 +436,14 @@ class OpenShiftProvider(Provider):
             filename (string): path to configuration file (e.g. ./kube/config)
 
         Returns:
-            tuple with server url, oauth token and namespace
-            (url, token, namespace)
+            dict of parsed values from config
 
         Example of expected file format:
             apiVersion: v1
             clusters:
             - cluster:
                 server: https://10.1.2.2:8443
+                certificate-authority: path-to-ca.cert
               name: 10-1-2-2:8443
             contexts:
             - context:
@@ -476,11 +477,13 @@ class OpenShiftProvider(Provider):
             kubecfg (dict): Kubernetes config data
 
         Returns:
-            A tuple: (url, token, namespace)
+            dict of parsed values from config
         """
         url = None
         token = None
         namespace = None
+        tls_verify = True
+        ca = None
 
         current_context = kubecfg["current-context"]
 
@@ -515,51 +518,60 @@ class OpenShiftProvider(Provider):
         token = user["user"]["token"]
         if "namespace" in context["context"]:
             namespace = context["context"]["namespace"]
+        if "insecure-skip-tls-verify" in cluster["cluster"]:
+            tls_verify = not cluster["cluster"]["insecure-skip-tls-verify"]
+        else:
+            if "certificate-authority" in cluster["cluster"]:
+                ca = cluster["cluster"]["certificate-authority"]
 
-        return (url, token, namespace)
+        return {PROVIDER_API_KEY: url,
+                ACCESS_TOKEN_KEY: token,
+                NAMESPACE_KEY: namespace,
+                PROVIDER_TLS_VERIFY_KEY: tls_verify,
+                PROVIDER_CA_KEY: ca}
 
-    def _get_config_values(self):
+    def _set_config_values(self):
         """
         Reads providerapi, namespace and accesstoken from answers.conf and
         corresponding values from providerconfig (if set).
         Use one that is set, if both are set and have conflicting values raise
         exception.
 
-        Returns:
-            tuple (providerapi, accesstoken, providerapi)
-
         Raises:
             ProviderFailedException: values in providerconfig and answers.conf
                 are in conflict
 
         """
-        result = {"namespace": self.namespace,
-                  "access_token": self.access_token,
-                  "providerapi": self.providerapi}
 
-        answers = {"namespace": None,
-                   "access_token": None,
-                   "providerapi": None}
-        providerconfig = {"namespace": None,
-                          "access_token": None,
-                          "providerapi": None}
+        # initialize result to default values
+        result = {PROVIDER_API_KEY: self.providerapi,
+                  ACCESS_TOKEN_KEY: self.access_token,
+                  NAMESPACE_KEY: self.namespace,
+                  PROVIDER_TLS_VERIFY_KEY: self.ssl_verify,
+                  PROVIDER_CA_KEY: None}
 
-        answers["namespace"] = self.config.get(NAMESPACE_KEY)
-        answers["access_token"] = self.config.get(ACCESS_TOKEN_KEY)
-        answers["providerapi"] = self.config.get(PROVIDER_API_KEY)
+        # get values from answers.conf
+        answers = {}
+        for k in result.keys():
+            answers[k] = self.config.get(k)
 
+        # get values from providerconfig
+        providerconfig = {}
         if self.config_file:
-            (providerconfig["providerapi"], providerconfig["access_token"],
-             providerconfig["namespace"]) = self._parse_kubeconf(self.config_file)
+            providerconfig = self._parse_kubeconf(self.config_file)
+        else:
+            # no providerconfig specified, set all values to None
+            for k in result.keys():
+                providerconfig[k] = None
 
         # decide between values from answers.conf and providerconfig
         # if only one is set use that, report if they are in conflict
-        for k in ["namespace", "access_token", "providerapi"]:
-            if answers[k] and not providerconfig[k]:
+        for k in result.keys():
+            if answers[k] != None and providerconfig[k] == None:
                 result[k] = answers[k]
-            if not answers[k] and providerconfig[k]:
+            if answers[k] == None and providerconfig[k] != None:
                 result[k] = providerconfig[k]
-            if answers[k] and providerconfig[k]:
+            if answers[k] != None and providerconfig[k] != None:
                 if answers[k] == providerconfig[k]:
                     result[k] = answers[k]
                 else:
@@ -568,6 +580,14 @@ class OpenShiftProvider(Provider):
                            answers[k])
                     logger.error(msg)
                     raise ProviderFailedException(msg)
-        return (result["providerapi"],
-                result["access_token"],
-                result["namespace"])
+
+        logger.debug("config values: %s" % result)
+
+        # set config values
+        self.providerapi = result[PROVIDER_API_KEY]
+        self.access_token = result[ACCESS_TOKEN_KEY]
+        self.namespace = result[NAMESPACE_KEY]
+        if result[PROVIDER_CA_KEY]:
+            self.ssl_verify = result[PROVIDER_CA_KEY]
+        else:
+            self.ssl_verify = result[PROVIDER_TLS_VERIFY_KEY]
