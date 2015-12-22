@@ -32,6 +32,85 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+class OpenshiftClient(object):
+
+    def __init__(self, openshift_api, kubernetes_api):
+        self.openshift_api = openshift_api
+        self.kubernetes_api = kubernetes_api
+
+    def get_oapi_resources(self):
+        """
+        Get Openshift API resources
+        """
+        # get list of supported resources for each api
+        (status_code, return_data) = \
+            Utils.make_rest_request("get",
+                                    self.openshift_api,
+                                    verify=self.ssl_verify)
+        if status_code == 200:
+            oapi_resources = return_data["resources"]
+        else:
+            raise ProviderFailedException("Cannot get OpenShift resource list")
+
+        # convert resources list of dicts to list of names
+        oapi_resources = [res['name'] for res in oapi_resources]
+
+        logger.debug("Openshift resources %s", oapi_resources)
+
+        return oapi_resources
+
+    def get_kapi_resources(self):
+        """
+        Get kubernetes API resources
+        """
+        # get list of supported resources for each api
+        (status_code, return_data) = \
+            Utils.make_rest_request("get",
+                                    self.kubernetes_api,
+                                    verify=self.ssl_verify)
+        if status_code == 200:
+            kapi_resources = return_data["resources"]
+        else:
+            raise ProviderFailedException("Cannot get Kubernetes resource list")
+
+        # convert resources list of dicts to list of names
+        kapi_resources = [res['name'] for res in kapi_resources]
+
+        logger.debug("Kubernetes resources %s", kapi_resources)
+
+        return kapi_resources
+
+    def deploy(self, url, artifact):
+        (status_code, return_data) = \
+            Utils.make_rest_request("post",
+                                    url,
+                                    verify=self.ssl_verify,
+                                    data=artifact)
+        if status_code == 201:
+            logger.info("Object %s sucessfully deployed.",
+                        artifact['metadata']['name'])
+        else:
+            msg = "%s %s" % (status_code, return_data)
+            logger.error(msg)
+            # TODO: remove running components (issue: #428)
+            raise ProviderFailedException(msg)
+
+    def process_template(self, url, template):
+        (status_code, return_data) = \
+            Utils.make_rest_request("post",
+                                    url,
+                                    verify=self.ssl_verify,
+                                    data=template)
+        if status_code == 201:
+            logger.info("template proccessed %s", template['metadata']['name'])
+            logger.debug("processed template %s", return_data)
+            return return_data['objects']
+        else:
+            msg = "%s %s" % (status_code, return_data)
+            logger.error(msg)
+            raise ProviderFailedException(msg)
+
+
 class OpenShiftProvider(Provider):
     key = "openshift"
     cli_str = "oc"
@@ -55,37 +134,15 @@ class OpenShiftProvider(Provider):
             self._get_config_values()
 
         # construct full urls for api endpoints
-        self.openshift_api = urljoin(self.providerapi, "oapi/v1/")
         self.kubernetes_api = urljoin(self.providerapi, "api/v1/")
+        self.openshift_api = urljoin(self.providerapi, "oapi/v1/")
 
-        logger.debug("openshift_api = %s", self.openshift_api)
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
+        logger.debug("openshift_api = %s", self.openshift_api)
 
-        # get list of supported resources for each api
-        (status_code, return_data) = \
-            Utils.make_rest_request("get",
-                                    self.openshift_api,
-                                    verify=self.ssl_verify)
-        if status_code == 200:
-            self.oapi_resources = return_data["resources"]
-        else:
-            raise ProviderFailedException("Cannot get OpenShift resource list")
-
-        (status_code, return_data) = \
-            Utils.make_rest_request("get",
-                                    self.kubernetes_api,
-                                    verify=self.ssl_verify)
-        if status_code == 200:
-            self.kapi_resources = return_data["resources"]
-        else:
-            raise ProviderFailedException("Cannot get Kubernetes resource list")
-
-        # convert resources list of dicts to list of names
-        self.oapi_resources = [res['name'] for res in self.oapi_resources]
-        self.kapi_resources = [res['name'] for res in self.kapi_resources]
-
-        logger.debug("Openshift resources %s", self.oapi_resources)
-        logger.debug("Kubernetes resources %s", self.kapi_resources)
+        self.oc = OpenshiftClient(self.openshift_api, self.kubernetes_api)
+        self.oapi_resources = self.oc.get_oapi_resources()
+        self.kapi_resources = self.oc.get_kapi_resources()
 
         self._process_artifacts()
 
@@ -116,19 +173,7 @@ class OpenShiftProvider(Provider):
                 if self.dryrun:
                     logger.info("DRY-RUN: %s", url)
                     continue
-                (status_code, return_data) = \
-                    Utils.make_rest_request("post",
-                                            url,
-                                            verify=self.ssl_verify,
-                                            data=artifact)
-                if status_code == 201:
-                    logger.info("Object %s sucessfully deployed.",
-                                artifact['metadata']['name'])
-                else:
-                    msg = "%s %s" % (status_code, return_data)
-                    logger.error(msg)
-                    # TODO: remove running components (issue: #428)
-                    raise ProviderFailedException(msg)
+                self.oc.deploy(url, artifact)
 
     def _process_artifacts(self):
         """
@@ -141,35 +186,46 @@ class OpenShiftProvider(Provider):
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
                 data = anymarkup.parse(fp, force_types=None)
-            # kind has to be specified in artifact
-            if "kind" not in data.keys():
-                raise ProviderFailedException(
-                    "Error processing %s artifact. There is no kind" % artifact)
 
-            kind = data["kind"].lower()
-            resource = self._kind_to_resource(kind)
+            self._process_artifact_data(artifact, data)
 
-            # check if resource is supported by apis
-            if resource not in self.oapi_resources \
-                    and resource not in self.kapi_resources:
-                raise ProviderFailedException(
-                    "Unsupported kind %s in artifact %s" % (kind, artifact))
+    def _process_artifact_data(self, artifact, data):
+        """
+        Process the data for an artifact
 
-            # process templates
-            if kind == "template":
-                processed_objects = self._process_template(data)
-                # add all processed object to artifacts dict
-                for obj in processed_objects:
-                    obj_kind = obj["kind"].lower()
-                    if obj_kind not in self.openshift_artifacts.keys():
-                        self.openshift_artifacts[obj_kind] = []
-                    self.openshift_artifacts[obj_kind].append(obj)
-                continue
+        Args:
+            artifact (str): Artifact name
+            data (dict): Artifact data
+        """
+        # kind has to be specified in artifact
+        if "kind" not in data.keys():
+            raise ProviderFailedException(
+                "Error processing %s artifact. There is no kind" % artifact)
 
-            # add parsed artifact to dict
-            if kind not in self.openshift_artifacts.keys():
-                self.openshift_artifacts[kind] = []
-            self.openshift_artifacts[kind].append(data)
+        kind = data["kind"].lower()
+        resource = self._kind_to_resource(kind)
+
+        # check if resource is supported by apis
+        if resource not in self.oapi_resources \
+                and resource not in self.kapi_resources:
+            raise ProviderFailedException(
+                "Unsupported kind %s in artifact %s" % (kind, artifact))
+
+        # process templates
+        if kind == "template":
+            processed_objects = self._process_template(data)
+            # add all processed object to artifacts dict
+            for obj in processed_objects:
+                obj_kind = obj["kind"].lower()
+                if obj_kind not in self.openshift_artifacts.keys():
+                    self.openshift_artifacts[obj_kind] = []
+                self.openshift_artifacts[obj_kind].append(obj)
+            return
+
+        # add parsed artifact to dict
+        if kind not in self.openshift_artifacts.keys():
+            self.openshift_artifacts[kind] = []
+        self.openshift_artifacts[kind].append(data)
 
     def _process_template(self, template):
         """
@@ -186,19 +242,7 @@ class OpenShiftProvider(Provider):
         """
         logger.debug("processing template: %s", template)
         url = self._get_url(self._get_namespace(template), "processedtemplates")
-        (status_code, return_data) = \
-            Utils.make_rest_request("post",
-                                    url,
-                                    verify=self.ssl_verify,
-                                    data=template)
-        if status_code == 201:
-            logger.info("template proccessed %s", template['metadata']['name'])
-            logger.debug("processed template %s", return_data)
-            return return_data['objects']
-        else:
-            msg = "%s %s" % (status_code, return_data)
-            logger.error(msg)
-            raise ProviderFailedException(msg)
+        return self.oc.process_template(url, template)
 
     def _kind_to_resource(self, kind):
         """
@@ -294,15 +338,29 @@ class OpenShiftProvider(Provider):
             user:
                 token: abcdefghijklmnopqrstuvwxyz0123456789ABCDEF
         """
-
-        url = None
-        token = None
-        namespace = None
-
         logger.debug("Parsing %s", filename)
 
         with open(filename, 'r') as fp:
             kubecfg = anymarkup.parse(fp.read())
+
+        try:
+            return self._parse_kubeconf_data(kubecfg)
+        except ProviderFailedException:
+            raise ProviderFailedException('Invalid %s' % filename)
+
+    def _parse_kubeconf_data(self, kubecfg):
+        """
+        Parse kubeconf data.
+
+        Args:
+            kubecfg (dict): Kubernetes config data
+
+        Returns:
+            A tuple: (url, token, namespace)
+        """
+        url = None
+        token = None
+        namespace = None
 
         current_context = kubecfg["current-context"]
 
@@ -312,6 +370,9 @@ class OpenShiftProvider(Provider):
         for co in kubecfg["contexts"]:
             if co["name"] == current_context:
                 context = co
+
+        if not context:
+            raise ProviderFailedException()
 
         cluster = None
         for cl in kubecfg["clusters"]:
@@ -323,8 +384,8 @@ class OpenShiftProvider(Provider):
             if usr["name"] == context["context"]["user"]:
                 user = usr
 
-        if not context or not cluster or not user:
-            raise ProviderFailedException("Invalid %s", filename)
+        if not cluster or not user:
+            raise ProviderFailedException()
 
         logger.debug("context: %s", context)
         logger.debug("cluster: %s", cluster)
