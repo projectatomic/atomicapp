@@ -34,9 +34,10 @@ logger = logging.getLogger(__name__)
 
 class OpenshiftClient(object):
 
-    def __init__(self, openshift_api, kubernetes_api):
+    def __init__(self, openshift_api, kubernetes_api, ssl_verify):
         self.openshift_api = openshift_api
         self.kubernetes_api = kubernetes_api
+        self.ssl_verify = ssl_verify
 
     def get_oapi_resources(self):
         """
@@ -140,7 +141,7 @@ class OpenShiftProvider(Provider):
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
         logger.debug("openshift_api = %s", self.openshift_api)
 
-        self.oc = OpenshiftClient(self.openshift_api, self.kubernetes_api)
+        self.oc = OpenshiftClient(self.openshift_api, self.kubernetes_api, self.ssl_verify)
         self.oapi_resources = self.oc.get_oapi_resources()
         self.kapi_resources = self.oc.get_kapi_resources()
 
