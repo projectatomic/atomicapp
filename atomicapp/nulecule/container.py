@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class DockerHandler(object):
+
     """Interface to interact with Docker."""
 
     def __init__(self, dryrun=False, docker_cli='/usr/bin/docker'):
@@ -48,10 +49,14 @@ class DockerHandler(object):
             logger.info('Pulling Docker image: %s' % image)
             pull_cmd = [self.docker_cli, 'pull', image]
             logger.debug(' '.join(pull_cmd))
-            if not self.dryrun:
-                subprocess.call(pull_cmd)
         else:
             logger.info('Skipping pulling Docker image: %s' % image)
+            return
+
+        if self.dryrun:
+            logger.info("DRY-RUN: %s", pull_cmd)
+        elif subprocess.call(pull_cmd) != 0:
+            raise Exception("Could not pull Docker image %s" % image)
 
     def extract(self, image, source, dest, update=False):
         """
