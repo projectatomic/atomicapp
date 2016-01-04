@@ -199,6 +199,16 @@ class OpenShiftProvider(Provider):
                 self.oc.deploy(url, artifact)
 
     def undeploy(self):
+        """
+        Undeploy application.
+
+        Cascade the deletion of the resources managed other resource
+        (e.g. ReplicationControllers created by a DeploymentConfig and
+        Pods created by a ReplicationController).
+        When using command line client this is done automatically
+        by `oc` command.
+        When using API calls we have to cascade deletion manually.
+        """
         logger.debug("Starting undeploy")
         delete_artifacts = []
         for kind, objects in self.openshift_artifacts.iteritems():
@@ -219,8 +229,8 @@ class OpenShiftProvider(Provider):
 
             logger.info("Undeploying artifact name=%s kind=%s" % (name, kind))
 
-            # if there is DeploymentConfig we also need delete all
-            # ReplicationControllers that were created byt this DC
+            # if there is DeploymentConfig we also need to delete all
+            # ReplicationControllers that were created by this DC
             if kind.lower() == "deploymentconfig":
                 params = {"labelSelector":
                           "openshift.io/deployment-config.name=%s" % name}
@@ -245,7 +255,7 @@ class OpenShiftProvider(Provider):
                 delete_artifacts.extend(items)
 
             # if there is ReplicationController we need delete all
-            # Pods that were created byt his RC
+            # Pods that were created by this RC
             if kind.lower() == "replicationcontroller":
                 params = {"labelSelector": "deployment=%s" % name}
                 url = self._get_url(namespace, "pod", params=params)
