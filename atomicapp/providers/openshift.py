@@ -520,9 +520,8 @@ class OpenShiftProvider(Provider):
             namespace = context["context"]["namespace"]
         if "insecure-skip-tls-verify" in cluster["cluster"]:
             tls_verify = not cluster["cluster"]["insecure-skip-tls-verify"]
-        else:
-            if "certificate-authority" in cluster["cluster"]:
-                ca = cluster["cluster"]["certificate-authority"]
+        elif "certificate-authority" in cluster["cluster"]:
+            ca = cluster["cluster"]["certificate-authority"]
 
         return {PROVIDER_API_KEY: url,
                 ACCESS_TOKEN_KEY: token,
@@ -567,11 +566,11 @@ class OpenShiftProvider(Provider):
         # decide between values from answers.conf and providerconfig
         # if only one is set use that, report if they are in conflict
         for k in result.keys():
-            if answers[k] != None and providerconfig[k] == None:
+            if answers[k] is not None and providerconfig[k] is None:
                 result[k] = answers[k]
-            if answers[k] == None and providerconfig[k] != None:
+            if answers[k] is None and providerconfig[k] is not None:
                 result[k] = providerconfig[k]
-            if answers[k] != None and providerconfig[k] != None:
+            if answers[k] is not None and providerconfig[k] is not None:
                 if answers[k] == providerconfig[k]:
                     result[k] = answers[k]
                 else:

@@ -229,7 +229,7 @@ class TestOpenshiftProviderParseKubeconfData(OpenshiftProviderTestMixin, unittes
     def test_parse_kubeconf_data_insecure(self):
         """
         Test parsing kubeconf data with current context containing
-        cluster, user, namespace info and skiping tls verification
+        cluster, user, namespace info and skipping tls verification
         """
         kubecfg_data = {
             'current-context': 'context2',
