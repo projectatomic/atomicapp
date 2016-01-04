@@ -20,6 +20,7 @@
 import os
 import anymarkup
 from urlparse import urljoin
+from urllib import urlencode
 from atomicapp.utils import Utils
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.constants import (ACCESS_TOKEN_KEY,
@@ -94,6 +95,27 @@ class OpenshiftClient(object):
             msg = "%s %s" % (status_code, return_data)
             logger.error(msg)
             # TODO: remove running components (issue: #428)
+            raise ProviderFailedException(msg)
+
+    def delete(self, url):
+        """
+        Delete object on given url
+
+        Args:
+            url (str): full url for artifact
+
+        Raises:
+            ProviderFailedException: error when calling remote api
+        """
+        (status_code, return_data) = \
+            Utils.make_rest_request("delete",
+                                    url,
+                                    verify=self.ssl_verify)
+        if status_code == 200:
+            logger.info("Sucessfully deleted.")
+        else:
+            msg = "%s %s" % (status_code, return_data)
+            logger.error(msg)
             raise ProviderFailedException(msg)
 
     def process_template(self, url, template):
@@ -175,6 +197,91 @@ class OpenShiftProvider(Provider):
                     logger.info("DRY-RUN: %s", url)
                     continue
                 self.oc.deploy(url, artifact)
+
+    def undeploy(self):
+        """
+        Undeploy application.
+
+        Cascade the deletion of the resources managed other resource
+        (e.g. ReplicationControllers created by a DeploymentConfig and
+        Pods created by a ReplicationController).
+        When using command line client this is done automatically
+        by `oc` command.
+        When using API calls we have to cascade deletion manually.
+        """
+        logger.debug("Starting undeploy")
+        delete_artifacts = []
+        for kind, objects in self.openshift_artifacts.iteritems():
+            delete_artifacts.extend(objects)
+
+        for artifact in delete_artifacts:
+            kind = artifact["kind"].lower()
+            namespace = self._get_namespace(artifact)
+
+            # get name from metadata so we know which object to delete
+            if "metadata" in artifact and \
+                    "name" in artifact["metadata"]:
+                name = artifact["metadata"]["name"]
+            else:
+                raise ProviderFailedException("Cannot undeploy. There is no"
+                                              " name in artifacts metadata "
+                                              "artifact=%s" % artifact)
+
+            logger.info("Undeploying artifact name=%s kind=%s" % (name, kind))
+
+            # if there is DeploymentConfig we also need to delete all
+            # ReplicationControllers that were created by this DC
+            if kind.lower() == "deploymentconfig":
+                params = {"labelSelector":
+                          "openshift.io/deployment-config.name=%s" % name}
+                url = self._get_url(namespace,
+                                    "replicationcontroller",
+                                    params=params)
+                (status_code, return_data) = \
+                    Utils.make_rest_request("get", url, verify=self.ssl_verify)
+                if status_code != 200:
+                    raise ProviderFailedException("Cannot get Replication"
+                                                  "Controllers for Deployment"
+                                                  "Config %s (status code %s)" %
+                                                  (name, status_code))
+                # kind of returned data is ReplicationControllerList
+                # https://docs.openshift.com/enterprise/3.1/rest_api/kubernetes_v1.html#v1-replicationcontrollerlist
+                # we need modify items to get valid ReplicationController
+                items = return_data["items"]
+                for item in items:
+                    item["kind"] = "ReplicationController"
+                    item["apiVersion"] = return_data["apiVersion"]
+                # add items to list of artifact to be deleted
+                delete_artifacts.extend(items)
+
+            # if there is ReplicationController we need delete all
+            # Pods that were created by this RC
+            if kind.lower() == "replicationcontroller":
+                params = {"labelSelector": "deployment=%s" % name}
+                url = self._get_url(namespace, "pod", params=params)
+                (status_code, return_data) = \
+                    Utils.make_rest_request("get", url, verify=self.ssl_verify)
+                if status_code != 200:
+                    raise ProviderFailedException("Cannot get Pods for "
+                                                  "ReplicationController %s"
+                                                  " (status code %s)" %
+                                                  (name, status_code))
+                # kind of returned data is ReplicationControllerList
+                # https://docs.openshift.com/enterprise/3.1/rest_api/kubernetes_v1.html#v1-podlist
+                # we need to modify items to get valid Pod
+                items = return_data["items"]
+                for item in items:
+                    item["kind"] = "Pod"
+                    item["apiVersion"] = return_data["apiVersion"]
+                # add items to list of artifact to be deleted
+                delete_artifacts.extend(items)
+
+            url = self._get_url(namespace, kind, name)
+
+            if self.dryrun:
+                logger.info("DRY-RUN: DELETE %s", url)
+            else:
+                self.oc.delete(url)
 
     def _process_artifacts(self):
         """
@@ -272,7 +379,7 @@ class OpenShiftProvider(Provider):
                 plural = singular + "s"
         return plural
 
-    def _get_url(self, namespace, kind, name=None):
+    def _get_url(self, namespace, kind, name=None, params=None):
         """
         Some kinds/resources are managed by OpensShift and some by Kubernetes.
         Here we compose right url (Kubernets or OpenShift) for given kind.
@@ -286,6 +393,7 @@ class OpenShiftProvider(Provider):
             namespace (str): Kubernetes namespace or Openshift project name
             kind (str): kind of the object
             name (str): object name if modifying or deleting specific object (optional)
+            params (dict): query parameters {"key":"value"}  url?key=value
 
         Returns:
             Full url (str) for given kind, namespace and name
@@ -304,7 +412,12 @@ class OpenShiftProvider(Provider):
         if name:
             url = urljoin(url, name)
 
-        url = urljoin(url, "?access_token={}".format(self.access_token))
+        if params:
+            params["access_token"] = self.access_token
+        else:
+            params = {"access_token": self.access_token}
+
+        url = urljoin(url, "?%s" % urlencode(params))
         logger.debug("url: %s", url)
         return url
 

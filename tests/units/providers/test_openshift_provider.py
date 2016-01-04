@@ -81,6 +81,56 @@ class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase)
 
         self.assertFalse(self.mock_oc.deploy.call_count)
 
+class TestOpenshiftProviderUndeploy(OpenshiftProviderTestMixin, unittest.TestCase):
+    """
+    Test OpenShiftProvider.undeploy
+    """
+
+    def test_undeploy(self):
+        """
+        Test calling OpenshiftClient.delete from OpenShiftProvider.undeploy
+        """
+        op = self.get_oc_provider()
+        op.oapi_resources = ['foo']
+        op.openshift_artifacts = {
+            'pods': [
+                {
+                    'kind': 'Pod',
+                    'metadata': {
+                        'name': 'bar',
+                        'namespace': 'foo'
+                    }
+                }
+            ]
+        }
+
+        op.undeploy()
+
+        self.mock_oc.delete.assert_called_once_with(
+            'namespaces/foo/pods/%s?access_token=None' %
+            op.openshift_artifacts['pods'][0]['metadata']['name'])
+
+    def test_undeploy_dryrun(self):
+        """
+        Test running OpenShiftProvider.undeploy as dryrun
+        """
+        op = self.get_oc_provider(dryrun=True)
+        op.oapi_resources = ['foo']
+        op.openshift_artifacts = {
+            'pods': [
+                {
+                    'kind': 'Pod',
+                    'metadata': {
+                        'name': 'bar',
+                        'namespace': 'foo'
+                    }
+                }
+            ]
+        }
+
+        op.deploy()
+
+        self.assertFalse(self.mock_oc.delete.call_count)
 
 class TestOpenshiftProviderProcessArtifactData(OpenshiftProviderTestMixin, unittest.TestCase):
     """
