@@ -229,8 +229,10 @@ class OpenShiftProvider(Provider):
 
             logger.info("Undeploying artifact name=%s kind=%s" % (name, kind))
 
-            # if there is DeploymentConfig we also need to delete all
-            # ReplicationControllers that were created by this DC
+            # If this is a DeploymentConfig we need to delete all
+            # ReplicationControllers that were created by this DC. Find the RC
+            # that belong to this DC by querying for all RC and filtering based
+            # on automatically created label openshift.io/deployment-config.name
             if kind.lower() == "deploymentconfig":
                 params = {"labelSelector":
                           "openshift.io/deployment-config.name=%s" % name}
@@ -254,8 +256,10 @@ class OpenShiftProvider(Provider):
                 # add items to list of artifact to be deleted
                 delete_artifacts.extend(items)
 
-            # if there is ReplicationController we need delete all
-            # Pods that were created by this RC
+            # If this is a ReplicationController we need to delete all
+            # Pods that were created by this RC. Find the pods that
+            # belong to this RC by querying for all pods and filtering
+            # based on the selector used in the RC.
             if kind.lower() == "replicationcontroller":
                 selector = ",".join(["%s=%s" % (k, v) for k, v in artifact["spec"]["selector"].iteritems()])
                 logger.debug("Using labelSelector: %s" % selector)
