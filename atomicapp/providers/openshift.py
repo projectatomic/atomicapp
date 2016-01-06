@@ -257,7 +257,9 @@ class OpenShiftProvider(Provider):
             # if there is ReplicationController we need delete all
             # Pods that were created by this RC
             if kind.lower() == "replicationcontroller":
-                params = {"labelSelector": "deployment=%s" % name}
+                selector = ",".join(["%s=%s" % (k, v) for k, v in artifact["spec"]["selector"].iteritems()])
+                logger.debug("Using labelSelector: %s" % selector)
+                params = {"labelSelector": selector}
                 url = self._get_url(namespace, "pod", params=params)
                 (status_code, return_data) = \
                     Utils.make_rest_request("get", url, verify=self.ssl_verify)
