@@ -188,7 +188,7 @@ class CLI():
             "--mode",
             dest="mode",
             default=None,
-            choices=['install', 'run', 'stop'],
+            choices=['install', 'run', 'stop', 'genanswers'],
             help=('''
                  The mode Atomic App is run in. This option has the
                  effect of switching the 'verb' that was passed by the
