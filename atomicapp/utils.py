@@ -148,8 +148,9 @@ class Utils(object):
         will exist if we are in openshift.
         """
         service_host = os.getenv("KUBERNETES_SERVICE_HOST")
+        service_port = os.getenv("KUBERNETES_SERVICE_PORT")
         if service_host:
-            return "https://%s/oapi" % service_host
+            return "https://%s:%s/oapi" % (service_host, service_port)
         else:
             return False
 
