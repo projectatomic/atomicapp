@@ -602,6 +602,13 @@ class OpenShiftProvider(Provider):
 
         logger.debug("config values: %s" % result)
 
+        # this items are required, they have to be not None
+        for k in [PROVIDER_API_KEY, ACCESS_TOKEN_KEY, NAMESPACE_KEY]:
+            if result[k] is None:
+                msg = "You need to set %s in %s" % (k, ANSWERS_FILE)
+                logger.error(msg)
+                raise ProviderFailedException(msg)
+
         # set config values
         self.providerapi = result[PROVIDER_API_KEY]
         self.access_token = result[ACCESS_TOKEN_KEY]

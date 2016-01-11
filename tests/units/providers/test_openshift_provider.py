@@ -27,6 +27,7 @@ class OpenshiftProviderTestMixin(object):
         """
         op = OpenShiftProvider({}, '.', dryrun)
         op.artifacts = artifacts
+        op.access_token = 'test'
         op.init()
         return op
 
@@ -58,7 +59,7 @@ class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase)
         op.deploy()
 
         self.mock_oc.deploy.assert_called_once_with(
-            'namespaces/foo/pods/?access_token=None',
+            'namespaces/foo/pods/?access_token=test',
             op.openshift_artifacts['pods'][0])
 
     def test_deploy_dryrun(self):
@@ -107,7 +108,7 @@ class TestOpenshiftProviderUndeploy(OpenshiftProviderTestMixin, unittest.TestCas
         op.undeploy()
 
         self.mock_oc.delete.assert_called_once_with(
-            'namespaces/foo/pods/%s?access_token=None' %
+            'namespaces/foo/pods/%s?access_token=test' %
             op.openshift_artifacts['pods'][0]['metadata']['name'])
 
     def test_undeploy_dryrun(self):
