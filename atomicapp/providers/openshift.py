@@ -115,7 +115,7 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("delete",
                                     url,
-                                    verify=self.ssl_verify)
+                                    verify=self._requests_tls_verify())
         if status_code == 200:
             logger.info("Sucessfully deleted.")
         else:
@@ -259,7 +259,7 @@ class OpenShiftProvider(Provider):
                                     "replicationcontroller",
                                     params=params)
                 (status_code, return_data) = \
-                    Utils.make_rest_request("get", url, verify=self.ssl_verify)
+                    Utils.make_rest_request("get", url, verify=self.oc._requests_tls_verify())
                 if status_code != 200:
                     raise ProviderFailedException("Cannot get Replication"
                                                   "Controllers for Deployment"
@@ -285,7 +285,7 @@ class OpenShiftProvider(Provider):
                 params = {"labelSelector": selector}
                 url = self._get_url(namespace, "pod", params=params)
                 (status_code, return_data) = \
-                    Utils.make_rest_request("get", url, verify=self.ssl_verify)
+                    Utils.make_rest_request("get", url, verify=self.oc._requests_tls_verify())
                 if status_code != 200:
                     raise ProviderFailedException("Cannot get Pods for "
                                                   "ReplicationController %s"
