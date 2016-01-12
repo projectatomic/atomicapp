@@ -71,6 +71,31 @@ namespace = mynamespace
 `oc whoami -t` or if you are not using `oc` client you can get it 
 via web browser on `https://<openshift server>/oauth/token/request`
 
+#### providertlsverify
+If `providerapi` is using https protocol you can optionally
+disable verification of tls/ssl certificates. This can be especially
+useful when using self-signed certificates.
+
+```
+[general]
+provider = openshift
+providerapi = https://127.0.0.1:8443
+accesstoken = sadfasdfasfasfdasfasfasdfsafasfd
+namespace = mynamespace
+providertlsverify = False
+```
+
+**NOTE**: If `providerconfig` is used  values of `providertlsverify`
+and `providercafile` are set according to settings in `providerconfig` file.
+
+#### providercafile
+If `providerapi` is using https protocol you can optionally specify
+path to a CA_BAUNDLE file or directory with certificates of trusted CAs.
+
+**NOTE**: If `providerconfig` is used  values of `providertlsverify`
+and `providercafile` are set according to settings in `providerconfig` file.
+
+
 #### Configuration Value Defaults
 
 Table 1. OpenShift default configuration values
@@ -81,6 +106,8 @@ namespace|   no     | namespace to use with each kubectl call                 | 
 providerconfig| no  | config file that specifies how to connect to kubernetes | none
 providerapi|  no    | the API endpoint where API requests can be sent         | none
 accesstoken|  no    | the access token that can be used to authenticate       | none
+providertlsverify|no| turn off verificatoin of tls/ssl certificates           | False
+providercafile| no  | path to file or directory with trusted CAs              | none
 
 **NOTE**: One of `providerconfig` or `providerapi` + `accesstoken` are required
 

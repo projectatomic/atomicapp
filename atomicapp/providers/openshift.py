@@ -27,18 +27,52 @@ from atomicapp.constants import (ACCESS_TOKEN_KEY,
                                  ANSWERS_FILE,
                                  DEFAULT_NAMESPACE,
                                  NAMESPACE_KEY,
-                                 PROVIDER_API_KEY)
-
+                                 PROVIDER_API_KEY,
+                                 PROVIDER_TLS_VERIFY_KEY,
+                                 PROVIDER_CA_KEY)
+from requests.exceptions import SSLError
 import logging
 logger = logging.getLogger(__name__)
 
 
 class OpenshiftClient(object):
 
-    def __init__(self, openshift_api, kubernetes_api, ssl_verify):
+    def __init__(self, openshift_api, kubernetes_api,
+                 provider_tls_verify, provider_ca):
+
         self.openshift_api = openshift_api
         self.kubernetes_api = kubernetes_api
-        self.ssl_verify = ssl_verify
+        self.provider_tls_verify = provider_tls_verify
+        self.provider_ca = provider_ca
+
+    def test_connection(self):
+        """
+        Test connection to OpenShift server
+
+        Raises:
+            ProviderFailedException - Invalid SSL/TLS certificate
+        """
+        logger.debug("Testing connection to OpenShift server")
+
+        if self.provider_ca and not os.path.exists(self.provider_ca):
+            raise ProviderFailedException("Unable to find CA path %s"
+                                          % self.provider_ca)
+
+        try:
+            (status_code, return_data) = \
+                Utils.make_rest_request("get",
+                                        self.openshift_api,
+                                        verify=self._requests_tls_verify())
+        except SSLError as e:
+            if self.provider_tls_verify:
+                msg = "SSL/TLS ERROR: invalid certificate. " \
+                      "Add certificate of correct Certificate Authority providing" \
+                      " `%s` or you can disable SSL/TLS verification by `%s=False`" \
+                      % (PROVIDER_CA_KEY, PROVIDER_TLS_VERIFY_KEY)
+                raise ProviderFailedException(msg)
+            else:
+                # this shouldn't happen
+                raise ProviderFailedException(e.message)
 
     def get_oapi_resources(self):
         """
@@ -48,7 +82,7 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("get",
                                     self.openshift_api,
-                                    verify=self.ssl_verify)
+                                    verify=self._requests_tls_verify())
         if status_code == 200:
             oapi_resources = return_data["resources"]
         else:
@@ -69,7 +103,7 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("get",
                                     self.kubernetes_api,
-                                    verify=self.ssl_verify)
+                                    verify=self._requests_tls_verify())
         if status_code == 200:
             kapi_resources = return_data["resources"]
         else:
@@ -86,7 +120,7 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("post",
                                     url,
-                                    verify=self.ssl_verify,
+                                    verify=self._requests_tls_verify(),
                                     data=artifact)
         if status_code == 201:
             logger.info("Object %s sucessfully deployed.",
@@ -110,7 +144,7 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("delete",
                                     url,
-                                    verify=self.ssl_verify)
+                                    verify=self._requests_tls_verify())
         if status_code == 200:
             logger.info("Sucessfully deleted.")
         else:
@@ -122,7 +156,7 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("post",
                                     url,
-                                    verify=self.ssl_verify,
+                                    verify=self._requests_tls_verify(),
                                     data=template)
         if status_code == 201:
             logger.info("template proccessed %s", template['metadata']['name'])
@@ -132,6 +166,17 @@ class OpenshiftClient(object):
             msg = "%s %s" % (status_code, return_data)
             logger.error(msg)
             raise ProviderFailedException(msg)
+
+    def _requests_tls_verify(self):
+        """
+        Return verify parameter for function Utils.make_rest_request
+        in format that is used by requests library.
+        see: http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
+        """
+        if self.provider_ca:
+            return self.provider_ca
+        else:
+            return self.provider_tls_verify
 
 
 class OpenShiftProvider(Provider):
@@ -145,7 +190,11 @@ class OpenShiftProvider(Provider):
     kubernetes_api = None
     access_token = None
     namespace = DEFAULT_NAMESPACE
-    ssl_verify = False
+
+    # verify tls/ssl connection
+    provider_tls_verify = True
+    # path to file or dir with CA certificates
+    provider_ca = None
 
     # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
     openshift_artifacts = {}
@@ -153,8 +202,7 @@ class OpenShiftProvider(Provider):
     def init(self):
         self.openshift_artifacts = {}
 
-        (self.providerapi, self.access_token, self.namespace) = \
-            self._get_config_values()
+        self._set_config_values()
 
         # construct full urls for api endpoints
         self.kubernetes_api = urljoin(self.providerapi, "api/v1/")
@@ -163,7 +211,13 @@ class OpenShiftProvider(Provider):
         logger.debug("kubernetes_api = %s", self.kubernetes_api)
         logger.debug("openshift_api = %s", self.openshift_api)
 
-        self.oc = OpenshiftClient(self.openshift_api, self.kubernetes_api, self.ssl_verify)
+        self.oc = OpenshiftClient(self.openshift_api,
+                                  self.kubernetes_api,
+                                  self.provider_tls_verify,
+                                  self.provider_ca)
+        # test connection to openshift server
+        self.oc.test_connection()
+
         self.oapi_resources = self.oc.get_oapi_resources()
         self.kapi_resources = self.oc.get_kapi_resources()
 
@@ -240,7 +294,7 @@ class OpenShiftProvider(Provider):
                                     "replicationcontroller",
                                     params=params)
                 (status_code, return_data) = \
-                    Utils.make_rest_request("get", url, verify=self.ssl_verify)
+                    Utils.make_rest_request("get", url, verify=self.oc._requests_tls_verify())
                 if status_code != 200:
                     raise ProviderFailedException("Cannot get Replication"
                                                   "Controllers for Deployment"
@@ -266,7 +320,7 @@ class OpenShiftProvider(Provider):
                 params = {"labelSelector": selector}
                 url = self._get_url(namespace, "pod", params=params)
                 (status_code, return_data) = \
-                    Utils.make_rest_request("get", url, verify=self.ssl_verify)
+                    Utils.make_rest_request("get", url, verify=self.oc._requests_tls_verify())
                 if status_code != 200:
                     raise ProviderFailedException("Cannot get Pods for "
                                                   "ReplicationController %s"
@@ -435,14 +489,15 @@ class OpenShiftProvider(Provider):
             filename (string): path to configuration file (e.g. ./kube/config)
 
         Returns:
-            tuple with server url, oauth token and namespace
-            (url, token, namespace)
+            dict of parsed values from config
 
         Example of expected file format:
             apiVersion: v1
             clusters:
             - cluster:
                 server: https://10.1.2.2:8443
+                certificate-authority: path-to-ca.cert
+                insecure-skip-tls-verify: false
               name: 10-1-2-2:8443
             contexts:
             - context:
@@ -476,11 +531,13 @@ class OpenShiftProvider(Provider):
             kubecfg (dict): Kubernetes config data
 
         Returns:
-            A tuple: (url, token, namespace)
+            dict of parsed values from config
         """
         url = None
         token = None
         namespace = None
+        tls_verify = True
+        ca = None
 
         current_context = kubecfg["current-context"]
 
@@ -515,51 +572,60 @@ class OpenShiftProvider(Provider):
         token = user["user"]["token"]
         if "namespace" in context["context"]:
             namespace = context["context"]["namespace"]
+        if "insecure-skip-tls-verify" in cluster["cluster"]:
+            tls_verify = not cluster["cluster"]["insecure-skip-tls-verify"]
+        elif "certificate-authority" in cluster["cluster"]:
+            ca = cluster["cluster"]["certificate-authority"]
 
-        return (url, token, namespace)
+        return {PROVIDER_API_KEY: url,
+                ACCESS_TOKEN_KEY: token,
+                NAMESPACE_KEY: namespace,
+                PROVIDER_TLS_VERIFY_KEY: tls_verify,
+                PROVIDER_CA_KEY: ca}
 
-    def _get_config_values(self):
+    def _set_config_values(self):
         """
         Reads providerapi, namespace and accesstoken from answers.conf and
         corresponding values from providerconfig (if set).
         Use one that is set, if both are set and have conflicting values raise
         exception.
 
-        Returns:
-            tuple (providerapi, accesstoken, providerapi)
-
         Raises:
             ProviderFailedException: values in providerconfig and answers.conf
                 are in conflict
 
         """
-        result = {"namespace": self.namespace,
-                  "access_token": self.access_token,
-                  "providerapi": self.providerapi}
 
-        answers = {"namespace": None,
-                   "access_token": None,
-                   "providerapi": None}
-        providerconfig = {"namespace": None,
-                          "access_token": None,
-                          "providerapi": None}
+        # initialize result to default values
+        result = {PROVIDER_API_KEY: self.providerapi,
+                  ACCESS_TOKEN_KEY: self.access_token,
+                  NAMESPACE_KEY: self.namespace,
+                  PROVIDER_TLS_VERIFY_KEY: self.provider_tls_verify,
+                  PROVIDER_CA_KEY: self.provider_ca}
 
-        answers["namespace"] = self.config.get(NAMESPACE_KEY)
-        answers["access_token"] = self.config.get(ACCESS_TOKEN_KEY)
-        answers["providerapi"] = self.config.get(PROVIDER_API_KEY)
+        # create keys in dicts and initialize values to None
+        answers = {}
+        providerconfig = {}
+        for k in result.keys():
+            answers[k] = None
+            providerconfig[k] = None
 
+        # get values from answers.conf
+        for k in result.keys():
+            answers[k] = self.config.get(k)
+
+        # get values from providerconfig
         if self.config_file:
-            (providerconfig["providerapi"], providerconfig["access_token"],
-             providerconfig["namespace"]) = self._parse_kubeconf(self.config_file)
+            providerconfig = self._parse_kubeconf(self.config_file)
 
         # decide between values from answers.conf and providerconfig
         # if only one is set use that, report if they are in conflict
-        for k in ["namespace", "access_token", "providerapi"]:
-            if answers[k] and not providerconfig[k]:
+        for k in result.keys():
+            if answers[k] is not None and providerconfig[k] is None:
                 result[k] = answers[k]
-            if not answers[k] and providerconfig[k]:
+            if answers[k] is None and providerconfig[k] is not None:
                 result[k] = providerconfig[k]
-            if answers[k] and providerconfig[k]:
+            if answers[k] is not None and providerconfig[k] is not None:
                 if answers[k] == providerconfig[k]:
                     result[k] = answers[k]
                 else:
@@ -568,6 +634,24 @@ class OpenShiftProvider(Provider):
                            answers[k])
                     logger.error(msg)
                     raise ProviderFailedException(msg)
-        return (result["providerapi"],
-                result["access_token"],
-                result["namespace"])
+
+        logger.debug("config values: %s" % result)
+
+        # this items are required, they have to be not None
+        for k in [PROVIDER_API_KEY, ACCESS_TOKEN_KEY, NAMESPACE_KEY]:
+            if result[k] is None:
+                msg = "You need to set %s in %s" % (k, ANSWERS_FILE)
+                logger.error(msg)
+                raise ProviderFailedException(msg)
+
+        # set config values
+        self.providerapi = result[PROVIDER_API_KEY]
+        self.access_token = result[ACCESS_TOKEN_KEY]
+        self.namespace = result[NAMESPACE_KEY]
+        self.provider_tls_verify = result[PROVIDER_TLS_VERIFY_KEY]
+        if result[PROVIDER_CA_KEY]:
+            # if we are in container translate path to path on host
+            self.provider_ca = os.path.join(Utils.getRoot(),
+                                            result[PROVIDER_CA_KEY].lstrip('/'))
+        else:
+            self.provider_ca = None
