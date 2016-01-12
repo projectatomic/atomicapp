@@ -53,6 +53,11 @@ class OpenshiftClient(object):
             ProviderFailedException - Invalid SSL/TLS certificate
         """
         logger.debug("Testing connection to OpenShift server")
+
+        if self.provider_ca and not os.path.exists(self.provider_ca):
+            raise ProviderFailedException("Unable to find CA path %s"
+                                          % self.provider_ca)
+
         try:
             (status_code, return_data) = \
                 Utils.make_rest_request("get",
@@ -643,5 +648,10 @@ class OpenShiftProvider(Provider):
         self.providerapi = result[PROVIDER_API_KEY]
         self.access_token = result[ACCESS_TOKEN_KEY]
         self.namespace = result[NAMESPACE_KEY]
-        self.provider_ca = result[PROVIDER_CA_KEY]
         self.provider_tls_verify = result[PROVIDER_TLS_VERIFY_KEY]
+        if result[PROVIDER_CA_KEY]:
+            # if we are in container translate path to path on host
+            self.provider_ca = os.path.join(Utils.getRoot(),
+                                            result[PROVIDER_CA_KEY].lstrip('/'))
+        else:
+            self.provider_ca = None
