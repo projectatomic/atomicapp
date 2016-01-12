@@ -30,7 +30,7 @@ from atomicapp.constants import (ACCESS_TOKEN_KEY,
                                  PROVIDER_API_KEY,
                                  PROVIDER_TLS_VERIFY_KEY,
                                  PROVIDER_CA_KEY)
-
+from requests.exceptions import SSLError
 import logging
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,30 @@ class OpenshiftClient(object):
         self.kubernetes_api = kubernetes_api
         self.provider_tls_verify = provider_tls_verify
         self.provider_ca = provider_ca
+
+    def test_connection(self):
+        """
+        Test connection to OpenShift server
+
+        Raises:
+            ProviderFailedException - Invalid SSL/TLS certificate
+        """
+        logger.debug("Testing connection to OpenShift server")
+        try:
+            (status_code, return_data) = \
+                Utils.make_rest_request("get",
+                                        self.openshift_api,
+                                        verify=self._requests_tls_verify())
+        except SSLError as e:
+            if self.provider_tls_verify:
+                msg = "SSL/TLS ERROR: invalid certificate. " \
+                      "Add certificate of correct Certificate Authority providing" \
+                      " `%s` or you can disable SSL/TLS verification by `%s=False`" \
+                      % (PROVIDER_CA_KEY, PROVIDER_TLS_VERIFY_KEY)
+                raise ProviderFailedException(msg)
+            else:
+                # this shouldn't happen
+                raise ProviderFailedException(e.message)
 
     def get_oapi_resources(self):
         """
@@ -161,7 +185,10 @@ class OpenShiftProvider(Provider):
     kubernetes_api = None
     access_token = None
     namespace = DEFAULT_NAMESPACE
+
+    # verify tls/ssl connection
     provider_tls_verify = True
+    # path to file or dir with CA certificates
     provider_ca = None
 
     # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
@@ -183,6 +210,9 @@ class OpenShiftProvider(Provider):
                                   self.kubernetes_api,
                                   self.provider_tls_verify,
                                   self.provider_ca)
+        # test connection to openshift server
+        self.oc.test_connection()
+
         self.oapi_resources = self.oc.get_oapi_resources()
         self.kapi_resources = self.oc.get_kapi_resources()
 
