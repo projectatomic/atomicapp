@@ -40,6 +40,9 @@ from requests.exceptions import SSLError
 import logging
 logger = logging.getLogger(__name__)
 
+# If running in an openshift POD via `oc new-app`, the ca file is here
+OPENSHIFT_POD_CA_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
 
 class OpenshiftClient(object):
 
@@ -704,8 +707,8 @@ class OpenShiftProvider(Provider):
             self.providerapi = Utils.get_openshift_api_endpoint_from_env()
             self.namespace = os.environ['POD_NAMESPACE']
             self.access_token = os.environ['TOKEN_ENV_VAR']
-            self.provider_tls_verify = False
-            self.provider_ca = None
+            self.provider_tls_verify = True
+            self.provider_ca = OPENSHIFT_POD_CA_FILE
             return  # No need to process other information
 
         # initialize result to default values
