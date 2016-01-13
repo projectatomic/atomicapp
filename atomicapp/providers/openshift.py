@@ -698,6 +698,16 @@ class OpenShiftProvider(Provider):
 
         """
 
+        # First things first, if we are running inside of an openshift pod via
+        # `oc new-app` then get the config from the environment (files/env vars)
+        if Utils.running_on_openshift():
+            self.providerapi = Utils.get_openshift_api_endpoint_from_env()
+            self.namespace = os.environ['POD_NAMESPACE']
+            self.access_token = os.environ['TOKEN_ENV_VAR']
+            self.provider_tls_verify = False
+            self.provider_ca = None
+            return  # No need to process other information
+
         # initialize result to default values
         result = {PROVIDER_API_KEY: self.providerapi,
                   ACCESS_TOKEN_KEY: self.access_token,
