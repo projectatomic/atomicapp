@@ -1,3 +1,123 @@
+## Atomic App 0.3.1 (01-14-2016)
+
+This release introduces some significant features to Atomic App as well as our first release since 0.3.0.
+
+The outmost features include:
+ - Persistent storage
+ - HTTPS (TLS) verification and support for OpenShift
+ - OpenShift stop support
+ - Nested Nulecule application support for OpenShift.
+
+For an extended list of changes, please see the git shortlog below.
+
+```
+Charlie Drage <charlie@charliedrage.com> (9):
+      Merge pull request #457 from rtnpro/remove-docker-containers-on-stop
+      Merge pull request #392 from kadel/marathon-provider
+      0.3.0 Release
+      Add persistent storage core
+      Add Kubernetes persistent storage functionality
+      Test requirements.py persistent storage
+      Warn if no persistent volumes exist to claim
+      Merge pull request #485 from kadel/issue484
+      Stop Docker containers more gracefully
+
+Dharmit Shah <shahdharmit@gmail.com> (10):
+      Common place for list of Providers
+      PEP8
+      Adds Marathon provider data for `helloapache` example
+      Nulecule for `helloapache` app now contains information about marathon artifacts
+      CLI tests for marathon provider using `helloapache` atomic app
+      Information about where to specify `providerapi` for Marathon provider
+      Changes suggested in PR review
+      Added try..except block for request
+      Catch `AnyMarkupError` instead of `Exception` for invalid artifacts
+      Use `ProviderFailedException` instead of `sys.exit`
+
+Dusty Mabe <dusty@dustymabe.com> (40):
+      Merge pull request #463 from kadel/make_rest_request
+      Revert "Remove container on stopping on Docker provider. Fixes #389"
+      Merge pull request #464 from projectatomic/revert-457-remove-docker-containers-on-stop
+      Allow user to specify both source and destination as directories.
+      Merge pull request #466 from dustymabe/dusty-src-dest
+      cli: import argparse rather than specific items
+      cli: Restructure argument parsers.
+      cli: Add global options help text to toplevel parser.
+      cli: Add in a --mode cli switch to select action.
+      Merge pull request #468 from dustymabe/dusty-add-mode
+      Fix yaml choice for --answers-format.
+      utils: add rm_dir() function.
+      Add --destination=none. Files don't persist after run.
+      Update native openshift code to use dest=none.
+      Add 'genanswers' action to generate answers.conf in cwd.
+      Merge pull request #469 from dustymabe/dusty-add-genanswers-new
+      cli: Fix the name of the genanswers subparser.
+      cli: Clarify some of the app_spec help texts.
+      Merge pull request #465 from projectatomic/openshift-unittests
+      Merge pull request #473 from kadel/openshift-AttributeError
+      Merge pull request #472 from dustymabe/dusty-update-stop-app-spec-help
+      Merge pull request #474 from kadel/openshift-stop
+      Merge pull request #460 from cdrage/persistent-storage
+      Merge pull request #488 from cdrage/stop-more-gracefully
+      cli: Add genanswers as a choice for --mode.
+      Include port information in detected openshift api endpoint.
+      Merge pull request #490 from dustymabe/allow-genanswers-for-mode
+      Merge pull request #491 from dustymabe/dusty-add-port-to-providerapi
+      Merge pull request #480 from kadel/openshift-ssl
+      Merge pull request #489 from projectatomic/oc-new-app-with-nested-nulecules
+      cli: allow overriding cmdline from env vars
+      Merge pull request #504 from dustymabe/dusty-cli-overrides
+      Add support for embedding answers file in application.
+      Merge pull request #505 from dustymabe/dusty-allow-embedded-answers-file
+      Add in cli options for some provider* answers.
+      Merge pull request #506 from dustymabe/dusty-add-cli-overrides
+      native openshift: move detection of provider information to provider.
+      native openshift: Add in ssl verification.
+      native openshift: respect it if user set tls_verify to False.
+      Merge pull request #503 from dustymabe/dusty-ssl-in-native-openshift
+
+Ratnadeep Debnath <rtnpro@gmail.com> (13):
+      Remove container on stopping on Docker provider. Fixes #389
+      Refactored openshift provider for testing. #459
+      Refactor openshift provider: Move interaction with remote API from OpenShiftProvider
+      Added tests for OpenshiftProvider.deploy.
+      Refactor openshift _process_artifacts
+      Added tests for openshift _process_artifact_data.
+      Added tests for openshift to parse kube config
+      Added docs for openshift provider unittests.
+      Unpack image using Openshift API on Openshift provider.
+      Fixed unittests for Nulecule and NuleculeComponent
+      Fix using ssl connection options in websocket connection to Openshift.
+      Wait for Openshift pod to run, before extracting content.
+      Delete openshift pod irrespective of successful or failed extraction.
+
+Tomas Kral <tkral@redhat.com> (24):
+      move openshift._make_request() to Utils.make_rest_request()
+      first draft of marathon provider
+      change providerurl to providerapi
+      fix dry-run for marathon
+      empty marathon_artifacts array in init()
+      marathon fixes
+      add Marathon to list of supported providers
+      raise exeption on AnyMarkupError in Marathon provider
+      mention Mesos with Marathon in docs
+      use Utils.make_rest_request in Marathon provider
+      add more docs to functions in Marathon provider
+      fix AttributeError OpenshiftClient.ssl_verify
+      Implement stop for OpenShift provider.
+      openshift provider: fix typos, add comments
+      openshift provider: when deleting use selector from RC to get PODs
+      openshift provider: update comments
+      openshift provider: add option for skiping tls verification
+      fix typos and flake8 errors
+      openshift provider: doc of providertlsverify and providercafile
+      openshift provider: break ssl_verify to provider_ca and provider_tls_verify
+      openshift provider: use _requests_tls_verify() in undeploy
+      openshift provider: check that required options are !None
+      openshift provider: test connection to OpenShift     print nicer error message when invalid ttl/ssl certificate
+      openshift provider: translate CA path to host path and check if exists
+```
+
 ## Atomic App 0.3.0 (12-16-2015)
 
 This release introduces a new provider (Mesos) as well as a major refactor of the OpenShift provider.
