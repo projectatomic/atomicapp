@@ -358,9 +358,9 @@ class CLI():
 
         # If we are running in an openshift pod (via `oc new-app`) then
         # there is no cmdline but we want to default to "atomicapp run".
-        # In this case copy files to cwd and use the working directory.
         if Utils.running_on_openshift():
-            cmdline = 'run -v --dest=none /{}'.format(APP_ENT_PATH).split()
+            cmdline = 'run -v --dest=none --provider=openshift /{}'
+            cmdline = cmdline.format(APP_ENT_PATH).split()  # now a list
 
         # If the user has elected to provide all arguments via the
         # ATOMICAPP_ARGS environment variable then set it now
