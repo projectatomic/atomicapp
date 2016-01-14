@@ -188,7 +188,7 @@ class OpenshiftClient(object):
         in format that is used by requests library.
         see: http://docs.python-requests.org/en/latest/user/advanced/#ssl-cert-verification
         """
-        if self.provider_ca:
+        if self.provider_ca and self.provider_tls_verify:
             return self.provider_ca
         else:
             return self.provider_tls_verify
@@ -703,12 +703,14 @@ class OpenShiftProvider(Provider):
 
         # First things first, if we are running inside of an openshift pod via
         # `oc new-app` then get the config from the environment (files/env vars)
+        # NOTE: pick up provider_tls_verify from answers if exists
         if Utils.running_on_openshift():
             self.providerapi = Utils.get_openshift_api_endpoint_from_env()
             self.namespace = os.environ['POD_NAMESPACE']
             self.access_token = os.environ['TOKEN_ENV_VAR']
-            self.provider_tls_verify = True
             self.provider_ca = OPENSHIFT_POD_CA_FILE
+            self.provider_tls_verify = \
+                self.config.get(PROVIDER_TLS_VERIFY_KEY, True)
             return  # No need to process other information
 
         # initialize result to default values
