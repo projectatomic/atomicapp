@@ -17,10 +17,16 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import datetime
 import os
 import anymarkup
+import ssl
+import tarfile
+import time
 from urlparse import urljoin
 from urllib import urlencode
+import websocket
+
 from atomicapp.utils import Utils
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.constants import (ACCESS_TOKEN_KEY,
@@ -37,13 +43,19 @@ logger = logging.getLogger(__name__)
 
 class OpenshiftClient(object):
 
-    def __init__(self, openshift_api, kubernetes_api,
+    def __init__(self, providerapi, access_token,
                  provider_tls_verify, provider_ca):
-
-        self.openshift_api = openshift_api
-        self.kubernetes_api = kubernetes_api
+        self.providerapi = providerapi
+        self.access_token = access_token
         self.provider_tls_verify = provider_tls_verify
         self.provider_ca = provider_ca
+
+        # construct full urls for api endpoints
+        self.kubernetes_api = urljoin(self.providerapi, "api/v1/")
+        self.openshift_api = urljoin(self.providerapi, "oapi/v1/")
+
+        logger.debug("kubernetes_api = %s", self.kubernetes_api)
+        logger.debug("openshift_api = %s", self.openshift_api)
 
     def test_connection(self):
         """
@@ -178,6 +190,100 @@ class OpenshiftClient(object):
         else:
             return self.provider_tls_verify
 
+    def execute(self, namespace, pod, container, command,
+                outfile=None):
+        """
+        Execute a command in a container in an Openshift pod.
+
+        Args:
+            namespace (str): Namespace
+            pod (str): Pod name
+            container (str): Container name inside pod
+            command (str): Command to execute
+            outfile (str): Path to output file where results should be dumped
+
+        Returns:
+            Command output (str) or None in case results dumped to output file
+        """
+        args = {
+            'token': self.access_token,
+            'namespace': namespace,
+            'pod': pod,
+            'container': container,
+            'command': ''.join(['command={}&'.format(word) for word in command.split()])
+        }
+        url = urljoin(
+            self.kubernetes_api,
+            'namespaces/{namespace}/pods/{pod}/exec?'
+            'access_token={token}&container={container}&'
+            '{command}stdout=1&stdin=0&tty=0'.format(**args))
+
+        # The above endpoint needs the request to be upgraded to SPDY,
+        # which python-requests does not yet support. However, the same
+        # endpoint works over websockets, so we are using websocket client.
+
+        # Convert url from http(s) protocol to wss protocol
+        url = 'wss://' + url.split('://', 1)[-1]
+        logger.debug('url: {}'.format(url))
+
+        results = []
+
+        ws = websocket.WebSocketApp(
+            url,
+            on_message=lambda ws, message: self._handle_exec_reply(ws, message, results, outfile))
+
+        ws.run_forever(sslopt={
+            'ca_certs': self.provider_ca,
+            'cert_reqs': ssl.CERT_REQUIRED if self.provider_tls_verify else ssl.CERT_NONE})
+
+        if not outfile:
+            return ''.join(results)
+
+    def _handle_exec_reply(self, ws, message, results, outfile=None):
+        """
+        Handle reply message for exec call
+        """
+        # FIXME: For some reason, we do not know why,  we need to ignore the
+        # 1st char of the message, to generate a meaningful result
+        cleaned_msg = message[1:]
+        if outfile:
+            with open(outfile, 'ab') as f:
+                f.write(cleaned_msg)
+        else:
+            results.append(cleaned_msg)
+
+    def get_pod_status(self, namespace, pod):
+        """
+        Get pod status.
+
+        Args:
+            namespace (str): Openshift namespace
+            pod (str): Pod name
+
+        Returns:
+            Status of pod (str)
+
+        Raises:
+            ProviderFailedException when unable to fetch Pod status.
+        """
+        args = {
+            'namespace': namespace,
+            'pod': pod,
+            'access_token': self.access_token
+        }
+        url = urljoin(
+            self.kubernetes_api,
+            'namespaces/{namespace}/pods/{pod}?'
+            'access_token={access_token}'.format(**args))
+        (status_code, return_data) = \
+            Utils.make_rest_request("get", url, verify=self._requests_tls_verify())
+
+        if status_code != 200:
+            raise ProviderFailedException(
+                'Could not fetch status for pod: {namespace}/{pod}'.format(
+                    namespace=namespace, pod=pod))
+        return return_data['status']['phase'].lower()
+
 
 class OpenShiftProvider(Provider):
     key = "openshift"
@@ -204,17 +310,13 @@ class OpenShiftProvider(Provider):
 
         self._set_config_values()
 
-        # construct full urls for api endpoints
-        self.kubernetes_api = urljoin(self.providerapi, "api/v1/")
-        self.openshift_api = urljoin(self.providerapi, "oapi/v1/")
-
-        logger.debug("kubernetes_api = %s", self.kubernetes_api)
-        logger.debug("openshift_api = %s", self.openshift_api)
-
-        self.oc = OpenshiftClient(self.openshift_api,
-                                  self.kubernetes_api,
+        self.oc = OpenshiftClient(self.providerapi,
+                                  self.access_token,
                                   self.provider_tls_verify,
                                   self.provider_ca)
+        self.openshift_api = self.oc.openshift_api
+        self.kubernetes_api = self.oc.kubernetes_api
+
         # test connection to openshift server
         self.oc.test_connection()
 
@@ -655,3 +757,94 @@ class OpenShiftProvider(Provider):
                                             result[PROVIDER_CA_KEY].lstrip('/'))
         else:
             self.provider_ca = None
+
+    def extract(self, image, src, dest, update=True):
+        """
+        Extract contents of a container image from 'src' in container
+        to 'dest' in host.
+
+        Args:
+            image (str): Name of container image
+            src (str): Source path in container
+            dest (str): Destination path in host
+            update (bool): Update existing destination, if True
+        """
+        if os.path.exists(dest) and not update:
+            return
+        cleaned_image_name = Utils.sanitizeName(image)
+        pod_name = '{}-{}'.format(cleaned_image_name, Utils.getUniqueUUID())
+        container_name = cleaned_image_name
+
+        # Pull (if needed) image and bring up a container from it
+        # with 'sleep 3600' entrypoint, just to extract content from it
+        artifact = {
+            'apiVersion': 'v1',
+            'kind': 'Pod',
+            'metadata': {
+                'name': pod_name
+            },
+            'spec': {
+                'containers': [
+                    {
+                        'image': image,
+                        'command': [
+                            'sleep',
+                            '3600'
+                        ],
+                        'imagePullPolicy': 'IfNotPresent',
+                        'name': container_name
+                    }
+                ],
+                'restartPolicy': 'Always'
+            }
+        }
+
+        self.oc.deploy(self._get_url(self.namespace, 'Pod'), artifact)
+        try:
+            self._wait_till_pod_runs(self.namespace, pod_name, timeout=300)
+
+            # Archive content from the container and dump it to tmpfile
+            tmpfile = '/tmp/atomicapp-{pod}.tar.gz'.format(pod=pod_name)
+            self.oc.execute(
+                self.namespace, pod_name, container_name,
+                'tar -cz --directory {} ./'.format('/' + src),
+                outfile=tmpfile
+            )
+        finally:
+            # Delete created pod
+            self.oc.delete(self._get_url(self.namespace, 'Pod', pod_name))
+
+        # Extract archive data
+        tar = tarfile.open(tmpfile, 'r:gz')
+        tar.extractall(dest)
+
+    def _wait_till_pod_runs(self, namespace, pod, timeout=300):
+        """
+        Wait till pod runs, with a timeout.
+
+        Args:
+            namespace (str): Openshift namespace
+            pod (str): Pod name
+            timeout (int): Timeout in seconds.
+
+        Raises:
+            ProviderFailedException on timeout or when the pod goes to
+            failed state.
+        """
+        now = datetime.datetime.now()
+        timeout_delta = datetime.timedelta(seconds=timeout)
+        while datetime.datetime.now() - now < timeout_delta:
+            status = self.oc.get_pod_status(namespace, pod)
+            if status == 'running':
+                break
+            elif status == 'failed':
+                raise ProviderFailedException(
+                    'Unable to run pod for extracting content: '
+                    '{namespace}/{pod}'.format(namespace=namespace,
+                                               pod=pod))
+            time.sleep(1)
+        if status != 'running':
+            raise ProviderFailedException(
+                'Timed out to extract content from pod: '
+                '{namespace}/{pod}'.format(namespace=namespace,
+                                           pod=pod))

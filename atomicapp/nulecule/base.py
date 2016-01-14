@@ -22,6 +22,7 @@ from atomicapp.requirements import Requirements
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
 from atomicapp.nulecule.exceptions import NuleculeException
+from atomicapp.providers.openshift import OpenShiftProvider
 
 from jsonpointer import resolve_pointer, set_pointer, JsonPointerException
 
@@ -87,9 +88,17 @@ class Nulecule(NuleculeBase):
             A Nulecule instance, or None in case of dry run.
         """
         logger.info('Unpacking image: %s to %s' % (image, dest))
-        docker_handler = DockerHandler(dryrun=dryrun)
-        docker_handler.pull(image)
-        docker_handler.extract(image, APP_ENT_PATH, dest, update)
+        if Utils.running_on_openshift():
+            # pass general config data containing provider specific data
+            # to Openshift provider
+            op = OpenShiftProvider(config.get('general', {}), './', False)
+            op.artifacts = []
+            op.init()
+            op.extract(image, APP_ENT_PATH, dest, update)
+        else:
+            docker_handler = DockerHandler(dryrun=dryrun)
+            docker_handler.pull(image)
+            docker_handler.extract(image, APP_ENT_PATH, dest, update)
         return cls.load_from_path(
             dest, config=config, namespace=namespace, nodeps=nodeps,
             dryrun=dryrun, update=update)
@@ -216,7 +225,8 @@ class Nulecule(NuleculeBase):
             source = Utils.getSourceImage(node)
             component = NuleculeComponent(
                 node_name, self.basepath, source,
-                node.get(PARAMS_KEY), node.get(ARTIFACTS_KEY))
+                node.get(PARAMS_KEY), node.get(ARTIFACTS_KEY),
+                self.config)
             component.load(nodeps, dryrun)
             components.append(component)
         self.components = components
@@ -257,6 +267,7 @@ class NuleculeComponent(NuleculeBase):
         self.artifacts = artifacts
         self.rendered_artifacts = defaultdict(list)
         self._app = None
+        self.config = config
 
     def load(self, nodeps=False, dryrun=False):
         """
@@ -331,6 +342,7 @@ class NuleculeComponent(NuleculeBase):
             nulecule = Nulecule.unpack(
                 self.source,
                 external_app_path,
+                config=self.config,
                 namespace=self.namespace,
                 dryrun=dryrun,
                 update=update

@@ -210,7 +210,7 @@ class TestNuleculeComponentLoadExternalApplication(unittest.TestCase):
             expected_external_app_path)
         mock_Nulecule.unpack.assert_called_once_with(
             nc.source, expected_external_app_path,
-            namespace=nc.namespace, dryrun=dryrun, update=update)
+            namespace=nc.namespace, config=None, dryrun=dryrun, update=update)
 
 
 class TestNuleculeComponentComponents(unittest.TestCase):

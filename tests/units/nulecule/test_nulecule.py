@@ -86,10 +86,10 @@ class TestNuleculeLoadComponents(unittest.TestCase):
 
         MockNuleculeComponent.assert_any_call(
             graph[0]['name'], n.basepath, 'somecontainer',
-            graph[0]['params'], None)
+            graph[0]['params'], None, {})
         MockNuleculeComponent.assert_any_call(
             graph[1]['name'], n.basepath, None,
-            graph[1].get('params'), graph[1].get('artifacts'))
+            graph[1].get('params'), graph[1].get('artifacts'), {})
 
 
 class TestNuleculeRender(unittest.TestCase):
