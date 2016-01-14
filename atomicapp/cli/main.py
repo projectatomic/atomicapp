@@ -328,6 +328,20 @@ class CLI():
         if Utils.running_on_openshift():
             cmdline = 'run -v --dest=none /{}'.format(APP_ENT_PATH).split()
 
+        # If the user has elected to provide all arguments via the
+        # ATOMICAPP_ARGS environment variable then set it now
+        argstr = os.environ.get('ATOMICAPP_ARGS')
+        if argstr:
+            logger.debug("Setting cmdline args to: {}".format(argstr))
+            cmdline = argstr.split()
+
+        # If the user has elected to provide some arguments via the
+        # ATOMICAPP_APPEND_ARGS environment variable then add those now
+        argstr = os.environ.get('ATOMICAPP_APPEND_ARGS')
+        if argstr:
+            logger.debug("Appending args to cmdline: {}".format(argstr))
+            cmdline.extend(argstr.split())
+
         # We want to be able to place options anywhere on the command
         # line. We have added all global options to each subparser,
         # but subparsers require all options to be after the 'action'
@@ -352,6 +366,9 @@ class CLI():
             set_logging(level=logging.WARNING)
         else:
             set_logging(level=logging.INFO)
+
+        # Now that we have set the logging level let's print out the cmdline
+        logger.debug("Final parsed cmdline: {}".format(' '.join(cmdline)))
 
         lock = LockFile(os.path.join(Utils.getRoot(), LOCK_FILE))
         try:
