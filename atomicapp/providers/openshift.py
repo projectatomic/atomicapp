@@ -231,7 +231,9 @@ class OpenshiftClient(object):
             url,
             on_message=lambda ws, message: self._handle_exec_reply(ws, message, results, outfile))
 
-        ws.run_forever(sslopt={'cert_reqs': ssl.CERT_NONE})
+        ws.run_forever(sslopt={
+            'ca_certs': self.provider_ca,
+            'cert_reqs': ssl.CERT_REQUIRED if self.provider_tls_verify else ssl.CERT_NONE})
 
         if not outfile:
             return ''.join(results)
