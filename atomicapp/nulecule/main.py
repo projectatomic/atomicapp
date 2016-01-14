@@ -88,16 +88,13 @@ class NuleculeManager(object):
         # Set where the main nulecule file should be
         self.main_file = os.path.join(self.app_path, MAIN_FILE)
 
-        # If user provided a path to answers then make sure it exists. If they
-        # didn't provide one then use the one in the app dir if it exists.
+        # If user provided a path to answers, then load them
         if answers_file:
-            self.answers_file = answers_file
-            if not os.path.isfile(self.answers_file):
+            if not os.path.isfile(answers_file):
                 raise NuleculeException(
-                    "Path for answers doesn't exist: %s" % self.answers_file)
-        else:
-            if os.path.isfile(os.path.join(self.app_path, ANSWERS_FILE)):
-                self.answers_file = os.path.join(self.app_path, ANSWERS_FILE)
+                    "Answers file doesn't exist: {}".format(answers_file))
+            self.answers_file = answers_file
+        self._process_answers()
 
         # TODO: put this in a better place in the future.
         # If we are running inside of an openshift pod then override
@@ -188,8 +185,6 @@ class NuleculeManager(object):
         Returns:
             None
         """
-        if self.answers_file:
-            self.answers = Utils.loadAnswers(self.answers_file)
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
 
         # Call unpack. If the app doesn't exist it will be pulled. If
@@ -225,14 +220,17 @@ class NuleculeManager(object):
         Returns:
             None
         """
-        if self.answers_file:
-            self.answers = Utils.loadAnswers(self.answers_file)
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
 
         # Call unpack. If the app doesn't exist it will be pulled. If
         # it does exist it will be just be loaded and returned
         self.nulecule = self.unpack(dryrun=dryrun, config=self.answers)
+
+        # If we didn't find an answers file before then call _process_answers
+        # again just in case the app developer embedded an answers file
+        if not self.answers_file:
+            self._process_answers()
 
         # Unless otherwise specified with CLI arguments we will
         # default to the first provider available
@@ -261,8 +259,8 @@ class NuleculeManager(object):
             kwargs (dict): Extra keyword arguments
         """
         # For stop we use the generated answer file from the run
-        self.answers = Utils.loadAnswers(
-            os.path.join(self.app_path, ANSWERS_RUNTIME_FILE))
+        self.answers_file = os.path.join(self.app_path, ANSWERS_RUNTIME_FILE)
+        self._process_answers()
 
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(
@@ -281,6 +279,31 @@ class NuleculeManager(object):
         self.uninstall()
         distutils.dir_util.remove_tree(self.unpack_path)
         self.initialize()
+
+    def _process_answers(self):
+        """
+        Processes answer files to load data from them.
+
+        NOTE: This function should be called once on startup and then
+        once more after the application has been extracted, but only
+        if answers file wasn't found on the first invocation. The idea
+        is to allow for people to embed an answers file in the application
+        if they want, which won't be available until after extraction.
+
+        Returns:
+            None
+        """
+
+        # If the user didn't provide an answers file then check the app
+        # dir to see if one exists.
+        if not self.answers_file:
+            f = os.path.join(self.app_path, ANSWERS_FILE)
+            if os.path.isfile(f):
+                self.answers_file = f
+
+        # At this point if we have an answers file, load it
+        if self.answers_file:
+            self.answers = Utils.loadAnswers(self.answers_file)
 
     def _write_answers(self, path, answers, answers_format):
         """
