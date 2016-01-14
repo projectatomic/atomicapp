@@ -17,6 +17,7 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 
+import datetime
 import os
 import anymarkup
 import ssl
@@ -250,6 +251,38 @@ class OpenshiftClient(object):
                 f.write(cleaned_msg)
         else:
             results.append(cleaned_msg)
+
+    def get_pod_status(self, namespace, pod):
+        """
+        Get pod status.
+
+        Args:
+            namespace (str): Openshift namespace
+            pod (str): Pod name
+
+        Returns:
+            Status of pod (str)
+
+        Raises:
+            ProviderFailedException when unable to fetch Pod status.
+        """
+        args = {
+            'namespace': namespace,
+            'pod': pod,
+            'access_token': self.access_token
+        }
+        url = urljoin(
+            self.kubernetes_api,
+            'namespaces/{namespace}/pods/{pod}?'
+            'access_token={access_token}'.format(**args))
+        (status_code, return_data) = \
+            Utils.make_rest_request("get", url, verify=self._requests_tls_verify())
+
+        if status_code != 200:
+            raise ProviderFailedException(
+                'Could not fetch status for pod: {namespace}/{pod}'.format(
+                    namespace=namespace, pod=pod))
+        return return_data['status']['phase'].lower()
 
 
 class OpenShiftProvider(Provider):
@@ -765,11 +798,9 @@ class OpenShiftProvider(Provider):
                 'restartPolicy': 'Always'
             }
         }
+
         self.oc.deploy(self._get_url(self.namespace, 'Pod'), artifact)
-        # FIXME: Pod takes some time to come up, so we wait for 3 seconds
-        # The best solution would be to watch for the pod to come to
-        # the running state
-        time.sleep(10)
+        self._wait_till_pod_runs(self.namespace, pod_name, timeout=300)
 
         # Archive content from the container and dump it to tmpfile
         tmpfile = '/tmp/atomicapp-{pod}.tar.gz'.format(pod=pod_name)
@@ -785,3 +816,34 @@ class OpenShiftProvider(Provider):
 
         # Delete created pod
         self.oc.delete(self._get_url(self.namespace, 'Pod', pod_name))
+
+    def _wait_till_pod_runs(self, namespace, pod, timeout=300):
+        """
+        Wait till pod runs, with a timeout.
+
+        Args:
+            namespace (str): Openshift namespace
+            pod (str): Pod name
+            timeout (int): Timeout in seconds.
+
+        Raises:
+            ProviderFailedException on timeout or when the pod goes to
+            failed state.
+        """
+        now = datetime.datetime.now()
+        timeout_delta = datetime.timedelta(seconds=timeout)
+        while datetime.datetime.now() - now < timeout_delta:
+            status = self.oc.get_pod_status(namespace, pod)
+            if status == 'running':
+                break
+            elif status == 'failed':
+                raise ProviderFailedException(
+                    'Unable to run pod for extracting content: '
+                    '{namespace}/{pod}'.format(namespace=namespace,
+                                               pod=pod))
+            time.sleep(1)
+        if status != 'running':
+            raise ProviderFailedException(
+                'Timed out to extract content from pod: '
+                '{namespace}/{pod}'.format(namespace=namespace,
+                                           pod=pod))
