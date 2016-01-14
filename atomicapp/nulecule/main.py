@@ -29,7 +29,8 @@ class NuleculeManager(object):
     Interface to install, run, stop a Nulecule application.
     """
 
-    def __init__(self, app_spec, destination=None, answers_file=None):
+    def __init__(self, app_spec, destination=None,
+                 cli_answers=None, answers_file=None):
         """
         init function for NuleculeManager. Sets a few instance variables.
 
@@ -37,9 +38,11 @@ class NuleculeManager(object):
             app_spec: either a path to an unpacked nulecule app or a
                       container image name where a nulecule can be found
             destination: where to unpack a nulecule to if it isn't local
+            cli_answers: some answer file values provided from cli args
+            answers_file: the location of the answers file
         """
-        # Let's pass in a default format for our answers
         self.answers = copy.deepcopy(DEFAULT_ANSWERS)
+        self.cli_answers = cli_answers
         self.answers_format = None
         self.answers_file = None  # The path to an answer file
         self.app_path = None  # The path where the app resides or will reside
@@ -282,7 +285,8 @@ class NuleculeManager(object):
 
     def _process_answers(self):
         """
-        Processes answer files to load data from them.
+        Processes answer files to load data from them and then merges
+        any cli provided answers into the config.
 
         NOTE: This function should be called once on startup and then
         once more after the application has been extracted, but only
@@ -304,6 +308,11 @@ class NuleculeManager(object):
         # At this point if we have an answers file, load it
         if self.answers_file:
             self.answers = Utils.loadAnswers(self.answers_file)
+
+        # If there is answers data from the cli then merge it in now
+        if self.cli_answers:
+            for k, v in self.cli_answers.iteritems():
+                self.answers[GLOBAL_CONF][k] = v
 
     def _write_answers(self, path, answers, answers_format):
         """

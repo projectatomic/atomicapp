@@ -71,6 +71,7 @@ def cli_install(args):
         destination = argdict['destination']
         nm = NuleculeManager(app_spec=argdict['app_spec'],
                              destination=destination,
+                             cli_answers=argdict['cli_answers'],
                              answers_file=argdict['answers'])
         nm.install(**argdict)
         # Clean up the files if the user asked us to. Otherwise
@@ -94,6 +95,7 @@ def cli_run(args):
         destination = argdict['destination']
         nm = NuleculeManager(app_spec=argdict['app_spec'],
                              destination=destination,
+                             cli_answers=argdict['cli_answers'],
                              answers_file=argdict['answers'])
         nm.run(**argdict)
         # Clean up the files if the user asked us to. Otherwise
@@ -123,6 +125,18 @@ def cli_stop(args):
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(1)
+
+
+# Create a custom action parser. Need this because for some args we don't
+# want to store a value if the user didn't provide one. "store_true" does
+# not allow this; it will always create an attribute and store a value.
+class TrueOrFalseAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values.lower() == 'true':
+            booleanvalue = True
+        else:
+            booleanvalue = False
+        setattr(namespace, self.dest, booleanvalue)
 
 
 class CLI():
@@ -210,6 +224,26 @@ class CLI():
             default=ANSWERS_FILE_SAMPLE_FORMAT,
             choices=['ini', 'json', 'xml', 'yaml'],
             help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
+        globals_parser.add_argument(
+            "--providertlsverify",
+            dest="providertlsverify",
+            action=TrueOrFalseAction,
+            choices=['True', 'False'],
+            help=('''
+                Value for providertlsverify answers option.
+                --providertlsverify=False to disable tls verification'''))
+        globals_parser.add_argument(
+            "--providerconfig",
+            dest="providerconfig",
+            help='Value for providerconfig answers option.')
+        globals_parser.add_argument(
+            "--providercafile",
+            dest="providercafile",
+            help='Value for providercafile answers option.')
+        globals_parser.add_argument(
+            "--providerapi",
+            dest="providerapi",
+            help='Value for providerapi answers option.')
 
         # === "run" SUBPARSER ===
         run_subparser = toplevel_subparsers.add_parser(
@@ -358,6 +392,14 @@ class CLI():
 
         # Finally, parse args and give error if necessary
         args = self.parser.parse_args(cmdline)
+
+        # Take the arguments that correspond to "answers" config file data
+        # and make a dictionary of it to pass along in args.
+        setattr(args, 'cli_answers', {})
+        for item in ['providerapi', 'providercafile',
+                     'providerconfig', 'providertlsverify']:
+            if hasattr(args, item) and getattr(args, item) is not None:
+                args.cli_answers[item] = getattr(args, item)
 
         # Set logging level
         if args.verbose:
