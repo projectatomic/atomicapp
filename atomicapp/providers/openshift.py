@@ -800,22 +800,23 @@ class OpenShiftProvider(Provider):
         }
 
         self.oc.deploy(self._get_url(self.namespace, 'Pod'), artifact)
-        self._wait_till_pod_runs(self.namespace, pod_name, timeout=300)
+        try:
+            self._wait_till_pod_runs(self.namespace, pod_name, timeout=300)
 
-        # Archive content from the container and dump it to tmpfile
-        tmpfile = '/tmp/atomicapp-{pod}.tar.gz'.format(pod=pod_name)
-        self.oc.execute(
-            self.namespace, pod_name, container_name,
-            'tar -cz --directory {} ./'.format('/' + src),
-            outfile=tmpfile
-        )
+            # Archive content from the container and dump it to tmpfile
+            tmpfile = '/tmp/atomicapp-{pod}.tar.gz'.format(pod=pod_name)
+            self.oc.execute(
+                self.namespace, pod_name, container_name,
+                'tar -cz --directory {} ./'.format('/' + src),
+                outfile=tmpfile
+            )
+        finally:
+            # Delete created pod
+            self.oc.delete(self._get_url(self.namespace, 'Pod', pod_name))
 
         # Extract archive data
         tar = tarfile.open(tmpfile, 'r:gz')
         tar.extractall(dest)
-
-        # Delete created pod
-        self.oc.delete(self._get_url(self.namespace, 'Pod', pod_name))
 
     def _wait_till_pod_runs(self, namespace, pod, timeout=300):
         """
