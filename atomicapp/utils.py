@@ -427,6 +427,9 @@ class Utils(object):
                 res = requests.put(url, json=data, verify=verify)
             elif method.lower() == "delete":
                 res = requests.delete(url, json=data, verify=verify)
+            elif method.lower() == "patch":
+                headers = {"Content-Type": "application/json-patch+json"}
+                res = requests.patch(url, json=data, verify=verify, headers=headers)
 
             status_code = res.status_code
             return_data = res.json()

@@ -167,6 +167,30 @@ class OpenshiftClient(object):
             logger.error(msg)
             raise ProviderFailedException(msg)
 
+    def scale(self, url, replicas):
+        """
+        Scale ReplicationControllers or DeploymentConfig
+
+        Args:
+          url (str): full url for artifact
+          replicas (int): number of replicas scale to
+        """
+        patch = [{"op": "replace",
+                  "path": "/spec/replicas",
+                  "value": replicas}]
+
+        (status_code, return_data) = \
+            Utils.make_rest_request("patch",
+                                    url,
+                                    data=patch,
+                                    verify=self._requests_tls_verify())
+        if status_code == 200:
+            logger.info("Sucessfully scaled %s to %s replicas", url, replicas)
+        else:
+            msg = "%s %s" % (status_code, return_data)
+            logger.error(msg)
+            raise ProviderFailedException(msg)
+
     def process_template(self, url, template):
         (status_code, return_data) = \
             Utils.make_rest_request("post",
@@ -371,13 +395,17 @@ class OpenShiftProvider(Provider):
         logger.debug("Starting undeploy")
         delete_artifacts = []
         for kind, objects in self.openshift_artifacts.iteritems():
-            delete_artifacts.extend(objects)
+            # Add DCs to beggining of list so they are deleted first.
+            if kind == "deploymentconfig":
+                delete_artifacts = objects + delete_artifacts
+            else:
+                delete_artifacts = delete_artifacts + objects
 
         for artifact in delete_artifacts:
             kind = artifact["kind"].lower()
             namespace = self._get_namespace(artifact)
 
-            # get name from metadata so we know which object to delete
+            # Get name from metadata so we know which object to delete.
             if "metadata" in artifact and \
                     "name" in artifact["metadata"]:
                 name = artifact["metadata"]["name"]
@@ -415,33 +443,15 @@ class OpenShiftProvider(Provider):
                 # add items to list of artifact to be deleted
                 delete_artifacts.extend(items)
 
-            # If this is a ReplicationController we need to delete all
-            # Pods that were created by this RC. Find the pods that
-            # belong to this RC by querying for all pods and filtering
-            # based on the selector used in the RC.
-            if kind.lower() == "replicationcontroller":
-                selector = ",".join(["%s=%s" % (k, v) for k, v in artifact["spec"]["selector"].iteritems()])
-                logger.debug("Using labelSelector: %s" % selector)
-                params = {"labelSelector": selector}
-                url = self._get_url(namespace, "pod", params=params)
-                (status_code, return_data) = \
-                    Utils.make_rest_request("get", url, verify=self.oc._requests_tls_verify())
-                if status_code != 200:
-                    raise ProviderFailedException("Cannot get Pods for "
-                                                  "ReplicationController %s"
-                                                  " (status code %s)" %
-                                                  (name, status_code))
-                # kind of returned data is ReplicationControllerList
-                # https://docs.openshift.com/enterprise/3.1/rest_api/kubernetes_v1.html#v1-podlist
-                # we need to modify items to get valid Pod
-                items = return_data["items"]
-                for item in items:
-                    item["kind"] = "Pod"
-                    item["apiVersion"] = return_data["apiVersion"]
-                # add items to list of artifact to be deleted
-                delete_artifacts.extend(items)
-
             url = self._get_url(namespace, kind, name)
+
+            # Scale down RC to 0 replicas before deleting.
+            # This should take care of all asocciated pods.
+            if kind.lower() == "replicationcontroller":
+                if self.dryrun:
+                    logger.info("DRY-RUN: SCALE %s down to 0", url)
+                else:
+                    self.oc.scale(url, 0)
 
             if self.dryrun:
                 logger.info("DRY-RUN: DELETE %s", url)
