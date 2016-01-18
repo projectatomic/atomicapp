@@ -395,9 +395,10 @@ class OpenShiftProvider(Provider):
         logger.debug("Starting undeploy")
         delete_artifacts = []
         for kind, objects in self.openshift_artifacts.iteritems():
-            # Add DCs to beginning of list so they are deleted first.
-            # Do DC first because if you do RC before DC then the DC
-            # will re-spawn the RC before the DC is deleted.
+            # Add deployment configs to beginning of the list so they are deleted first.
+            # Do deployment config first because if you do replication controller
+            # before deployment config then the deployment config will re-spawn
+            # the replication controller before the deployment config is deleted.
             if kind == "deploymentconfig":
                 delete_artifacts = objects + delete_artifacts
             else:
@@ -418,9 +419,10 @@ class OpenShiftProvider(Provider):
 
             logger.info("Undeploying artifact name=%s kind=%s" % (name, kind))
 
-            # If this is a DeploymentConfig we need to delete all
-            # ReplicationControllers that were created by this DC. Find the RC
-            # that belong to this DC by querying for all RC and filtering based
+            # If this is a deployment config we need to delete all
+            # replication controllers that were created by this.
+            # Find the replication controller that was created by this deployment
+            # config by querying for all replication controllers and filtering based
             # on automatically created label openshift.io/deployment-config.name
             if kind.lower() == "deploymentconfig":
                 params = {"labelSelector":
@@ -447,8 +449,9 @@ class OpenShiftProvider(Provider):
 
             url = self._get_url(namespace, kind, name)
 
-            # Scale down RC to 0 replicas before deleting.
-            # This should take care of all asocciated pods.
+            # Scale down replication controller to 0 replicas before deleting.
+            # This should take care of all pods created by this replication
+            # controller and we can safely delete it.
             if kind.lower() == "replicationcontroller":
                 if self.dryrun:
                     logger.info("DRY-RUN: SCALE %s down to 0", url)
