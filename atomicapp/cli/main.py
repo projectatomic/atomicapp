@@ -269,6 +269,8 @@ class CLI():
             help="Ask for params even if the defaul value is provided")
         run_subparser.add_argument(
             "app_spec",
+            nargs='?',
+            default=None,
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
@@ -313,6 +315,8 @@ class CLI():
                 files and have them cleaned up when finished.''' % CACHE_DIR))
         install_subparser.add_argument(
             "app_spec",
+            nargs='?',
+            default=None,
             help=(
                 "Application to run. This is a container image or a path "
                 "that contains the metadata describing the whole application."))
@@ -392,6 +396,14 @@ class CLI():
 
         # Finally, parse args and give error if necessary
         args = self.parser.parse_args(cmdline)
+
+        # In the case of Atomic CLI we want to allow the user to specify
+        # a directory if they want to for "run". For that reason we won't
+        # default the RUN label for Atomic App to provide an app_spec argument.
+        # In this case pick up app_spec from $IMAGE env var (set by RUN label).
+        if args.app_spec is None and os.environ.get('IMAGE') is not None:
+            logger.debug("Setting app_spec based on $IMAGE env var")
+            args.app_spec = os.environ['IMAGE']
 
         # Take the arguments that correspond to "answers" config file data
         # and make a dictionary of it to pass along in args.
