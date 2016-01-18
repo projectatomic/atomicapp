@@ -395,7 +395,9 @@ class OpenShiftProvider(Provider):
         logger.debug("Starting undeploy")
         delete_artifacts = []
         for kind, objects in self.openshift_artifacts.iteritems():
-            # Add DCs to beggining of list so they are deleted first.
+            # Add DCs to beginning of list so they are deleted first.
+            # Do DC first because if you do RC before DC then the DC
+            # will re-spawn the RC before the DC is deleted.
             if kind == "deploymentconfig":
                 delete_artifacts = objects + delete_artifacts
             else:
