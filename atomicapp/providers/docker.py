@@ -113,6 +113,12 @@ class DockerProvider(Provider):
             label_run = None
             with open(artifact_path, "r") as fp:
                 label_run = fp.read().strip()
+
+            # If user specified a name of the container via --name=NAME then
+            # then remove the equals sign since it breaks our later processing
+            label_run = label_run.replace('--name=', '--name ')
+
+            # Convert to list for processing
             run_args = label_run.split()
 
             # If any artifacts are labelled by name, add it to a container dict list
