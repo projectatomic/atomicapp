@@ -225,6 +225,10 @@ class CLI():
             choices=['ini', 'json', 'xml', 'yaml'],
             help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
         globals_parser.add_argument(
+            "--namespace",
+            dest="namespace",
+            help=('The namespace to use in the target provider'))
+        globals_parser.add_argument(
             "--providertlsverify",
             dest="providertlsverify",
             action=TrueOrFalseAction,
@@ -409,7 +413,7 @@ class CLI():
         # and make a dictionary of it to pass along in args.
         setattr(args, 'cli_answers', {})
         for item in ['providerapi', 'providercafile',
-                     'providerconfig', 'providertlsverify']:
+                     'providerconfig', 'providertlsverify', 'namespace']:
             if hasattr(args, item) and getattr(args, item) is not None:
                 args.cli_answers[item] = getattr(args, item)
 
