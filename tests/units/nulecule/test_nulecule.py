@@ -43,19 +43,72 @@ class TestNuleculeLoadConfig(unittest.TestCase):
 
     """Test Nulecule load_config"""
 
-    def test_load_config(self):
-        config = {'group1': {'a': 'b'}}
+    def test_load_config_without_specified_provider(self):
+        """
+        Test Nulecule load_config without specifying a provider.
+        """
+        config = {'general': {}, 'group1': {'a': 'b'}}
         mock_component_1 = mock.Mock()
         mock_component_1.config = {
             'group1': {'a': 'c', 'k': 'v'},
             'group2': {'1': '2'}
         }
 
-        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        n = Nulecule(id='some-id', specversion='0.0.2', metadata={}, graph=[], basepath='some/path')
         n.components = [mock_component_1]
         n.load_config(config)
 
         self.assertEqual(n.config, {
+            'general': {'provider': 'kubernetes'},
+            'group1': {'a': 'b', 'k': 'v'},
+            'group2': {'1': '2'}
+        })
+
+    def test_load_config_with_defaultprovider(self):
+        """
+        Test Nulecule load_config with default provider specified
+        in global params in Nulecule spec.
+        """
+        config = {'general': {}, 'group1': {'a': 'b'}}
+        mock_component_1 = mock.Mock()
+        mock_component_1.config = {
+            'group1': {'a': 'c', 'k': 'v'},
+            'group2': {'1': '2'}
+        }
+
+        n = Nulecule(id='some-id', specversion='0.0.2', metadata={}, graph=[],
+                     basepath='some/path',
+                     params=[{'name': 'provider', 'default': 'some-provider'}])
+        n.components = [mock_component_1]
+        n.load_config(config)
+
+        self.assertEqual(n.config, {
+            'general': {'provider': 'some-provider'},
+            'group1': {'a': 'b', 'k': 'v'},
+            'group2': {'1': '2'}
+        })
+
+    def test_load_config_with_defaultprovider_overridden_by_provider_in_answers(self):
+        """
+        Test Nulecule load_config with default provider specified
+        in global params in Nulecule spec, but overridden in answers config.
+        """
+        config = {'general': {'provider': 'new-provider'},
+                  'group1': {'a': 'b'}}
+        mock_component_1 = mock.Mock()
+        mock_component_1.config = {
+            'group1': {'a': 'c', 'k': 'v'},
+            'group2': {'1': '2'}
+        }
+
+        n = Nulecule(id='some-id', specversion='0.0.2', metadata={}, graph=[],
+                     basepath='some/path',
+                     params=[{'name': 'provider', 'default': 'some-provider'}])
+        n.components = [mock_component_1]
+        n.load_config(config)
+
+        self.assertEqual(n.config, {
+            'general': {'provider': 'new-provider'},
             'group1': {'a': 'b', 'k': 'v'},
             'group2': {'1': '2'}
         })
