@@ -61,7 +61,6 @@ DEFAULT_CONTAINER_NAME = "atomic"
 DEFAULT_NAMESPACE = "default"
 DEFAULT_ANSWERS = {
     "general": {
-        "provider": DEFAULT_PROVIDER,
         "namespace": DEFAULT_NAMESPACE
     }
 }
