@@ -1,3 +1,37 @@
+## Atomic App 0.4.0 (01-20-2016)
+
+With this release we bump our version to 0.4.0 to coincide with our BETA-4 release as well as the change to our "install" verb.
+
+The most significant new features are:
+  - Renaming install to fetch
+  - Allowing users to pass an answers file as a URL
+
+For an extended list of changes, please see the git shortlog below.
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Change undeploy/deploy functions to run/stop
+      Rename install to fetch
+      Remove mention of uninstall function
+      Fix test names
+      Remove install label from Dockerfiles
+
+Dusty Mabe <dusty@dustymabe.com>:
+      docker: fix stopping for artifacts with '--name='
+      cli: allow specifying target dir during atomic run
+      cli: add --namespace option to cli
+      Allow users to provide answers file as url.
+      Create destination app_path dir if it doesn't exist yet.
+
+Ratnadeep Debnath <rtnpro@gmail.com>:
+      Support specifying default provider in Nulecule spec file. Fixes #378
+
+Tomas Kral <tkral@redhat.com>:
+      openshift provider: safer stop
+      openshift provider: fix typos, add more explanation
+      openshift provider: remove acronyms from comments
+```
+
 ## Atomic App 0.3.1 (01-14-2016)
 
 This release introduces some significant features to Atomic App as well as our first release since 0.3.0.

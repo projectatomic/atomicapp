@@ -41,7 +41,7 @@ def _install_requirements():
 
 setup(
     name='atomicapp',
-    version='0.3.1',
+    version='0.4.0',
     description='A tool to install and run Nulecule apps',
     author='Red Hat, Inc.',
     author_email='container-tools@redhat.com',
