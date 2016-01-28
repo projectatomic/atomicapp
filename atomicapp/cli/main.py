@@ -347,6 +347,8 @@ class CLI():
             "genanswers", parents=[globals_parser])
         gena_subparser.add_argument(
             "app_spec",
+            nargs='?',
+            default=None,
             help='The name of a container image containing an Atomic App.')
         gena_subparser.set_defaults(func=cli_genanswers)
 
