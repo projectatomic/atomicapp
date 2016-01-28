@@ -138,7 +138,7 @@ class OpenshiftClient(object):
                                     verify=self._requests_tls_verify(),
                                     data=artifact)
         if status_code == 201:
-            logger.info("Object %s sucessfully deployed.",
+            logger.info("Object %s successfully deployed.",
                         artifact['metadata']['name'])
         else:
             msg = "%s %s" % (status_code, return_data)
@@ -161,7 +161,7 @@ class OpenshiftClient(object):
                                     url,
                                     verify=self._requests_tls_verify())
         if status_code == 200:
-            logger.info("Sucessfully deleted.")
+            logger.info("Successfully deleted.")
         else:
             msg = "%s %s" % (status_code, return_data)
             logger.error(msg)
@@ -185,7 +185,7 @@ class OpenshiftClient(object):
                                     data=patch,
                                     verify=self._requests_tls_verify())
         if status_code == 200:
-            logger.info("Sucessfully scaled %s to %s replicas", url, replicas)
+            logger.info("Successfully scaled %s to %s replicas", url, replicas)
         else:
             msg = "%s %s" % (status_code, return_data)
             logger.error(msg)
@@ -198,7 +198,7 @@ class OpenshiftClient(object):
                                     verify=self._requests_tls_verify(),
                                     data=template)
         if status_code == 201:
-            logger.info("template proccessed %s", template['metadata']['name'])
+            logger.info("template processed %s", template['metadata']['name'])
             logger.debug("processed template %s", return_data)
             return return_data['objects']
         else:
