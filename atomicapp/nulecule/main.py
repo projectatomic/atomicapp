@@ -14,9 +14,7 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
                                  DEFAULT_ANSWERS,
-                                 DEFAULT_NAMESPACE,
                                  MAIN_FILE,
-                                 NAMESPACE_KEY,
                                  PROVIDER_KEY)
 from atomicapp.nulecule.base import Nulecule
 from atomicapp.nulecule.exceptions import NuleculeException
@@ -332,6 +330,10 @@ class NuleculeManager(object):
         logger.debug("ANSWERS: %s", answers)
         anymarkup.serialize_file(answers, path, format=answers_format)
 
+    # TODO - once we rework config data we shouldn't need this
+    # function anymore, we should be able to take the data
+    # straight from the config object since the defaults and args
+    # provided from the cli would have already been merged.
     def _get_runtime_answers(self, config, cli_provider):
         """
         Get runtime answers data from config (Nulecule config) by adding
@@ -346,8 +348,7 @@ class NuleculeManager(object):
         """
         _config = copy.deepcopy(config)
         _config[GLOBAL_CONF] = config.get(GLOBAL_CONF) or {}
-        _config[GLOBAL_CONF][NAMESPACE_KEY] = _config[GLOBAL_CONF].get(
-            NAMESPACE_KEY) or DEFAULT_NAMESPACE
+
         # If a provider is provided via CLI, override the config parameter
         if cli_provider:
             _config[GLOBAL_CONF][PROVIDER_KEY] = cli_provider
