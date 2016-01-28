@@ -36,8 +36,7 @@ from constants import (APP_ENT_PATH,
                        CACHE_DIR,
                        EXTERNAL_APP_DIR,
                        HOST_DIR,
-                       WORKDIR,
-                       ARTIFACTS_FOLDER)
+                       WORKDIR)
 
 __all__ = ('Utils')
 
@@ -386,11 +385,6 @@ class Utils(object):
     def rm_dir(directory):
         logger.debug('Recursively removing directory: %s' % directory)
         distutils.dir_util.remove_tree(directory)
-
-    @staticmethod
-    def getSupportedProviders(path):
-        providers = os.listdir(path + '/' + ARTIFACTS_FOLDER)
-        return providers
 
     @staticmethod
     def make_rest_request(method, url, verify=True, data=None):
