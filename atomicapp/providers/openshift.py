@@ -185,7 +185,7 @@ class OpenshiftClient(object):
                                     data=patch,
                                     verify=self._requests_tls_verify())
         if status_code == 200:
-            logger.info("Successfully scaled %s to %s replicas", url, replicas)
+            logger.info("Successfully scaled to %s replicas", replicas)
         else:
             msg = "%s %s" % (status_code, return_data)
             logger.error(msg)
