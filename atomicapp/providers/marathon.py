@@ -108,7 +108,9 @@ class Marathon(Provider):
             data = None
             with open(os.path.join(self.path, artifact), "r") as fp:
                 try:
-                    data = anymarkup.parse(fp)
+                    # env variables in marathon artifacts have to be string:string
+                    # force_types=None respects types from json file
+                    data = anymarkup.parse(fp, force_types=None)
                     logger.debug("Parsed artifact %s", data)
                     # every marathon app has to have id. 'id' key  is also used for showing messages
                     if "id" not in data.keys():
