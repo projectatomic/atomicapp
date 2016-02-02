@@ -1,3 +1,22 @@
+## Atomic App 0.4.1 (02-02-2016)
+
+0.4.1 is a minor bug fix release.
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Remove roadmap in favour of wiki
+      Remove symbolic link from Dockerfile
+
+Dusty Mabe <dusty@dustymabe.com>:
+      cli: Fix bug with atomic cli + genanswers
+      openshift: Fix a few spelling mistakes.
+      openshift: clean up scale function log message.
+      If not given, don't populate namespace in answers.conf.gen.
+
+Tomas Kral <tkral@redhat.com>:
+      marathon: do not convert types when parsing json artifact
+```
+
 ## Atomic App 0.4.0 (01-20-2016)
 
 With this release we bump our version to 0.4.0 to coincide with our BETA-4 release as well as the change to our "install" verb.
