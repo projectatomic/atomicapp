@@ -408,9 +408,14 @@ class CLI():
         # a directory if they want to for "run". For that reason we won't
         # default the RUN label for Atomic App to provide an app_spec argument.
         # In this case pick up app_spec from $IMAGE env var (set by RUN label).
-        if args.app_spec is None and os.environ.get('IMAGE') is not None:
-            logger.debug("Setting app_spec based on $IMAGE env var")
-            args.app_spec = os.environ['IMAGE']
+        if args.app_spec is None:
+            if os.environ.get('IMAGE') is not None:
+                logger.debug("Setting app_spec based on $IMAGE env var")
+                args.app_spec = os.environ['IMAGE']
+            else:
+                print("Error. Too few arguments. Must provide app_spec.")
+                print("Run with '--help' for more info")
+                sys.exit(1)
 
         # Take the arguments that correspond to "answers" config file data
         # and make a dictionary of it to pass along in args.
