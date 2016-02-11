@@ -238,7 +238,7 @@ class TestNuleculeComponentRender(unittest.TestCase):
         provider_key = 'some-provider'
         dryrun = False
 
-        nc = NuleculeComponent(name='some-app', basepath='some/path')
+        nc = NuleculeComponent(name='some-app', basepath='some/path', artifacts="/foo/bar")
         nc._app = mock_nulecule
         nc.render(provider_key, dryrun)
 
@@ -258,6 +258,17 @@ class TestNuleculeComponentRender(unittest.TestCase):
         nc.artifacts = {'x': ['some-artifact']}
 
         self.assertRaises(NuleculeException, nc.render, provider_key, dryrun)
+
+    def test_render_for_local_app_with_missing_artifacts_from_nulecule(self):
+        """
+        Test rendering a Nulecule component with no artifacts provided in the
+        Nulecule file.
+        """
+        nc = NuleculeComponent(name='some-app', basepath='some/path')
+        nc.config = {}
+
+        with self.assertRaises(NuleculeException):
+            nc.render()
 
     @mock.patch('atomicapp.nulecule.base.NuleculeComponent.get_context')
     @mock.patch('atomicapp.nulecule.base.NuleculeComponent.'
