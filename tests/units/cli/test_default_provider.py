@@ -70,7 +70,7 @@ class TestCli(object):
         print out
 
         # Since this a Docker-only provider test, docker *should* be in it, NOT Kubernetes
-        assert "'provider': 'docker'" in out
+        assert "u'provider': u'docker'" in out
         assert "Deploying to Kubernetes" not in out
 
         assert exec_info.value.code == 0
