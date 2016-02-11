@@ -72,8 +72,9 @@ class Provider(object):
         """
         if PROVIDER_CONFIG_KEY in self.config:
             self.config_file = self.config[PROVIDER_CONFIG_KEY]
-            if self.container:
-                self.config_file = os.path.join(Utils.getRoot(), self.config_file.lstrip("/"))
+            if os.path.isabs(self.config_file):
+                self.config_file = os.path.join(Utils.getRoot(),
+                                                self.config_file.lstrip('/'))
         else:
             logger.warning("Configuration option '%s' not found" % PROVIDER_CONFIG_KEY)
 
