@@ -372,6 +372,9 @@ class NuleculeComponent(NuleculeBase):
         if self._app:
             self._app.render(provider_key=provider_key, dryrun=dryrun)
             return
+        if self.artifacts is None:
+            raise NuleculeException(
+                "No artifacts specified in the Nulecule file")
         context = self.get_context()
         if provider_key and provider_key not in self.artifacts:
             raise NuleculeException(
