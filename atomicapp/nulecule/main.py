@@ -223,12 +223,6 @@ class NuleculeManager(object):
         if not self.answers_file:
             self._process_answers()
 
-        # Unless otherwise specified with CLI arguments we will
-        # default to the first provider available
-        providers = Utils.getSupportedProviders(self.app_path)
-        if cli_provider is None and len(providers) == 1:
-            self.answers[GLOBAL_CONF][PROVIDER_KEY] = providers[0]
-
         self.nulecule.load_config(config=self.nulecule.config, ask=ask)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
