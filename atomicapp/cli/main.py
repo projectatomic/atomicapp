@@ -159,7 +159,7 @@ class CLI():
             formatter_class=argparse.RawDescriptionHelpFormatter,
             add_help=False,
             description=(
-                "This will install and run an Atomic App, "
+                "This will fetch and run an Atomic App, "
                 "a containerized application conforming to the Nulecule Specification"))
         # Add a help function to the toplevel parser but don't output
         # help information for it. We need this because of the way we
@@ -284,7 +284,7 @@ class CLI():
             dest="destination",
             default=None,
             help=('''
-                Destination directory for install. This defaults to a
+                Destination directory for fetching. This defaults to a
                 directory under %s. Specify 'none' to not persist
                 files and have them cleaned up when finished.''' % CACHE_DIR))
         run_subparser.set_defaults(func=cli_run)
@@ -338,7 +338,7 @@ class CLI():
         stop_subparser.add_argument(
             "app_spec",
             help=('''
-                Path to the directory where the Atomic App is installed
+                Path to the directory where the Atomic App is fetched
                 that is to be stopped.'''))
         stop_subparser.set_defaults(func=cli_stop)
 

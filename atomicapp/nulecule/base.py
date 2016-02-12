@@ -120,12 +120,12 @@ class Nulecule(NuleculeBase):
             update (bool): Update existing application if True, else reuse it.
 
         Returns:
-            A Nulecule instance or None in case of some dry run (installing
-            from image).
+            A Nulecule instance or None in case of some dry run (fetching
+            an image).
         """
         nulecule_path = os.path.join(src, MAIN_FILE)
         if dryrun and not os.path.exists(nulecule_path):
-            raise NuleculeException("Installed Nulecule components are required to initiate dry-run. "
+            raise NuleculeException("Fetched Nulecule components are required to initiate dry-run. "
                                     "Please specify your app via atomicapp --dry-run /path/to/your-app")
         nulecule_data = anymarkup.parse_file(nulecule_path)
         nulecule = Nulecule(config=config, basepath=src,
