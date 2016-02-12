@@ -1,6 +1,6 @@
-## Install
+## Fetch
 
-Installing an Atomic App means to download the artifacts and sample answerfile.
+Fetching an Atomic App means to download the artifacts and sample answerfile.
 
 ## Developing and Debugging
 

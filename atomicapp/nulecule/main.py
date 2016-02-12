@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 class NuleculeManager(object):
 
     """
-    Interface to install, run, stop a Nulecule application.
+    Interface to fetch, run, stop a Nulecule application.
     """
 
     def __init__(self, app_spec, destination=None,
