@@ -400,6 +400,13 @@ class NuleculeComponent(NuleculeBase):
         """
         artifact_paths = []
         artifacts = self.artifacts.get(provider_key)
+
+        # If there are no artifacts for the requested provider then error
+        # This can happen for incorrectly named inherited provider (#435)
+        if artifacts is None:
+            raise NuleculeException(
+                "No artifacts for provider {}".format(provider_key))
+
         for artifact in artifacts:
             # Convert dict if the Nulecule file references "resource"
             if isinstance(artifact, dict) and artifact.get(RESOURCE_KEY):
