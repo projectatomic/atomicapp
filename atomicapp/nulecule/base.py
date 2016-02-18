@@ -548,6 +548,8 @@ class NuleculeComponent(NuleculeBase):
         immediate children, i.e., we do not deal with nested artifact
         directories at this moment.
 
+        If a file or directory is not found, raise an exception.
+
         Args:
             path (str): Local path
 
@@ -558,9 +560,14 @@ class NuleculeComponent(NuleculeBase):
         if os.path.isfile(path):
             artifact_paths.append(path)
         elif os.path.isdir(path):
+            if os.listdir(path) == []:
+                raise NuleculeException("Artifact directory %s is empty" % path)
             for dir_child in os.listdir(path):
                 dir_child_path = os.path.join(path, dir_child)
                 if dir_child.startswith('.') or os.path.isdir(dir_child_path):
                     continue
                 artifact_paths.append(dir_child_path)
+        else:
+            raise NuleculeException("Unable to find artifact %s" % path)
+
         return artifact_paths
