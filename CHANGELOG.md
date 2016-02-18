@@ -1,3 +1,48 @@
+## Atomic App 0.4.2 (02-18-2016)
+
+As we start to get closer to a 1.0.0 release, we continue to focus on tests and user interaction. This weeks release focus on both as well as a minor feature.
+
+The main features of this release are:
+  - Meta data is now an optional requirement when building
+
+UI:
+  - Relative path support for provider ocnfig data
+  - Raise on missing artifact or docker image failure
+
+Bug fixes:
+  - Label fixes against `atomic` cli master branch. We now pass our current working directory as a variable
+
+Misc:
+  - Remove uneeded test suite files (Dockerfiles, licenses, etc.)
+  - All references to `install` have now been removed  within the code in favour of `fetch`
+
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Fail on missing artifacts within Nulecule file
+      Add tests for failure of finding Nulecule artifacts
+      Remove instances of install verb to fetch
+      Remove unneeded files in test examples dirs
+      Fix xpathing tests on missing files
+
+Dusty Mabe <dusty@dustymabe.com>:
+      providerconfig: support someone specifying a relative path
+      cli: Print helpful error if no app_spec provided.
+      Do not use artifacts dir to select provider.
+      tests: update cli test
+      labels: update run labels to no longer use backticks
+      labels: no longer default to verbose output
+      Add Tomas to MAINTAINERS
+      Adds Atomicapp lifecycle definition. Closes #290
+      nulecule: error if no artifacts in spec for inherited provider
+
+Ratnadeep Debnath <rtnpro@gmail.com>:
+      Update file handling doc. Fixes #285
+
+Suraj Deshmukh <surajssd009005@gmail.com>:
+      This makes `metadata` an optional argument
+```
+
 ## Atomic App 0.4.1 (02-02-2016)
 
 0.4.1 is a minor bug fix release.
