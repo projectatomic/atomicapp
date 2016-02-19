@@ -25,7 +25,7 @@ import logging
 from lockfile import LockFile
 from lockfile import AlreadyLocked
 
-from atomicapp import set_logging
+from atomicapp.applogging import Logging
 from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  __NULECULESPECVERSION__,
                                  ANSWERS_FILE,
@@ -34,12 +34,13 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  CACHE_DIR,
                                  HOST_DIR,
                                  LOCK_FILE,
+                                 LOGGER_DEFAULT,
                                  PROVIDERS)
 from atomicapp.nulecule import NuleculeManager
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 def print_app_location(app_path):
@@ -218,7 +219,7 @@ class CLI():
             action="store_true",
             help=(
                 "Don't actually call provider. The commands that should be "
-                "run will be sent to stdout but not run."))
+                "run will be logged but not run."))
         globals_parser.add_argument(
             "--answers-format",
             dest="answers_format",
@@ -249,6 +250,18 @@ class CLI():
             "--providerapi",
             dest="providerapi",
             help='Value for providerapi answers option.')
+        globals_parser.add_argument(
+            "--logtype",
+            dest="logtype",
+            choices=['cockpit', 'color', 'nocolor', 'none'],
+            help="""
+                Override the default logging output. The options are:
+                    nocolor: we will only log to stdout;
+                    color: log to stdout with color;
+                    cockpit: used with cockpit integration;
+                    none: atomicapp will disable any logging.
+                If nothing is set and logging to file then 'nocolor' by default.
+                If nothing is set and logging to tty then 'color' by default.""")
 
         # === "run" SUBPARSER ===
         run_subparser = toplevel_subparsers.add_parser(
@@ -367,6 +380,9 @@ class CLI():
     def run(self):
         cmdline = sys.argv[1:]  # Grab args from cmdline
 
+        # Initial setup of logging (to allow for a few early debug statements)
+        Logging.setup_logging(verbose=True, quiet=False)
+
         # If we are running in an openshift pod (via `oc new-app`) then
         # there is no cmdline but we want to default to "atomicapp run".
         if Utils.running_on_openshift():
@@ -399,10 +415,14 @@ class CLI():
         if args.mode:
             args.action = args.mode     # Allow mode to override 'action'
         cmdline.insert(0, args.action)  # Place 'action' at front
-        logger.info("Action/Mode Selected is: %s" % args.action)
 
         # Finally, parse args and give error if necessary
         args = self.parser.parse_args(cmdline)
+
+        # Setup logging (now with arguments from cmdline) and log a few msgs
+        Logging.setup_logging(args.verbose, args.quiet, args.logtype)
+        logger.info("Action/Mode Selected is: %s" % args.action)
+        logger.debug("Final parsed cmdline: {}".format(' '.join(cmdline)))
 
         # In the case of Atomic CLI we want to allow the user to specify
         # a directory if they want to for "run". For that reason we won't
@@ -424,17 +444,6 @@ class CLI():
                      'providerconfig', 'providertlsverify', 'namespace']:
             if hasattr(args, item) and getattr(args, item) is not None:
                 args.cli_answers[item] = getattr(args, item)
-
-        # Set logging level
-        if args.verbose:
-            set_logging(level=logging.DEBUG)
-        elif args.quiet:
-            set_logging(level=logging.WARNING)
-        else:
-            set_logging(level=logging.INFO)
-
-        # Now that we have set the logging level let's print out the cmdline
-        logger.debug("Final parsed cmdline: {}".format(' '.join(cmdline)))
 
         lock = LockFile(os.path.join(Utils.getRoot(), LOCK_FILE))
         try:

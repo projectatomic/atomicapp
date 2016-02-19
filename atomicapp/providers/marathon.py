@@ -21,12 +21,14 @@ import anymarkup
 import urlparse
 import logging
 import os
+from atomicapp.constants import (LOGGER_COCKPIT,
+                                 LOGGER_DEFAULT)
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.utils import printErrorStatus
 from atomicapp.utils import Utils
 from atomicapp.constants import PROVIDER_API_KEY
 
-logger = logging.getLogger(__name__)
+cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class Marathon(Provider):
@@ -115,10 +117,10 @@ class Marathon(Provider):
                     # every marathon app has to have id. 'id' key  is also used for showing messages
                     if "id" not in data.keys():
                         msg = "Error processing %s artifact. There is no id" % artifact
-                        printErrorStatus(msg)
+                        cockpit_logger.error(msg)
                         raise ProviderFailedException(msg)
                 except anymarkup.AnyMarkupError, e:
                     msg = "Error processing artifact - %s" % e
-                    printErrorStatus(msg)
+                    cockpit_logger.error(msg)
                     raise ProviderFailedException(msg)
                 self.marathon_artifacts.append(data)

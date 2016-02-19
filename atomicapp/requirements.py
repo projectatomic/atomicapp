@@ -1,9 +1,10 @@
 import logging
 
-from atomicapp.constants import REQUIREMENT_FUNCTIONS
+from atomicapp.constants import (LOGGER_DEFAULT,
+                                 REQUIREMENT_FUNCTIONS)
 from atomicapp.plugin import Plugin
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class Requirements:

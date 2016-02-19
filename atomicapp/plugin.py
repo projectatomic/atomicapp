@@ -26,9 +26,11 @@ import imp
 
 import logging
 from utils import Utils
-from constants import HOST_DIR, PROVIDER_CONFIG_KEY
+from constants import (HOST_DIR,
+                       LOGGER_DEFAULT,
+                       PROVIDER_CONFIG_KEY)
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class Provider(object):

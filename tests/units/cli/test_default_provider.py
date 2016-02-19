@@ -61,16 +61,16 @@ class TestCli(object):
         # Run the dry-run command
         with pytest.raises(SystemExit) as exec_info:
             self.exec_cli(command)
-        nil, out = capsys.readouterr()
+        stdout, stderr = capsys.readouterr()
 
         # Tear down and remove all those useless generated files
         self.tear_down()
 
         # Print out what we've captured just in case the test fails
-        print out
+        print stdout
 
         # Since this a Docker-only provider test, docker *should* be in it, NOT Kubernetes
-        assert "u'provider': u'docker'" in out
-        assert "Deploying to Kubernetes" not in out
+        assert "u'provider': u'docker'" in stdout
+        assert "Deploying to Kubernetes" not in stdout
 
         assert exec_info.value.code == 0

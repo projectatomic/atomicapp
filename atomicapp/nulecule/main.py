@@ -14,13 +14,16 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
                                  DEFAULT_ANSWERS,
+                                 LOGGER_COCKPIT,
+                                 LOGGER_DEFAULT,
                                  MAIN_FILE,
                                  PROVIDER_KEY)
 from atomicapp.nulecule.base import Nulecule
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
-logger = logging.getLogger(__name__)
+cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class NuleculeManager(object):
@@ -190,6 +193,8 @@ class NuleculeManager(object):
         self._write_answers(
             os.path.join(self.app_path, ANSWERS_FILE_SAMPLE),
             runtime_answers, answers_format)
+
+    cockpit_logger.info("Install Successful.")
 
     def run(self, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):

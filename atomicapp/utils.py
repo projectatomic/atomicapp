@@ -36,27 +36,18 @@ from constants import (APP_ENT_PATH,
                        CACHE_DIR,
                        EXTERNAL_APP_DIR,
                        HOST_DIR,
+                       LOGGER_COCKPIT,
+                       LOGGER_DEFAULT,
                        WORKDIR)
 
 __all__ = ('Utils')
 
-logger = logging.getLogger(__name__)
+cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class AtomicAppUtilsException(Exception):
     pass
-
-# Following Methods(printStatus, printErrorStatus)
-#  are required for Cockpit or thirdparty management tool integration
-#  DONOT change the atomicapp.status.* prefix in the logger method.
-
-
-def printStatus(message):
-    logger.info("atomicapp.status.info.message=" + str(message))
-
-
-def printErrorStatus(message):
-    logger.info("atomicapp.status.error.message=" + str(message))
 
 
 def find_binary(executable, path=None):
@@ -270,7 +261,7 @@ class Utils(object):
         # we were asked not to.
         if checkexitcode:
             if ec != 0:
-                printErrorStatus("cmd failed: %s" % str(cmd))  # For cockpit
+                cockpit_logger.error("cmd failed: %s" % str(cmd))
                 raise AtomicAppUtilsException(
                     "cmd: %s failed: \n%s" % (str(cmd), stderr))
 
