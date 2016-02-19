@@ -14,13 +14,14 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE,
                                  ANSWERS_RUNTIME_FILE,
                                  DEFAULT_ANSWERS,
+                                 LOGGER_DEFAULT,
                                  MAIN_FILE,
                                  PROVIDER_KEY)
 from atomicapp.nulecule.base import Nulecule
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class NuleculeManager(object):

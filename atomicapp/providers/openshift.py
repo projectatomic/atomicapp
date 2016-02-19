@@ -32,13 +32,14 @@ from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.constants import (ACCESS_TOKEN_KEY,
                                  ANSWERS_FILE,
                                  DEFAULT_NAMESPACE,
+                                 LOGGER_DEFAULT,
                                  NAMESPACE_KEY,
                                  PROVIDER_API_KEY,
                                  PROVIDER_TLS_VERIFY_KEY,
                                  PROVIDER_CA_KEY)
 from requests.exceptions import SSLError
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 # If running in an openshift POD via `oc new-app`, the ca file is here
 OPENSHIFT_POD_CA_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"

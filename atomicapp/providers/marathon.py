@@ -21,12 +21,13 @@ import anymarkup
 import urlparse
 import logging
 import os
+from atomicapp.constants import LOGGER_DEFAULT
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus
 from atomicapp.utils import Utils
 from atomicapp.constants import PROVIDER_API_KEY
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class Marathon(Provider):

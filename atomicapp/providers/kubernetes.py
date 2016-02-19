@@ -22,10 +22,11 @@ import logging
 import os
 from string import Template
 
+from atomicapp.constants import LOGGER_DEFAULT
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import printErrorStatus, Utils
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class KubernetesProvider(Provider):

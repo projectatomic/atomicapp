@@ -36,11 +36,12 @@ from constants import (APP_ENT_PATH,
                        CACHE_DIR,
                        EXTERNAL_APP_DIR,
                        HOST_DIR,
+                       LOGGER_DEFAULT,
                        WORKDIR)
 
 __all__ = ('Utils')
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class AtomicAppUtilsException(Exception):

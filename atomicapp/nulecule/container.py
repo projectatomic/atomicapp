@@ -4,11 +4,12 @@ import uuid
 import logging
 
 from atomicapp.constants import (APP_ENT_PATH,
+                                 LOGGER_DEFAULT,
                                  MAIN_FILE)
 from atomicapp.utils import Utils
 from atomicapp.nulecule.exceptions import NuleculeException
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class DockerHandler(object):

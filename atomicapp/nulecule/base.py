@@ -10,6 +10,7 @@ from string import Template
 from atomicapp.constants import (APP_ENT_PATH,
                                  EXTERNAL_APP_DIR,
                                  GLOBAL_CONF,
+                                 LOGGER_DEFAULT,
                                  MAIN_FILE,
                                  RESOURCE_KEY,
                                  PARAMS_KEY,
@@ -27,7 +28,7 @@ from atomicapp.providers.openshift import OpenShiftProvider
 
 from jsonpointer import resolve_pointer, set_pointer, JsonPointerException
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(LOGGER_DEFAULT)
 
 
 class Nulecule(NuleculeBase):

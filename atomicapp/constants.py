@@ -54,6 +54,10 @@ ANSWERS_FILE_SAMPLE = "answers.conf.sample"
 ANSWERS_FILE_SAMPLE_FORMAT = 'ini'
 WORKDIR = ".workdir"
 LOCK_FILE = "/run/lock/atomicapp.lock"
+
+LOGGER_DEFAULT = "atomicapp"
+LOGGER_COCKPIT = "cockpit"
+
 HOST_DIR = "/host"
 
 DEFAULT_PROVIDER = "kubernetes"
