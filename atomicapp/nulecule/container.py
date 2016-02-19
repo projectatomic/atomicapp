@@ -4,11 +4,13 @@ import uuid
 import logging
 
 from atomicapp.constants import (APP_ENT_PATH,
+                                 LOGGER_COCKPIT,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE)
 from atomicapp.utils import Utils
 from atomicapp.nulecule.exceptions import NuleculeException
 
+cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 logger = logging.getLogger(LOGGER_DEFAULT)
 
 
@@ -48,6 +50,7 @@ class DockerHandler(object):
         """
         if not self.is_image_present(image) or update:
             logger.info('Pulling Docker image: %s' % image)
+            cockpit_logger.info('Pulling Docker image: %s' % image)
             pull_cmd = [self.docker_cli, 'pull', image]
             logger.debug(' '.join(pull_cmd))
         else:
@@ -58,6 +61,8 @@ class DockerHandler(object):
             logger.info("DRY-RUN: %s", pull_cmd)
         elif subprocess.call(pull_cmd) != 0:
             raise Exception("Could not pull Docker image %s" % image)
+
+        cockpit_logger.info('Skipping pulling Docker image: %s' % image)
 
     def extract(self, image, source, dest, update=False):
         """
@@ -110,6 +115,7 @@ class DockerHandler(object):
         if os.path.exists(mainfile):
             existing_id = Utils.getAppId(mainfile)
             new_id = Utils.getAppId(tmpmainfile)
+            cockpit_logger.info("Loading app_id %s ." % new_id)
             if existing_id != new_id:
                 raise NuleculeException(
                     "Existing app (%s) and requested app (%s) differ" %

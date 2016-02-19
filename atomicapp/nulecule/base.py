@@ -10,6 +10,7 @@ from string import Template
 from atomicapp.constants import (APP_ENT_PATH,
                                  EXTERNAL_APP_DIR,
                                  GLOBAL_CONF,
+                                 LOGGER_COCKPIT,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE,
                                  RESOURCE_KEY,
@@ -28,6 +29,7 @@ from atomicapp.providers.openshift import OpenShiftProvider
 
 from jsonpointer import resolve_pointer, set_pointer, JsonPointerException
 
+cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 logger = logging.getLogger(LOGGER_DEFAULT)
 
 
@@ -101,6 +103,7 @@ class Nulecule(NuleculeBase):
             docker_handler = DockerHandler(dryrun=dryrun)
             docker_handler.pull(image)
             docker_handler.extract(image, APP_ENT_PATH, dest, update)
+            cockpit_logger.info("All dependencies installed successfully.")
         return cls.load_from_path(
             dest, config=config, namespace=namespace, nodeps=nodeps,
             dryrun=dryrun, update=update)
@@ -160,6 +163,7 @@ class Nulecule(NuleculeBase):
         # Process components
         for component in self.components:
             component.run(provider_key, dryrun)
+            cockpit_logger.info("Component %s installed successfully" % provider_key)
 
     def stop(self, provider_key=None, dryrun=False):
         """
@@ -272,6 +276,7 @@ class NuleculeComponent(NuleculeBase):
         """
         Load external application of the Nulecule component.
         """
+        cockpit_logger.info("Loading app %s ." % self.name)
         if self.source:
             if nodeps:
                 logger.info(
@@ -283,6 +288,7 @@ class NuleculeComponent(NuleculeBase):
         """
         Run the Nulecule component with the specified provider,
         """
+        cockpit_logger.info("Deploying component %s ..." % self.name)
         if self._app:
             self._app.run(provider_key, dryrun)
             return
@@ -347,6 +353,7 @@ class NuleculeComponent(NuleculeBase):
                 update=update
             )
         self._app = nulecule
+        cockpit_logger.info("Copied app successfully.")
 
     @property
     def components(self):

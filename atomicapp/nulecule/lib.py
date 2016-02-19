@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
+import logging
+
 from atomicapp.constants import (GLOBAL_CONF,
+                                 LOGGER_COCKPIT,
                                  NAME_KEY,
                                  DEFAULTNAME_KEY,
                                  PROVIDER_KEY)
 from atomicapp.utils import Utils
 from atomicapp.plugin import Plugin
+
+cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 
 
 class NuleculeBase(object):
@@ -44,6 +49,7 @@ class NuleculeBase(object):
                 config.get(GLOBAL_CONF, {}).get(param[NAME_KEY])
             if value is None and (ask or (
                     not skip_asking and param.get(DEFAULTNAME_KEY) is None)):
+                cockpit_logger.info("%s is missing in answers.conf." % param[NAME_KEY])
                 value = Utils.askFor(param[NAME_KEY], param)
             elif value is None:
                 value = param.get(DEFAULTNAME_KEY)
