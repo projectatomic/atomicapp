@@ -31,10 +31,18 @@ class DockerHandler(object):
             except subprocess.CalledProcessError as e:
                 if "client and server don't have same version" in e.output \
                         or "client is newer than server" in e.output:
-                    print("\nThe docker version in this Atomic App differs "
-                          "greatly from the host version.\nPlease use a different "
-                          "Atomic App version for this host.\n")
-                raise e
+                    raise DockerException("\nThe docker version in this "
+                                          "Atomic App differs greatly from "
+                                          "the host version.\nPlease use a "
+                                          "different Atomic App version for "
+                                          "this host.\n")
+                elif "Is your docker daemon up and running" in e.output or \
+                     "Are you trying to connect to a TLS-enabled daemon " \
+                     "without TLS" in e.output:
+                    raise DockerException("Could not connect to the "
+                                          "docker daemon.")
+                else:
+                    raise DockerException(e.output)
 
     def pull(self, image, update=False):
         """
