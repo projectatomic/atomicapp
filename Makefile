@@ -5,6 +5,8 @@ install:
 	python setup.py install
 
 test:
+	pip install -qr requirements.txt
+	pip install -qr test-requirements.txt
 	python -m pytest -vv
 
 image:
