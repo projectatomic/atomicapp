@@ -1,3 +1,50 @@
+## Atomic App 0.4.3 (03-01-2016)
+
+You'll now see pretty colors with logging / output!
+
+With this release, we've refactored our logging formatter making it easier to decipher between information, debug, warning and errors.
+
+You are now able to specify what logging format you'd like to output via the command line:
+
+```
+  --logtype {cockpit,color,nocolor,none}
+                        Override the default logging output. The options are:
+                        nocolor: we will only log to stdout; color: log to
+                        stdout with color; cockpit: used with cockpit
+                        integration; none: atomicapp will disable any logging.
+                        If nothing is set and logging to file then 'nocolor'
+                        by default. If nothing is set and logging to tty then
+                        'color' by default.
+```
+
+The main features are:
+
+  - A new logging mechanism that outputs color-coordinated logging messages
+  - Added CLI commands for color, nocolor, cockpit and 'none' output
+
+UI:
+
+  - Failure on finding no artifacts
+
+Other:
+
+  - Readme updates / typo fixes
+
+```
+Charlie Drage <charlie@charliedrage.com> (3):
+      Fail if unable to find artifact
+      Change order of getting context
+      Update readme
+
+Dusty Mabe <dusty@dustymabe.com> (4):
+      logging: Add in Atomic App Logging class
+      logging: add cockpit logging output
+      tests: fix test to look for output in stdout vs stderr
+
+Shubham Minglani <shubham@linux.com> (1):
+      Remove extra whitespaces from logging output.
+```
+
 ## Atomic App 0.4.2 (02-18-2016)
 
 As we start to get closer to a 1.0.0 release, we continue to focus on tests and user interaction. This weeks release focus on both as well as a minor feature.
