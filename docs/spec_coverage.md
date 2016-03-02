@@ -1,6 +1,6 @@
 # Implementation
 
-This is a table of a list of current functions which are implemented by Atomic App against the Nulecule (spec)[https://github.com/projectatomic/nulcule].
+This is a table of a list of current functions which are implemented by Atomic App against the Nulecule [spec](https://github.com/projectatomic/nulecule).
 
 | Status | Description | Version implemented in | Notes |
 |--------|-------------|------------------------|-------|
