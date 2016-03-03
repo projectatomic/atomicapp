@@ -24,7 +24,24 @@ from atomicapp.constants import (LOGGER_COCKPIT,
                                  LOGGER_DEFAULT)
 
 
-class colorizeOutputFormatter(logging.Formatter):
+class customOutputFormatter(logging.Formatter):
+    """
+    A class that adds 'longerfilename' support to the logging formatter
+    This 'longerfilename' will be filename + parent dir.
+    """
+
+    def format(self, record):
+
+        # Add the 'longerfilename' field to the record dict. This is
+        # then used by the Formatter in the logging library when
+        # formatting the message string.
+        record.longerfilename = '/'.join(record.pathname.split('/')[-2:])
+
+        # Call the parent class to do formatting.
+        return super(customOutputFormatter, self).format(record)
+
+
+class colorizeOutputFormatter(customOutputFormatter):
     """
     A class to colorize the log msgs based on log level
     """
@@ -99,6 +116,13 @@ class Logging:
         else:
             logging_level = logging.INFO
 
+        # Set the format string to use based on the logging level.
+        # For debug we include more of the filename than for !debug.
+        if logging_level == logging.DEBUG:
+            formatstr = '%(asctime)s - [%(levelname)s] - %(longerfilename)s - %(message)s'
+        else:
+            formatstr = '%(asctime)s - [%(levelname)s] - %(filename)s - %(message)s'
+
         # Get the loggers and clear out the handlers (allows this function
         # to be ran more than once)
         logger = logging.getLogger(LOGGER_DEFAULT)
@@ -130,7 +154,7 @@ class Logging:
 
             # configure logger for basic no color printing to stdout
             handler = logging.StreamHandler(stream=sys.stdout)
-            formatter = logging.Formatter('%(asctime)s - [%(levelname)s] - %(filename)s - %(message)s')
+            formatter = customOutputFormatter(formatstr)
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             logger.setLevel(logging_level)
@@ -142,7 +166,7 @@ class Logging:
 
             # configure logger for color printing to stdout
             handler = logging.StreamHandler(stream=sys.stdout)
-            formatter = colorizeOutputFormatter('%(asctime)s - [%(levelname)s] - %(filename)s - %(message)s')
+            formatter = colorizeOutputFormatter(formatstr)
             handler.setFormatter(formatter)
             logger.addHandler(handler)
             logger.setLevel(logging_level)
