@@ -8,7 +8,7 @@ from atomicapp.constants import (APP_ENT_PATH,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE)
 from atomicapp.utils import Utils
-from atomicapp.nulecule.exceptions import NuleculeException
+from atomicapp.nulecule.exceptions import NuleculeException, DockerException
 
 cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 logger = logging.getLogger(LOGGER_DEFAULT)
@@ -60,7 +60,7 @@ class DockerHandler(object):
         if self.dryrun:
             logger.info("DRY-RUN: %s", pull_cmd)
         elif subprocess.call(pull_cmd) != 0:
-            raise Exception("Could not pull Docker image %s" % image)
+            raise DockerException("Could not pull Docker image %s" % image)
 
         cockpit_logger.info('Skipping pulling Docker image: %s' % image)
 

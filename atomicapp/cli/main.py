@@ -37,7 +37,7 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  LOGGER_DEFAULT,
                                  PROVIDERS)
 from atomicapp.nulecule import NuleculeManager
-from atomicapp.nulecule.exceptions import NuleculeException
+from atomicapp.nulecule.exceptions import NuleculeException, DockerException
 from atomicapp.utils import Utils
 
 logger = logging.getLogger(LOGGER_DEFAULT)
@@ -106,6 +106,9 @@ def cli_run(args):
         else:
             print_app_location(nm.app_path)
         sys.exit(0)
+    except DockerException as e:
+        logger.error(e)
+        sys.exit(1)
     except NuleculeException as e:
         logger.error(e)
         sys.exit(1)
