@@ -3,6 +3,8 @@ import anymarkup
 import copy
 import logging
 import os
+import yaml
+import re
 
 from collections import defaultdict
 from string import Template
@@ -28,6 +30,7 @@ from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.providers.openshift import OpenShiftProvider
 
 from jsonpointer import resolve_pointer, set_pointer, JsonPointerException
+from anymarkup import AnyMarkupError
 
 cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 logger = logging.getLogger(LOGGER_DEFAULT)
@@ -128,10 +131,27 @@ class Nulecule(NuleculeBase):
             an image).
         """
         nulecule_path = os.path.join(src, MAIN_FILE)
+
+        if os.path.exists(nulecule_path):
+            nulecule_data = open(nulecule_path, 'r').read()
+        else:
+            raise NuleculeException("No Nulecule file exists in directory: %s" % src)
+
         if dryrun and not os.path.exists(nulecule_path):
             raise NuleculeException("Fetched Nulecule components are required to initiate dry-run. "
                                     "Please specify your app via atomicapp --dry-run /path/to/your-app")
-        nulecule_data = anymarkup.parse_file(nulecule_path)
+
+        # By default, AnyMarkup converts all formats to YAML when parsing.
+        # Thus the rescue works either on JSON or YAML.
+        try:
+            nulecule_data = anymarkup.parse(nulecule_data)
+        except (yaml.parser.ParserError, AnyMarkupError), e:
+            line = re.search('line (\d+)', str(e)).group(1)
+            column = re.search('column (\d+)', str(e)).group(1)
+            data = nulecule_data.splitlines()[int(line)]
+            raise NuleculeException("Failure parsing Nulecule file. Validation error on line %s, column %s:\n%s"
+                                    % (line, column, data))
+
         nulecule = Nulecule(config=config, basepath=src,
                             namespace=namespace, **nulecule_data)
         nulecule.load_components(nodeps, dryrun)
