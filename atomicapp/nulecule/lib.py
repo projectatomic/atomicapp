@@ -5,9 +5,11 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  LOGGER_COCKPIT,
                                  NAME_KEY,
                                  DEFAULTNAME_KEY,
-                                 PROVIDER_KEY)
+                                 PROVIDER_KEY,
+                                 PROVIDERS)
 from atomicapp.utils import Utils
 from atomicapp.plugin import Plugin
+from atomicapp.nulecule.exceptions import NuleculeException
 
 cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 
@@ -101,6 +103,11 @@ class NuleculeBase(object):
         if provider_key is None:
             provider_key = self.config.get(GLOBAL_CONF)[PROVIDER_KEY]
         provider_class = self.plugin.getProvider(provider_key)
+        if provider_class is None:
+            raise NuleculeException("Invalid Provider - '{}', provided in "
+                                    "answers.conf (choose from {})"
+                                    .format(provider_key, ', '
+                                                          .join(PROVIDERS)))
         return provider_key, provider_class(
             self.get_context(), self.basepath, dry)
 
