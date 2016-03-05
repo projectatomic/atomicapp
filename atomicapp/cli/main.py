@@ -101,6 +101,16 @@ def cli_stop(args):
     sys.exit(0)
 
 
+def cli_init(args):
+    try:
+        argdict = args.__dict__
+        NuleculeManager.init(argdict['app_name'], argdict['destination'])
+        sys.exit(0)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        sys.exit(1)
+
+
 # Create a custom action parser. Need this because for some args we don't
 # want to store a value if the user didn't provide one. "store_true" does
 # not allow this; it will always create an attribute and store a value.
@@ -365,6 +375,19 @@ class CLI():
             help='The name of a container image containing an Atomic App.')
         gena_subparser.set_defaults(func=cli_genanswers)
 
+        # === "init" SUBPARSER ===
+        init_subparser = toplevel_subparsers.add_parser(
+            "init", parents=[globals_parser])
+        init_subparser.add_argument(
+            "app_name",
+            help="App name.")
+        init_subparser.add_argument(
+            "destination",
+            help=('''
+                Path to the directory where the Atomic App
+                is to be initialized.'''))
+        init_subparser.set_defaults(func=cli_init)
+
         # Some final fixups.. We want the "help" from the global
         # parser to be output when someone runs 'atomicapp --help'
         # To get that functionality we will add the help from the
@@ -428,7 +451,7 @@ class CLI():
         # a directory if they want to for "run". For that reason we won't
         # default the RUN label for Atomic App to provide an app_spec argument.
         # In this case pick up app_spec from $IMAGE env var (set by RUN label).
-        if args.app_spec is None:
+        if args.action != 'init' and args.app_spec is None:
             if os.environ.get('IMAGE') is not None:
                 logger.debug("Setting app_spec based on $IMAGE env var")
                 args.app_spec = os.environ['IMAGE']

@@ -25,6 +25,7 @@ import os
 import tempfile
 import urlparse
 import urllib
+from string import Template
 
 from atomicapp.constants import (GLOBAL_CONF,
                                  ANSWERS_FILE_SAMPLE_FORMAT,
@@ -119,6 +120,40 @@ class NuleculeManager(object):
         # Process answers.
         self.answers_file = answers_file
         self._process_answers()
+
+    @staticmethod
+    def init(app_name, destination='.', app_version='1.0',
+             app_desc='App description'):
+        """Initialize a new Nulecule app"""
+        context = dict(
+            app_name=app_name,
+            app_version=app_version,
+            app_desc=app_desc)
+        tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
+        template_dir = os.path.join(os.path.dirname(__file__),
+                                    '../templates/nulecule')
+        distutils.dir_util.copy_tree(template_dir, tmpdir)
+        for item in os.walk(tmpdir):
+            parent_dir, dirs, files = item
+            for filename in files:
+                if not filename.endswith('.tpl'):
+                    continue
+                templ_path = os.path.join(parent_dir, filename)
+                if parent_dir.endswith('artifacts/docker') or parent_dir.endswith('artifacts/kubernetes'):
+                    file_path = os.path.join(
+                        parent_dir,
+                        '{}_{}'.format(app_name, filename[:-4]))
+                else:
+                    file_path = os.path.join(parent_dir, filename[:-4])
+                with open(templ_path) as f:
+                    s = f.read()
+                t = Template(s)
+                with open(file_path, 'w') as f:
+                    f.write(t.safe_substitute(**context))
+                os.remove(templ_path)
+
+        distutils.dir_util.copy_tree(tmpdir, destination, True)
+        distutils.dir_util.remove_tree(tmpdir)
 
     def unpack(self, update=False,
                dryrun=False, nodeps=False, config=None):
