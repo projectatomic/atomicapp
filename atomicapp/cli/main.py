@@ -170,9 +170,15 @@ class CLI():
         # are stitching help output together from multiple parsers
         toplevel_parser.add_argument(
             "-h",
-            "--help"
-            "--version",
+            "--help",
             action='help',
+            help=argparse.SUPPRESS)
+        toplevel_parser.add_argument(
+            "-V",
+            "--version",
+            action='version',
+            version='atomicapp %s, Nulecule Specification %s' % (
+                __ATOMICAPPVERSION__, __NULECULESPECVERSION__),
             help=argparse.SUPPRESS)
         # Allow for subparsers of the toplevel_parser. Store the name
         # in the "action" attribute
@@ -182,13 +188,13 @@ class CLI():
         # Create the globals argument parser next. This will be a
         # parent parser for the subparsers
         globals_parser = argparse.ArgumentParser(add_help=False)
+        # Adding version argument again to avoid optional arguments from
+        # being listed twice in -h. This only serves the help message.
         globals_parser.add_argument(
             "-V",
             "--version",
-            action='version',
-            version='atomicapp %s, Nulecule Specification %s' % (
-                __ATOMICAPPVERSION__, __NULECULESPECVERSION__),
-            help="show the version and exit.")
+            action="store_true",
+            help="Show the version and exit.")
         globals_parser.add_argument(
             "-v",
             "--verbose",
