@@ -1,87 +1,102 @@
 # Atomic App
 
-Atomic App is a reference implementation of the [Nulecule specification](https://github.com/projectatomic/nulecule). It can be used to bootstrap packaged container environments and then run them. Atomic App is designed to be ran within a container. 
+![](docs/images/logo.png "Project Atomic")
 
-Examples of this tool may be found within the [Nulecule library repo](https://github.com/projectatomic/nulecule/tree/master/examples).
+Atomic App is a reference implementation of the [Nulecule](https://github.com/projectatomic/nulecule) specification. Packaged Atomic App containers are "Nuleculized" and each component of the package is a "Nulecule".
 
-## Getting Started
+Atomic App is used to bootstrap packaged container environments and run them on multiple container orchestrators. It is designed from the ground-up to be portable and provider pluggable.
 
-Atomic App itself is packaged as a container. End-users typically do not install the software from source. Instead use the `atomicapp` container as the `FROM` line in a Dockerfile and package your application on top. For example:
+  - __A "packaged installer" for all container-based environments and applications.__ Replace all those bash and Ansible scripts with one container-based deployment tool.
 
-```
-FROM projectatomic/atomicapp
+  - __Target multiple providers:__ Specify the provider you want the Atomic App to run on. It supports Kubernetes, OpenShift, Mesos+Marathon and Docker.
 
-MAINTAINER Your Name <you@example.com>
+  - __Inherit already packaged containers:__ Create composite applications by referencing other Nulecule-compliant applications. For example, plugging in an alternative well-orchestrated database in another referenced container image.
 
-ADD /Nulecule /Dockerfile README.md /application-entity/
-ADD /artifacts /application-entity/artifacts
-```
+  - __Fetch and run entire environments:__ Use `atomicapp fetch` and `atomicapp run` to run pre-packaged Nuleculized containers.
 
-For more information see the [Nulecule getting started guide](https://github.com/projectatomic/nulecule/blob/master/docs/getting-started.md).
-
-## Developers
-
-First of all, clone the github repository: `git clone https://github.com/projectatomic/atomicapp`.
-
-### Installing Atomic App locally
-Simply run
-
-```
+## Installing Atomic App
+From Linux:
+```sh
+git clone https://github.com/projectatomic/atomicapp && cd atomicapp
 make install
 ```
 
-If you want to do some changes to the code, I suggest to do:
+_or_ 
 
-```
-cd atomicapp
-export PYTHONPATH=`pwd`:$PYTHONPATH
-alias atomicapp="python `pwd`/atomicapp/cli/main.py"
-```
-
-### Building for containerized execution
-```
-docker build -t [TAG] .
+Download a pre-signed .tar.gz from [download.projectatomic.io](https://download.projectatomic.io) / [GitHub](https://github.com/projectatomic/atomicapp/releases):
+```sh
+export RELEASE=0.4.2
+wget https://github.com/projectatomic/atomicapp/releases/download/$RELEASE/atomicapp-$RELEASE.tar.gz
+tar -xvf atomicapp-$RELEASE.tar.gz && cd atomicapp-$RELEASE.tar.gz
+make install
 ```
 
-Use 'docker build' to package up the application and tag the resulting image.
+## Documentation
 
-### Fetch and run
-```
-atomicapp [--dry-run] [-v] [-a answers.conf] fetch|run|stop|genanswers [--provider docker] [--destination DST_PATH] APP|PATH
-```
+This README contains some high level overview information on Atomic App. The detailed documentation for Atomic App resides in the [docs](docs) directory. The index provided conveniently links to each section below:
 
-Pulls the application and its dependencies. If the last argument is
-existing path, it looks for `Nulecule` file there instead of pulling anything.
+1. [Quick start](docs/quick_start.md)
+2. [Getting started](docs/start_guide.md)
+3. [Providers](docs/providers.md)
+  1. [Docker](docs/providers/docker/overview.md)
+  2. [Kubernetes](docs/providers/kubernetes/overview.md)
+  3. [OpenShift](docs/providers/openshift/overview.md)
+4. [CLI](docs/cli.md)
+5. [Nulecule file](docs/nulecule.md)
+6. [Atomic App lifecycle](docs/atomicapp_lifecycle.md)
+7. [File handling](docs/file_handling.md)
+8. [Specification coverage](docs/spec_coverage.md)
+9. [Contributing](CONTRIBUTING.md)
+10. [Dependencies](docs/requirements.md)
 
-* `--provider docker` Use the Docker provider within the Atomic App
-* `--destination DST_PATH` Unpack the application into given directory instead of current directory
-* `APP` Name of the image containing the application (ex. `projectatomic/apache-centos7-atomicapp`)
-* `PATH` Path to a directory with installed (ex. result of `atomicapp fetch...`) app
 
-Action `run` performs `fetch` prior to its own tasks if an `APP` is provided. Otherwise, it will use its respective `PATH`. When `run` is selected, providers' code is invoked and containers are deployed.
+## Getting started
+
+Atomic App can be used either natively on your OS __or__ ran via the [atomic](https://github.com/projectatomic/atomic) command on [Fedora or CentOS Atomic hosts](https://www.projectatomic.io/download/).
+
+__Detailed instructions on [getting started](docs/start_guide.md) are available.__ Alternatively, use the [quick start guide](docs/quick_start.md) to get a Nuleculized application running immediately.
+
+An extended guide on the `Nulecule` file format is [also available](docs/nulecule.md).
+
+## Real-world examples
+Atomic App can be used to launch a cluster of containers (application servers, databases, etc.).
+
+For a list of already packaged examples, visit the [nulecule-library](https://github.com/projectatomic/nulecule-library) repo.
 
 ## Providers
 
-Providers represent various deployment targets. They can be added by placing the artifact within the respective in `provider/` folder. For example, placing `deploy_pod.yml` within `providers/kubernetes/`. For a detailed description of all providers available see [docs/providers.md](docs/providers.md).
+We currently support:
 
-## Dependencies
+  - Docker
+  - Kubernetes
+  - OpenShift 3
+  - Marathon (Mesos)
 
-See [REQUIREMENTS](https://github.com/projectatomic/atomicapp/blob/master/docs/requirements.md) for current Atomic App dependencies.
+Providers represent various deployment targets. They can be added by placing the artifact within the respective in `artifacts/` folder. For example, placing `deploy_pod.yml` within `artifacts/kubernetes/`. 
 
-##Communication channels
+For a detailed description of all providers available see [docs/providers.md](docs/providers.md).
 
-* IRC: #nulecule (On Freenode)
-* Mailing List: [container-tools@redhat.com](https://www.redhat.com/mailman/listinfo/container-tools)
-
-# The Badges
-
+## Contributing to Atomic App
 [![Code Health](https://landscape.io/github/projectatomic/atomicapp/master/landscape.svg?style=flat)](https://landscape.io/github/projectatomic/atomicapp/master)
 [![Build Status](https://travis-ci.org/projectatomic/atomicapp.svg?branch=master)](https://travis-ci.org/projectatomic/atomicapp)
 [![Coverage Status](https://coveralls.io/repos/projectatomic/atomicapp/badge.svg?branch=master&service=github)](https://coveralls.io/github/projectatomic/atomicapp?branch=master)
 [![Issue Stats](http://issuestats.com/github/projectatomic/atomicapp/badge/pr)](http://issuestats.com/github/projectatomic/atomicapp)
 [![Issue Stats](http://issuestats.com/github/projectatomic/atomicapp/badge/issue)](http://issuestats.com/github/projectatomic/atomicapp)
 
-# Copyright
+First of all, awesome! We have [a development guide to help you get started!](CONTRIBUTING.md)
+
+If you have any issues or get stuck, feel free to open a GitHub issue or reach us at our communication channels (see below).
+
+## Dependencies
+
+See [REQUIREMENTS.md](docs/requirements.md) for a list of current Atomic App dependencies.
+
+## Communication channels
+
+* IRC: __#nulecule__ on irc.freenode.net
+* Mailing List: [container-tools@redhat.com](https://www.redhat.com/mailman/listinfo/container-tools)
+
+## Copyright
 
 Copyright (C) 2016 Red Hat Inc.
 
