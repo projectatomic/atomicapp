@@ -80,8 +80,6 @@ For a detailed description of all providers available see [docs/providers.md](do
 [![Code Health](https://landscape.io/github/projectatomic/atomicapp/master/landscape.svg?style=flat)](https://landscape.io/github/projectatomic/atomicapp/master)
 [![Build Status](https://travis-ci.org/projectatomic/atomicapp.svg?branch=master)](https://travis-ci.org/projectatomic/atomicapp)
 [![Coverage Status](https://coveralls.io/repos/projectatomic/atomicapp/badge.svg?branch=master&service=github)](https://coveralls.io/github/projectatomic/atomicapp?branch=master)
-[![Issue Stats](http://issuestats.com/github/projectatomic/atomicapp/badge/pr)](http://issuestats.com/github/projectatomic/atomicapp)
-[![Issue Stats](http://issuestats.com/github/projectatomic/atomicapp/badge/issue)](http://issuestats.com/github/projectatomic/atomicapp)
 
 First of all, awesome! We have [a development guide to help you get started!](CONTRIBUTING.md)
 
