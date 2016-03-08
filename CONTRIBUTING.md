@@ -100,6 +100,8 @@ Before you submit your pull request consider the following guidelines:
 
 That's it! Thank you for your contribution!
 
+**NOTE**: When submitting a documentation PR, you can skip the travis ci by adding `[ci skip]` to your commit message.
+
 ### Merge Rules
 
 * Include unit or integration tests for the capability you have implemented
