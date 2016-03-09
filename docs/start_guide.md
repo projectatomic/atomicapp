@@ -285,4 +285,4 @@ sudo atomicapp run myrepo/myapp
 
 Although we have yet to cover every `atomicapp` command. Feel free to use `atomicapp [run/fetch/stop] --help` for a list of all options.
 
-For an extended guide on the `Nulecule` file, read our [extended Nulecule doc](docs/nulecule.md).
+For an extended guide on the `Nulecule` file, read our [extended Nulecule doc](nulecule.md).
