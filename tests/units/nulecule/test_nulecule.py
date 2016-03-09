@@ -1,6 +1,9 @@
 import mock
 import unittest
+import pytest
+import os
 from atomicapp.nulecule.base import Nulecule
+from atomicapp.nulecule.exceptions import NuleculeException
 
 
 class TestNuleculeRun(unittest.TestCase):
@@ -163,3 +166,16 @@ class TestNuleculeRender(unittest.TestCase):
             provider_key=provider_key, dryrun=dryrun)
         mock_component_2.render.assert_called_once_with(
             provider_key=provider_key, dryrun=dryrun)
+
+
+class TestLoadNuleculeParsing(unittest.TestCase):
+
+    def test_missing_nulecule(self):
+        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        with pytest.raises(NuleculeException):
+            n.load_from_path(src='foo/bar')
+
+    def test_invalid_nulecule_format(self):
+        n = Nulecule('some-id', '0.0.2', {}, [], 'some/path')
+        with pytest.raises(NuleculeException):
+            n.load_from_path(src=os.path.dirname(__file__) + '/invalid_nulecule/')

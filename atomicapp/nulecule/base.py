@@ -133,7 +133,8 @@ class Nulecule(NuleculeBase):
         nulecule_path = os.path.join(src, MAIN_FILE)
 
         if os.path.exists(nulecule_path):
-            nulecule_data = open(nulecule_path, 'r').read()
+            with open(nulecule_path, 'r') as f:
+                nulecule_data = f.read()
         else:
             raise NuleculeException("No Nulecule file exists in directory: %s" % src)
 
@@ -148,9 +149,14 @@ class Nulecule(NuleculeBase):
         except (yaml.parser.ParserError, AnyMarkupError), e:
             line = re.search('line (\d+)', str(e)).group(1)
             column = re.search('column (\d+)', str(e)).group(1)
-            data = nulecule_data.splitlines()[int(line)]
-            raise NuleculeException("Failure parsing Nulecule file. Validation error on line %s, column %s:\n%s"
-                                    % (line, column, data))
+
+            output = ""
+            for i, l in enumerate(nulecule_data.splitlines()):
+                if (i == int(line) - 1) or (i == int(line)) or (i == int(line) + 1):
+                    output += "%s %s\n" % (str(i), str(l))
+
+            raise NuleculeException("Failure parsing %s file. Validation error on line %s, column %s:\n%s"
+                                    % (nulecule_path, line, column, output))
 
         nulecule = Nulecule(config=config, basepath=src,
                             namespace=namespace, **nulecule_data)
