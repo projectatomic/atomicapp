@@ -23,7 +23,8 @@ import os
 from string import Template
 
 from atomicapp.constants import (LOGGER_COCKPIT,
-                                 LOGGER_DEFAULT)
+                                 LOGGER_DEFAULT,
+                                 PERSISTENT_STORAGE_FORMAT)
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import Utils
 
@@ -216,6 +217,12 @@ class KubernetesProvider(Provider):
         """
 
         logger.debug("Persistent storage enabled! Running action: %s" % action)
+
+        if graph["accessMode"] not in PERSISTENT_STORAGE_FORMAT:
+            raise ProviderFailedException("{} is an invalid storage format "
+                                          "(choose from {})"
+                                          .format(graph["accessMode"],
+                                                  ', '.join(PERSISTENT_STORAGE_FORMAT)))
 
         if action not in ['run']:
             logger.warning(

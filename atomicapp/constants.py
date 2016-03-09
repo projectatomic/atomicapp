@@ -75,3 +75,6 @@ ACCESS_TOKEN_KEY = "accesstoken"
 PROVIDER_CONFIG_KEY = "providerconfig"
 PROVIDER_TLS_VERIFY_KEY = "providertlsverify"
 PROVIDER_CA_KEY = "providercafile"
+
+# Persistent Storage Formats
+PERSISTENT_STORAGE_FORMAT = ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
