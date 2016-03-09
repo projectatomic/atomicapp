@@ -10,8 +10,8 @@ class TestPersistentStorage(unittest.TestCase):
     def setUp(self):
         config = {'helloapache-app': {'image': 'centos/httpd', 'hostport': 80},
                   'general': {'namespace': 'default', 'provider': 'kubernetes'}}
-        graph = [{'persistentVolume': {'accessMode': 'ReadWrite', 'name': 'var-lib-mongodb-data', 'size': 4}},
-                 {'persistentVolume': {'accessMode': 'ReadWrite', 'name': 'var-log-mongodb', 'size': 4}}]
+        graph = [{'persistentVolume': {'accessMode': 'ReadWriteOnce', 'name': 'var-lib-mongodb-data', 'size': 4}},
+                 {'persistentVolume': {'accessMode': 'ReadWriteOnce', 'name': 'var-log-mongodb', 'size': 4}}]
         self.tmpdir = tempfile.mkdtemp(prefix="atomicapp-test", dir="/tmp")
         self.test = Requirements(
             config=config, basepath=self.tmpdir, graph=graph, provider="kubernetes", dryrun=True)
