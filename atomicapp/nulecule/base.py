@@ -200,6 +200,8 @@ class Nulecule(NuleculeBase):
             config=config, ask=ask, skip_asking=skip_asking)
         if self.namespace == GLOBAL_CONF and self.config[GLOBAL_CONF].get('provider') is None:
             self.config[GLOBAL_CONF]['provider'] = DEFAULT_PROVIDER
+            logger.info("Provider not specified, using default provider - {}".
+                        format(DEFAULT_PROVIDER))
         for component in self.components:
             # FIXME: Find a better way to expose config data to components.
             #        A component should not get access to all the variables,
