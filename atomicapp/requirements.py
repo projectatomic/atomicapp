@@ -47,8 +47,8 @@ class Requirements:
 
     # Find if the requirement does not exist within REQUIREMENT_FUNCTIONS
     def _find_requirement_function_name(self, key):
-        logging.debug("Checking if %s matches any of %s" %
-                      (key, REQUIREMENT_FUNCTIONS))
+        logger.debug("Checking if %s matches any of %s" %
+                     (key, REQUIREMENT_FUNCTIONS))
         if key in REQUIREMENT_FUNCTIONS.keys():
             return REQUIREMENT_FUNCTIONS[key]
         raise RequirementFailedException("Requirement %s does not exist." % key)
