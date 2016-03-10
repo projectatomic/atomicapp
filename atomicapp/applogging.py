@@ -121,7 +121,7 @@ class Logging:
         if logging_level == logging.DEBUG:
             formatstr = '%(asctime)s - [%(levelname)s] - %(longerfilename)s - %(message)s'
         else:
-            formatstr = '%(asctime)s - [%(levelname)s] - %(filename)s - %(message)s'
+            formatstr = '[%(levelname)s] - %(filename)s - %(message)s'
 
         # Get the loggers and clear out the handlers (allows this function
         # to be ran more than once)
