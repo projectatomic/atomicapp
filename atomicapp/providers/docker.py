@@ -90,6 +90,8 @@ class DockerProvider(Provider):
             label_run = None
             with open(artifact_path, "r") as fp:
                 label_run = fp.read().strip()
+                # if docker-run provided as multiline command
+                label_run = ' '.join(label_run.split('\\\n'))
             run_args = label_run.split()
 
             # If --name is provided, do not re-name due to potential linking of containers. Warn user instead.
