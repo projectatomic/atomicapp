@@ -1,3 +1,57 @@
+## Atomic App 0.4.4 (03-15-2016)
+
+This release includes a major update to our documentation as well as the user experience when deploying an Atomic App.
+
+The main features are:
+
+  - Major update to documentation
+  - Cleaner logging output
+  - Error-out validation on JSON/YAML
+
+UI:
+
+  - Fix --version output on CLI
+  - Handle docker exception errors
+  - Inform on wrong provider name provided within answers.conf
+
+Other:
+
+  - Fix requirements on 'make test'
+
+For a full list of changes between 0.4.4 and 0.4.3 please see the git shortlog below!
+
+```
+Charlie Drage <charlie@charliedrage.com> (10):
+      Doc for current functions implemented by spec
+      Fix minor markdown error in spec_coverage
+      Major update to README and documentation
+      Error cleanly on missing Nulecule or invalid formatted Nulecule
+      Multiple problems with issuestats.com
+      Add tests for missing Nulecule or wrongly formatted file for missing
+      Change from ReadWrite to ReadWriteOnce in persistent storage tests
+      Add Persistent Storage validation on ReadWriteOnce, etc.
+      Remove time from default output
+      Convert to epoch time
+
+Dusty Mabe <dusty@dustymabe.com> (2):
+      docs: fix broken link
+      logging: fix duplicated log messages
+
+Preeti Chandrashekar <preetipagad@gmail.com> (1):
+      Minor edits to atomicapp_lifecycle.md
+
+Shubham Minglani <shubham@linux.com> (2):
+      Handle docker pull exception, improve #441, fix #568
+      fix --version output, fix #481
+
+Suraj Deshmukh <surajssd009005@gmail.com> (5):
+      Install requirements before make test
+      Wrong provider name in answers.conf, exits AtomicApp with readable error
+      Typo in providers docs
+      Instruction to skip travis CI
+      Inform user when provider not specified
+```
+
 ## Atomic App 0.4.3 (03-01-2016)
 
 You'll now see pretty colors with logging / output!
