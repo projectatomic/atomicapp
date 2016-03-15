@@ -278,12 +278,12 @@ class Utils(object):
             repeat = False
             if "default" in info:
                 value = raw_input(
-                    "%s (%s, default: %s): " % (what, desc, info["default"]))
+                    "==> %s (%s, default: %s): " % (what, desc, info["default"]))
                 if len(value) == 0:
                     value = info["default"]
             else:
                 try:
-                    value = raw_input("%s (%s): " % (what, desc))
+                    value = raw_input("==> %s (%s): " % (what, desc))
                 except EOFError:
                     raise
 
