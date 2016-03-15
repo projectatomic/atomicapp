@@ -16,26 +16,26 @@ directory is then cleaned up.
 -------
 Will download and combine artifacts from the target application and any 
 dependent applications including sample answers.conf file into a local 
-directory for inspection and/or modification. Same for all providers.
+directory for inspection and/or modification. This is the same for all providers.
 
 `run`
 -----
-Run an application.
+Will run an application.
 
 | Provider      | Implementation |
 | ------------- | -------------- |
 | Docker        | Run application containers on local machine. |
-| Kubernetes    | Run requested application in kubernetes target environment. |
+| Kubernetes    | Run requested application in Kubernetes target environment. |
 | Openshift     | Run requested application in OpenShift target environment. |
 | Marathon      | Run requested application in Marathon target environment. |
 
 `stop`
 ------
-Stop an application. 
+Will stop an application. 
 
 | Provider      | Implementation |
 | ------------- | -------------- |
 | Docker        | Stop application containers on local machine. |
-| Kubernetes    | Stop requested application in kubernetes target environment. |
+| Kubernetes    | Stop requested application in Kubernetes target environment. |
 | Openshift     | Stop requested application in OpenShift target environment. |
 | Marathon      | Stop requested application in Marathon target environment. |
