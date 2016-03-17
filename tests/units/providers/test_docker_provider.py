@@ -78,3 +78,15 @@ class TestDockerProviderBase(unittest.TestCase):
         provider.artifacts = [self.artifact_dir + 'hello-world-one']
         with pytest.raises(ProviderFailedException):
             provider.run()
+
+    def test_docker_run_with_backslashes(self):
+        data = {'namespace': 'test', 'provider': 'docker'}
+        provider = self.prepare_provider(data)
+        provider.init()
+        provider.artifacts = [
+                self.artifact_dir + 'run-with-backslashes',
+                ]
+        expected_output = 'docker run -d -p 80:80 --name centos7 centos7'
+        with mock.patch('atomicapp.providers.docker.logger') as mock_logger:
+            provider.run()
+            mock_logger.info.assert_called_with('DRY-RUN: %s', expected_output)
