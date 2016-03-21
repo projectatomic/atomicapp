@@ -51,84 +51,53 @@ def print_app_location(app_path):
 
 
 def cli_genanswers(args):
-    try:
-        argdict = args.__dict__
-        nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination='none')
-        nm.genanswers(**argdict)
-        Utils.rm_dir(nm.app_path)  # clean up files
-        sys.exit(0)
-    except NuleculeException as e:
-        logger.error(e)
-        sys.exit(1)
-    except Exception as e:
-        logger.error(e, exc_info=True)
-        sys.exit(1)
+    argdict = args.__dict__
+    nm = NuleculeManager(app_spec=argdict['app_spec'],
+                         destination='none')
+    nm.genanswers(**argdict)
+    Utils.rm_dir(nm.app_path)  # clean up files
+    sys.exit(0)
 
 
 def cli_fetch(args):
-    try:
-        argdict = args.__dict__
-        destination = argdict['destination']
-        nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=destination,
-                             cli_answers=argdict['cli_answers'],
-                             answers_file=argdict['answers'])
-        nm.fetch(**argdict)
-        # Clean up the files if the user asked us to. Otherwise
-        # notify the user where they can manage the application
-        if destination and destination.lower() == 'none':
-            Utils.rm_dir(nm.app_path)
-        else:
-            print_app_location(nm.app_path)
-        sys.exit(0)
-    except NuleculeException as e:
-        logger.error(e)
-        sys.exit(1)
-    except Exception as e:
-        logger.error(e, exc_info=True)
-        sys.exit(1)
+    argdict = args.__dict__
+    destination = argdict['destination']
+    nm = NuleculeManager(app_spec=argdict['app_spec'],
+                         destination=destination,
+                         cli_answers=argdict['cli_answers'],
+                         answers_file=argdict['answers'])
+    nm.fetch(**argdict)
+    # Clean up the files if the user asked us to. Otherwise
+    # notify the user where they can manage the application
+    if destination and destination.lower() == 'none':
+        Utils.rm_dir(nm.app_path)
+    else:
+        print_app_location(nm.app_path)
+    sys.exit(0)
 
 
 def cli_run(args):
-    try:
-        argdict = args.__dict__
-        destination = argdict['destination']
-        nm = NuleculeManager(app_spec=argdict['app_spec'],
-                             destination=destination,
-                             cli_answers=argdict['cli_answers'],
-                             answers_file=argdict['answers'])
-        nm.run(**argdict)
-        # Clean up the files if the user asked us to. Otherwise
-        # notify the user where they can manage the application
-        if destination and destination.lower() == 'none':
-            Utils.rm_dir(nm.app_path)
-        else:
-            print_app_location(nm.app_path)
-        sys.exit(0)
-    except DockerException as e:
-        logger.error(e)
-        sys.exit(1)
-    except NuleculeException as e:
-        logger.error(e)
-        sys.exit(1)
-    except Exception as e:
-        logger.error(e, exc_info=True)
-        sys.exit(1)
+    argdict = args.__dict__
+    destination = argdict['destination']
+    nm = NuleculeManager(app_spec=argdict['app_spec'],
+                         destination=destination,
+                         cli_answers=argdict['cli_answers'],
+                         answers_file=argdict['answers'])
+    nm.run(**argdict)
+    # Clean up the files if the user asked us to. Otherwise
+    # notify the user where they can manage the application
+    if destination and destination.lower() == 'none':
+        Utils.rm_dir(nm.app_path)
+    else:
+        print_app_location(nm.app_path)
+    sys.exit(0)
 
 
 def cli_stop(args):
-    try:
-        argdict = args.__dict__
-        nm = NuleculeManager(app_spec=argdict['app_spec'])
-        nm.stop(**argdict)
-        sys.exit(0)
-    except NuleculeException as e:
-        logger.error(e)
-        sys.exit(1)
-    except Exception as e:
-        logger.error(e, exc_info=True)
-        sys.exit(1)
+    argdict = args.__dict__
+    nm = NuleculeManager(app_spec=argdict['app_spec'])
+    nm.stop(**argdict)
+    sys.exit(0)
 
 
 # Create a custom action parser. Need this because for some args we don't
@@ -142,6 +111,20 @@ class TrueOrFalseAction(argparse.Action):
         else:
             booleanvalue = False
         setattr(namespace, self.dest, booleanvalue)
+
+
+def cli_func_exec(cli_func, cli_func_args):
+    try:
+        cli_func(cli_func_args)
+    except DockerException as e:
+        logger.error(e)
+        sys.exit(1)
+    except NuleculeException as e:
+        logger.error(e)
+        sys.exit(1)
+    except Exception as e:
+        logger.error(e, exc_info=True)
+        sys.exit(1)
 
 
 class CLI():
@@ -457,7 +440,7 @@ class CLI():
         lock = LockFile(os.path.join(Utils.getRoot(), LOCK_FILE))
         try:
             lock.acquire(timeout=-1)
-            args.func(args)
+            cli_func_exec(args.func, args)
         except AttributeError:
             if hasattr(args, 'func'):
                 raise
