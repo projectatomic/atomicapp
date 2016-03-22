@@ -93,6 +93,8 @@ See [REQUIREMENTS.md](docs/requirements.md) for a list of current Atomic App dep
 
 * IRC: __#nulecule__ on irc.freenode.net
 * Mailing List: [container-tools@redhat.com](https://www.redhat.com/mailman/listinfo/container-tools)
+* Weekly IRC Nulecule meeting: Monday's @ 0930 EST / 0130 UTC
+* Weekly SCRUM Container-Tools meeting: Wednesday's @ 0830 EST / 1230 UTC on [Bluejeans](https://bluejeans.com/381583203/)
 
 ## Copyright
 
