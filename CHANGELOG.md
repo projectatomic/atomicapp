@@ -1,3 +1,39 @@
+## Atomic App 0.4.5 (03-29-2016)
+
+This is a minor release of Atomic App where we make some changes to the UI output as well as fix a few provider-specific bugs.
+
+The main features of this release are:
+
+  - Cleaner logging output
+  - More prominent output when Atomic App asks for a missing answers variable
+  - Multi-line artifact support for the Docker provider
+
+Other:
+
+  - Update documentation on cli comparison
+  - Move kubeconfig parsing to a separate class
+  - Refactor cli exceptions code
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Convert to epoch time
+      Update docs / more clarity on cli comparison
+      Change asking format
+      Move kubeconfig parsing to a separate file
+      Change kubeconfig testing name and move into a separate file
+      Add weekly meeting information
+
+Preeti Chandrashekar <preetipagad@gmail.com>:
+      Minor edits to atomicapp_lifecycle.md
+
+Shubham Minglani <shubham@linux.com>:
+      handle docker error, raise instead of print, fix #570
+      refactor exceptions, fix #621, fix #622
+
+Suraj Deshmukh <surajssd009005@gmail.com>:
+      Docker-run file with multi-line command supported
+```
+
 ## Atomic App 0.4.4 (03-15-2016)
 
 This release includes a major update to our documentation as well as the user experience when deploying an Atomic App.
