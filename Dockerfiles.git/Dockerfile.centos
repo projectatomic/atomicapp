@@ -2,7 +2,7 @@ FROM centos:7
 
 MAINTAINER Red Hat, Inc. <container-tools@redhat.com>
 
-ENV ATOMICAPPVERSION="0.4.4"
+ENV ATOMICAPPVERSION="0.4.5"
 
 LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
       io.openshift.generate.job=true \
