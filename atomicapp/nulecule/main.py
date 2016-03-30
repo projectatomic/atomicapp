@@ -122,7 +122,7 @@ class NuleculeManager(object):
         self._process_answers()
 
     @staticmethod
-    def init(app_name, destination='.', app_version='1.0',
+    def init(app_name, destination=None, app_version='1.0',
              app_desc='App description'):
         """Initialize a new Nulecule app"""
         context = dict(
@@ -132,6 +132,9 @@ class NuleculeManager(object):
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
         template_dir = os.path.join(os.path.dirname(__file__),
                                     '../templates/nulecule')
+        if destination is None:
+            destination = os.path.join('.', app_name)
+
         distutils.dir_util.copy_tree(template_dir, tmpdir)
         for item in os.walk(tmpdir):
             parent_dir, dirs, files = item

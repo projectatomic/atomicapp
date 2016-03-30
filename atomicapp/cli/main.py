@@ -382,7 +382,9 @@ class CLI():
             "app_name",
             help="App name.")
         init_subparser.add_argument(
-            "destination",
+            "--destination",
+            dest="destination",
+            default=None,
             help=('''
                 Path to the directory where the Atomic App
                 is to be initialized.'''))
