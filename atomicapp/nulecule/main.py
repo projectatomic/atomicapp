@@ -135,6 +135,11 @@ class NuleculeManager(object):
         if destination is None:
             destination = os.path.join('.', app_name)
 
+        if os.path.exists(destination) and os.path.isdir(destination) and os.listdir(destination):
+            value = raw_input('Destination directory is not empty! Do you still want to proceed? (y/n): ')
+            if value != 'y':
+                return
+
         distutils.dir_util.copy_tree(template_dir, tmpdir)
         for item in os.walk(tmpdir):
             parent_dir, dirs, files = item
