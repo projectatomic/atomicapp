@@ -472,7 +472,8 @@ class CLI():
 
         lock = LockFile(os.path.join(Utils.getRoot(), LOCK_FILE))
         try:
-            lock.acquire(timeout=-1)
+            if args.action != 'init':
+                lock.acquire(timeout=-1)
             cli_func_exec(args.func, args)
         except AttributeError:
             if hasattr(args, 'func'):
