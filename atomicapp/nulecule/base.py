@@ -38,7 +38,6 @@ from atomicapp.constants import (APP_ENT_PATH,
                                  NAME_KEY,
                                  INHERIT_KEY,
                                  ARTIFACTS_KEY,
-                                 REQUIREMENTS_KEY,
                                  DEFAULT_PROVIDER)
 from atomicapp.utils import Utils
 from atomicapp.requirements import Requirements
@@ -195,14 +194,11 @@ class Nulecule(NuleculeBase):
         """
         provider_key, provider = self.get_provider(provider_key, dryrun)
 
-        # Process preliminary requirements
-        # Pass configuration, path of the app, graph, provider as well as dry-run
-        # for provider init()
-        if REQUIREMENTS_KEY in self.graph[0]:
-            logger.debug("Requirements key detected. Running action.")
-            r = Requirements(self.config, self.basepath, self.graph[0][REQUIREMENTS_KEY],
-                             provider_key, dryrun)
-            r.run()
+        # Process preliminary requirements before componenets
+        if self.requirements:
+            logger.debug("Requirements detected. Running action.")
+            Requirements(self.config, self.basepath, self.requirements,
+                         provider_key, dryrun).run()
 
         # Process components
         for component in self.components:
