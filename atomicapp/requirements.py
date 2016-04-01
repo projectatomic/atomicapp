@@ -79,13 +79,14 @@ class Requirements:
             requirement_function = self._find_requirement_function_name(key_name)
 
             # Check to see if the function exists in the provider,
-            # if it does not: fail
+            # if it does not: warn the user
             try:
                 requirement = getattr(self.provider, requirement_function)
             except AttributeError:
-                raise RequirementFailedException(
-                    "Requirement %s does not exist within %s." %
+                logger.warning(
+                    "Requirement %s does not exist within %s. Skipping." %
                     (requirement_function, self.provider))
+                continue
 
             # Run the requirement function
             requirement(req[key_name], action)
