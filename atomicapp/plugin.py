@@ -117,8 +117,8 @@ class Provider(object):
 
 
 class ProviderFailedException(Exception):
-
     """Error during provider execution"""
+    pass
 
 
 class Plugin(object):
