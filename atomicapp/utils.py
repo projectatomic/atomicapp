@@ -342,7 +342,7 @@ class Utils(object):
         Returns:
             (bool): True == we are in a container
         """
-        if os.path.isdir(HOST_DIR):
+        if os.path.isfile('/.dockerenv') and os.path.isfile('/.dockerinit') and os.path.isdir(HOST_DIR):
             return True
         else:
             return False
