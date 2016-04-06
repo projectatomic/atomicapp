@@ -633,11 +633,8 @@ class OpenShiftProvider(Provider):
                   PROVIDER_CA_KEY: self.provider_ca}
 
         # create keys in dicts and initialize values to None
-        answers = {}
-        providerconfig = {}
-        for k in result.keys():
-            answers[k] = None
-            providerconfig[k] = None
+        answers = dict.fromkeys(result)
+        providerconfig = dict.fromkeys(result)
 
         # get values from answers.conf
         for k in result.keys():
