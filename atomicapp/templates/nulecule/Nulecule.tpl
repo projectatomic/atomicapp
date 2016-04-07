@@ -16,5 +16,6 @@ graph:
     artifacts:
       kubernetes:
         - file://artifacts/kubernetes/${app_name}_pod.yaml
+        - file://artifacts/kubernetes/${app_name}_service.yaml
       docker:
         - file://artifacts/docker/${app_name}_run
