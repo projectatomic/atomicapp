@@ -335,12 +335,14 @@ class Utils(object):
     @staticmethod
     def inContainer():
         """
-        Determine if we are running inside a container or not.
+        Determine if we are running inside a container or not. This is done by
+        checking to see if /host has been passed as well as if .dockerenv and
+        .dockerinit files exist
 
         Returns:
             (bool): True == we are in a container
         """
-        if os.path.isdir(HOST_DIR):
+        if os.path.isfile('/.dockerenv') and os.path.isfile('/.dockerinit') and os.path.isdir(HOST_DIR):
             return True
         else:
             return False
@@ -376,6 +378,58 @@ class Utils(object):
     def rm_dir(directory):
         logger.debug('Recursively removing directory: %s' % directory)
         distutils.dir_util.remove_tree(directory)
+
+    @staticmethod
+    def getUserName():
+        """
+        Finds the username of the user running the application. Uses the
+        SUDO_USER and USER environment variables. If runnning within a
+        container, SUDO_USER and USER varibles must be passed for proper
+        detection.
+        Ex. docker run -v /:/host -e SUDO_USER -e USER foobar
+        """
+        sudo_user = os.environ.get('SUDO_USER')
+
+        if os.getegid() == 0 and sudo_user is None:
+            user = 'root'
+        elif sudo_user is not None:
+            user = sudo_user
+        else:
+            user = os.environ.get('USER')
+        return user
+
+    @staticmethod
+    def getUserHome():
+        """
+        Finds the home directory of the user running the application.
+        If runnning within a container, the root dir must be passed as
+        a volume.
+        Ex. docker run -v /:/host -e SUDO_USER -e USER foobar
+        """
+        logger.debug("Finding the users home directory")
+        user = Utils.getUserName()
+        incontainer = Utils.inContainer()
+
+        # Check to see if we are running in a container. If we are we
+        # will chroot into the /host path before calling os.path.expanduser
+        if incontainer:
+            os.chroot(HOST_DIR)
+
+        # Call os.path.expanduser to determine the user's home dir.
+        # See https://docs.python.org/2/library/os.path.html#os.path.expanduser
+        # Warn if none is detected, don't error as not having a home
+        # dir doesn't mean we fail.
+        home = os.path.expanduser("~%s" % user)
+        if home == ("~%s" % user):
+            logger.error("No home directory exists for user %s" % user)
+
+        # Back out of chroot if necessary
+        if incontainer:
+            os.chroot("../..")
+
+        logger.debug("Running as user %s. Using home directory %s for configuration data"
+                     % (user, home))
+        return home
 
     @staticmethod
     def make_rest_request(method, url, verify=True, data=None):
