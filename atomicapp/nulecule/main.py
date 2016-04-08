@@ -131,7 +131,7 @@ class NuleculeManager(object):
             app_desc=app_desc)
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
         template_dir = os.path.join(os.path.dirname(__file__),
-                                    '../templates/nulecule')
+                                    '../external/templates/nulecule')
         if destination is None:
             destination = os.path.join('.', app_name)
 
