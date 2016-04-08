@@ -46,7 +46,7 @@ class TestKubeConfParsing(unittest.TestCase):
 
         self.assertEqual(KubeConfig.parse_kubeconf_data(kubecfg_data),
                          {'provider-api': 'server1',
-                          'accesstoken': 'token1',
+                          'provider-auth': 'token1',
                           'namespace': 'namespace1',
                           'provider-tlsverify': False,
                           'provider-cafile': None})
@@ -92,7 +92,7 @@ class TestKubeConfParsing(unittest.TestCase):
 
         self.assertEqual(KubeConfig.parse_kubeconf_data(kubecfg_data),
                          {'provider-api': 'server1',
-                          'accesstoken': 'token1',
+                          'provider-auth': 'token1',
                           'namespace': 'namespace1',
                           'provider-tlsverify': True,
                           'provider-cafile': '/foo/bar'})
