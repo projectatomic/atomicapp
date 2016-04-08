@@ -60,7 +60,7 @@ class TestKubernetesProviderBase(unittest.TestCase):
         with open(provider_config_path, "w") as fp:
             fp.write(mock_content)
 
-        data = {'namespace': 'testing', 'provider': 'kubernetes', 'providerconfig': provider_config_path}
+        data = {'namespace': 'testing', 'provider': 'kubernetes', 'provider-config': provider_config_path}
         
         provider = self.prepare_provider(data)
 
