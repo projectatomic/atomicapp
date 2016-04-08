@@ -247,6 +247,10 @@ class CLI():
             dest="provider-api",
             help='Value for provider-api answers option.')
         globals_parser.add_argument(
+            "--provider-auth",
+            dest="provider-auth",
+            help='Value for provider-auth answers option.')
+        globals_parser.add_argument(
             "--logtype",
             dest="logtype",
             choices=['cockpit', 'color', 'nocolor', 'none'],
@@ -436,7 +440,7 @@ class CLI():
         # Take the arguments that correspond to "answers" config file data
         # and make a dictionary of it to pass along in args.
         setattr(args, 'cli_answers', {})
-        for item in ['provider-api', 'provider-cafile',
+        for item in ['provider-api', 'provider-cafile', 'provider-auth',
                      'provider-config', 'provider-tlsverify', 'namespace']:
             if hasattr(args, item) and getattr(args, item) is not None:
                 args.cli_answers[item] = getattr(args, item)
