@@ -70,11 +70,11 @@ DEFAULT_ANSWERS = {
 }
 
 PROVIDERS = ["docker", "kubernetes", "openshift", "marathon"]
-PROVIDER_API_KEY = "providerapi"
+PROVIDER_API_KEY = "provider-api"
 ACCESS_TOKEN_KEY = "accesstoken"
-PROVIDER_CONFIG_KEY = "providerconfig"
-PROVIDER_TLS_VERIFY_KEY = "providertlsverify"
-PROVIDER_CA_KEY = "providercafile"
+PROVIDER_CONFIG_KEY = "provider-config"
+PROVIDER_TLS_VERIFY_KEY = "provider-tlsverify"
+PROVIDER_CA_KEY = "provider-cafile"
 
 # Persistent Storage Formats
 PERSISTENT_STORAGE_FORMAT = ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
