@@ -45,11 +45,11 @@ class TestKubeConfParsing(unittest.TestCase):
         }
 
         self.assertEqual(KubeConfig.parse_kubeconf_data(kubecfg_data),
-                         {'providerapi': 'server1',
-                          'accesstoken': 'token1',
+                         {'provider-api': 'server1',
+                          'provider-auth': 'token1',
                           'namespace': 'namespace1',
-                          'providertlsverify': False,
-                          'providercafile': None})
+                          'provider-tlsverify': False,
+                          'provider-cafile': None})
 
     def test_parse_kubeconf_data_cafile(self):
         """
@@ -91,11 +91,11 @@ class TestKubeConfParsing(unittest.TestCase):
         }
 
         self.assertEqual(KubeConfig.parse_kubeconf_data(kubecfg_data),
-                         {'providerapi': 'server1',
-                          'accesstoken': 'token1',
+                         {'provider-api': 'server1',
+                          'provider-auth': 'token1',
                           'namespace': 'namespace1',
-                          'providertlsverify': True,
-                          'providercafile': '/foo/bar'})
+                          'provider-tlsverify': True,
+                          'provider-cafile': '/foo/bar'})
 
     def test_parse_kubeconf_data_no_context(self):
         """

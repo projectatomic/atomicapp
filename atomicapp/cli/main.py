@@ -227,25 +227,29 @@ class CLI():
             dest="namespace",
             help=('The namespace to use in the target provider'))
         globals_parser.add_argument(
-            "--providertlsverify",
-            dest="providertlsverify",
+            "--provider-tlsverify",
+            dest="provider-tlsverify",
             action=TrueOrFalseAction,
             choices=['True', 'False'],
             help=('''
-                Value for providertlsverify answers option.
+                Value for provider-tlsverify answers option.
                 --providertlsverify=False to disable tls verification'''))
         globals_parser.add_argument(
-            "--providerconfig",
-            dest="providerconfig",
-            help='Value for providerconfig answers option.')
+            "--provider-config",
+            dest="provider-config",
+            help='Value for provider-config answers option.')
         globals_parser.add_argument(
-            "--providercafile",
-            dest="providercafile",
-            help='Value for providercafile answers option.')
+            "--provider-cafile",
+            dest="provider-cafile",
+            help='Value for provider-cafile answers option.')
         globals_parser.add_argument(
-            "--providerapi",
-            dest="providerapi",
-            help='Value for providerapi answers option.')
+            "--provider-api",
+            dest="provider-api",
+            help='Value for provider-api answers option.')
+        globals_parser.add_argument(
+            "--provider-auth",
+            dest="provider-auth",
+            help='Value for provider-auth answers option.')
         globals_parser.add_argument(
             "--logtype",
             dest="logtype",
@@ -436,8 +440,8 @@ class CLI():
         # Take the arguments that correspond to "answers" config file data
         # and make a dictionary of it to pass along in args.
         setattr(args, 'cli_answers', {})
-        for item in ['providerapi', 'providercafile',
-                     'providerconfig', 'providertlsverify', 'namespace']:
+        for item in ['provider-api', 'provider-cafile', 'provider-auth',
+                     'provider-config', 'provider-tlsverify', 'namespace']:
             if hasattr(args, item) and getattr(args, item) is not None:
                 args.cli_answers[item] = getattr(args, item)
 
