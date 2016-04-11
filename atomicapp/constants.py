@@ -71,7 +71,7 @@ DEFAULT_ANSWERS = {
 
 PROVIDERS = ["docker", "kubernetes", "openshift", "marathon"]
 PROVIDER_API_KEY = "provider-api"
-ACCESS_TOKEN_KEY = "provider-auth"
+PROVIDER_AUTH_KEY = "provider-auth"
 PROVIDER_CONFIG_KEY = "provider-config"
 PROVIDER_TLS_VERIFY_KEY = "provider-tlsverify"
 PROVIDER_CA_KEY = "provider-cafile"

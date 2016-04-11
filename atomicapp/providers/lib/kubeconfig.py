@@ -1,7 +1,7 @@
 import anymarkup
 
 from atomicapp.plugin import ProviderFailedException
-from atomicapp.constants import (ACCESS_TOKEN_KEY,
+from atomicapp.constants import (PROVIDER_AUTH_KEY,
                                  LOGGER_DEFAULT,
                                  NAMESPACE_KEY,
                                  PROVIDER_API_KEY,
@@ -112,7 +112,7 @@ class KubeConfig(object):
             ca = cluster["cluster"]["certificate-authority"]
 
         return {PROVIDER_API_KEY: url,
-                ACCESS_TOKEN_KEY: token,
+                PROVIDER_AUTH_KEY: token,
                 NAMESPACE_KEY: namespace,
                 PROVIDER_TLS_VERIFY_KEY: tls_verify,
                 PROVIDER_CA_KEY: ca}

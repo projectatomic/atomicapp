@@ -29,7 +29,7 @@ import websocket
 
 from atomicapp.utils import Utils
 from atomicapp.plugin import Provider, ProviderFailedException
-from atomicapp.constants import (ACCESS_TOKEN_KEY,
+from atomicapp.constants import (PROVIDER_AUTH_KEY,
                                  ANSWERS_FILE,
                                  DEFAULT_NAMESPACE,
                                  LOGGER_DEFAULT,
@@ -630,7 +630,7 @@ class OpenShiftProvider(Provider):
 
         # initialize result to default values
         result = {PROVIDER_API_KEY: self.providerapi,
-                  ACCESS_TOKEN_KEY: self.access_token,
+                  PROVIDER_AUTH_KEY: self.access_token,
                   NAMESPACE_KEY: self.namespace,
                   PROVIDER_TLS_VERIFY_KEY: self.provider_tls_verify,
                   PROVIDER_CA_KEY: self.provider_ca}
@@ -670,7 +670,7 @@ class OpenShiftProvider(Provider):
         logger.debug("config values: %s" % result)
 
         # this items are required, they have to be not None
-        for k in [PROVIDER_API_KEY, ACCESS_TOKEN_KEY, NAMESPACE_KEY]:
+        for k in [PROVIDER_API_KEY, PROVIDER_AUTH_KEY, NAMESPACE_KEY]:
             if result[k] is None:
                 msg = "You need to set %s in %s" % (k, ANSWERS_FILE)
                 logger.error(msg)
@@ -678,7 +678,7 @@ class OpenShiftProvider(Provider):
 
         # set config values
         self.providerapi = result[PROVIDER_API_KEY]
-        self.access_token = result[ACCESS_TOKEN_KEY]
+        self.access_token = result[PROVIDER_AUTH_KEY]
         self.namespace = result[NAMESPACE_KEY]
         self.provider_tls_verify = result[PROVIDER_TLS_VERIFY_KEY]
         if result[PROVIDER_CA_KEY]:
