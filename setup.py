@@ -51,7 +51,10 @@ setup(
         'console_scripts': ['atomicapp=atomicapp.cli.main:main'],
     },
     packages=find_packages(),
-    package_data={'atomicapp': ['providers/external/kubernetes/*.yaml']},
+    package_data={'atomicapp': ['providers/external/kubernetes/*.yaml',
+                                'external/templates/nulecule/*.tpl',
+                                'external/templates/nulecule/artifacts/docker/*.tpl',
+                                'external/templates/nulecule/artifacts/kubernetes/*.tpl']},
     include_package_data=True,
     install_requires=_install_requirements()
 )
