@@ -126,7 +126,19 @@ class NuleculeManager(object):
     @staticmethod
     def init(app_name, destination=None, app_version='1.0',
              app_desc='App description'):
-        """Initialize a new Nulecule app"""
+        """Initialize a new Nulecule app
+
+        Args:
+            app_name (str): Application name
+            destination (str): Destination path
+            app_version (str): Application version
+            app_desc (str): Application description
+
+        Returns:
+            created (bool), destination (str)
+        """
+
+        # context to render template files for Atomic App
         context = dict(
             app_name=app_name,
             app_version=app_version,
@@ -135,18 +147,22 @@ class NuleculeManager(object):
             nulecule_spec_version=__NULECULESPECVERSION__
         )
         created = False
+
+        # Temporary working dir to render the templates
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
         template_dir = os.path.join(os.path.dirname(__file__),
                                     '../external/templates/nulecule')
         if destination is None:
             destination = os.path.join('.', app_name)
 
+        # Check if destination directory exists and is not empty
         if os.path.exists(destination) and os.path.isdir(destination) and os.listdir(destination):
             value = raw_input('Destination directory is not empty! Do you still want to proceed? [Y]/n: ')
             value = value or 'y'
             if value.lower() != 'y':
                 return created, destination
 
+        # Copy template dir to temporary working directory and render templates
         distutils.dir_util.copy_tree(template_dir, tmpdir)
         for item in os.walk(tmpdir):
             parent_dir, dirs, files = item
@@ -167,7 +183,9 @@ class NuleculeManager(object):
                     f.write(t.safe_substitute(**context))
                 os.remove(templ_path)
 
+        # Copy rendered templates to destination directory
         distutils.dir_util.copy_tree(tmpdir, destination, True)
+        # Remove temporary working directory
         distutils.dir_util.remove_tree(tmpdir)
         created = True
         return created, destination
