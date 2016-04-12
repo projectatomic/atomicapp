@@ -107,11 +107,6 @@ def cli_init(args):
         created, destination = NuleculeManager.init(argdict['app_name'], argdict['destination'])
         if created:
             print('\nAtomic App: %s initialized at %s' % (argdict['app_name'], destination))
-        else:
-            print(
-                '\nAtomic App: %s was not initialized because destination directory: %s is not empty.' % (
-                    argdict['app_name'], destination)
-            )
         sys.exit(0)
     except Exception as e:
         logger.error(e, exc_info=True)
