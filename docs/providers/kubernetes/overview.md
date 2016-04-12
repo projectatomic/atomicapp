@@ -43,7 +43,7 @@ One example of specifying a `provider-config` is below:
 ```
 [general]
 provider: kubernetes
-provider-config: /host/home/foo/.kube/config
+provider-config: /home/foo/.kube/config
 ```
 
 #### Configuration Value Defaults
