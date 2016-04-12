@@ -151,8 +151,10 @@ class NuleculeManager(object):
             destination = os.path.join('.', app_name)
 
         # Check if destination directory exists and is not empty
-        if os.path.exists(destination) and os.path.isdir(destination) and os.listdir(destination):
-            value = raw_input('Destination directory is not empty! Do you still want to proceed? [Y]/n: ')
+        if os.path.exists(destination) and \
+           os.path.isdir(destination) and os.listdir(destination):
+            value = raw_input('Destination directory is not empty! '
+                              'Do you still want to proceed? [Y]/n: ')
             value = value or 'y'
             if value.lower() != 'y':
                 return  # Exit out as the user has chosen not to proceed
@@ -171,7 +173,8 @@ class NuleculeManager(object):
                     if not filename.endswith('.tpl'):
                         continue
                     templ_path = os.path.join(parent_dir, filename)
-                    if parent_dir.endswith('artifacts/docker') or parent_dir.endswith('artifacts/kubernetes'):
+                    if parent_dir.endswith('artifacts/docker') or \
+                       parent_dir.endswith('artifacts/kubernetes'):
                         file_path = os.path.join(
                             parent_dir,
                             '{}_{}'.format(app_name, filename[:-4]))
