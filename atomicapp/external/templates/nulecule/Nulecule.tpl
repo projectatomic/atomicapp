@@ -1,5 +1,5 @@
 ---
-specversion: 0.0.2
+specversion: ${nulecule_spec_version}
 id: ${app_name}
 
 metadata:

@@ -36,7 +36,9 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  LOGGER_COCKPIT,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE,
-                                 PROVIDER_KEY)
+                                 PROVIDER_KEY,
+                                 __ATOMICAPPVERSION__,
+                                 __NULECULESPECVERSION__)
 from atomicapp.nulecule.base import Nulecule
 from atomicapp.nulecule.exceptions import NuleculeException
 from atomicapp.utils import Utils
@@ -128,7 +130,10 @@ class NuleculeManager(object):
         context = dict(
             app_name=app_name,
             app_version=app_version,
-            app_desc=app_desc)
+            app_desc=app_desc,
+            atomicapp_version=__ATOMICAPPVERSION__,
+            nulecule_spec_version=__NULECULESPECVERSION__
+        )
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
         template_dir = os.path.join(os.path.dirname(__file__),
                                     '../external/templates/nulecule')

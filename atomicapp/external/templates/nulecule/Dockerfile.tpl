@@ -1,10 +1,9 @@
-FROM projectatomic/atomicapp:0.4.1
+FROM projectatomic/atomicapp:${atomicapp_version}
 
 MAINTAINER Your Name <you@email.com>
 
-LABEL io.projectatomic.nulecule.specversion="0.0.2" \
-      io.projectatomic.nulecule.providers="kubernetes, docker" \
-      Build="docker build --rm --tag test/$app_name-atomicapp ."
+LABEL io.projectatomic.nulecule.providers="kubernetes,docker,marathon" \
+      io.projectatomic.nulecule.specversion="${nulecule_spec_version}"
 
 ADD /Nulecule /Dockerfile README.md /application-entity/
 ADD /artifacts /application-entity/artifacts
