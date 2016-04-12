@@ -147,10 +147,6 @@ class NuleculeManager(object):
             nulecule_spec_version=__NULECULESPECVERSION__
         )
 
-        # Temporary working dir to render the templates
-        tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
-        template_dir = os.path.join(os.path.dirname(__file__),
-                                    '../external/templates/nulecule')
         if destination is None:
             destination = os.path.join('.', app_name)
 
@@ -161,31 +157,38 @@ class NuleculeManager(object):
             if value.lower() != 'y':
                 return  # Exit out as the user has chosen not to proceed
 
-        # Copy template dir to temporary working directory and render templates
-        distutils.dir_util.copy_tree(template_dir, tmpdir)
-        for item in os.walk(tmpdir):
-            parent_dir, dirs, files = item
-            for filename in files:
-                if not filename.endswith('.tpl'):
-                    continue
-                templ_path = os.path.join(parent_dir, filename)
-                if parent_dir.endswith('artifacts/docker') or parent_dir.endswith('artifacts/kubernetes'):
-                    file_path = os.path.join(
-                        parent_dir,
-                        '{}_{}'.format(app_name, filename[:-4]))
-                else:
-                    file_path = os.path.join(parent_dir, filename[:-4])
-                with open(templ_path) as f:
-                    s = f.read()
-                t = Template(s)
-                with open(file_path, 'w') as f:
-                    f.write(t.safe_substitute(**context))
-                os.remove(templ_path)
+        # Temporary working dir to render the templates
+        tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
+        template_dir = os.path.join(os.path.dirname(__file__),
+                                    '../external/templates/nulecule')
 
-        # Copy rendered templates to destination directory
-        distutils.dir_util.copy_tree(tmpdir, destination, True)
-        # Remove temporary working directory
-        distutils.dir_util.remove_tree(tmpdir)
+        try:
+            # Copy template dir to temporary working directory and render templates
+            distutils.dir_util.copy_tree(template_dir, tmpdir)
+            for item in os.walk(tmpdir):
+                parent_dir, dirs, files = item
+                for filename in files:
+                    if not filename.endswith('.tpl'):
+                        continue
+                    templ_path = os.path.join(parent_dir, filename)
+                    if parent_dir.endswith('artifacts/docker') or parent_dir.endswith('artifacts/kubernetes'):
+                        file_path = os.path.join(
+                            parent_dir,
+                            '{}_{}'.format(app_name, filename[:-4]))
+                    else:
+                        file_path = os.path.join(parent_dir, filename[:-4])
+                    with open(templ_path) as f:
+                        s = f.read()
+                    t = Template(s)
+                    with open(file_path, 'w') as f:
+                        f.write(t.safe_substitute(**context))
+                    os.remove(templ_path)
+
+            # Copy rendered templates to destination directory
+            distutils.dir_util.copy_tree(tmpdir, destination, True)
+        finally:
+            # Remove temporary working directory
+            distutils.dir_util.remove_tree(tmpdir)
         return destination
 
     def unpack(self, update=False,
