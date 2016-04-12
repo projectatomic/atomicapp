@@ -135,7 +135,7 @@ class NuleculeManager(object):
             app_desc (str): Application description
 
         Returns:
-            created (bool), destination (str)
+            destination (str)
         """
 
         # context to render template files for Atomic App
@@ -146,7 +146,6 @@ class NuleculeManager(object):
             atomicapp_version=__ATOMICAPPVERSION__,
             nulecule_spec_version=__NULECULESPECVERSION__
         )
-        created = False
 
         # Temporary working dir to render the templates
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
@@ -160,7 +159,7 @@ class NuleculeManager(object):
             value = raw_input('Destination directory is not empty! Do you still want to proceed? [Y]/n: ')
             value = value or 'y'
             if value.lower() != 'y':
-                return created, destination
+                return  # Exit out as the user has chosen not to proceed
 
         # Copy template dir to temporary working directory and render templates
         distutils.dir_util.copy_tree(template_dir, tmpdir)
@@ -187,8 +186,7 @@ class NuleculeManager(object):
         distutils.dir_util.copy_tree(tmpdir, destination, True)
         # Remove temporary working directory
         distutils.dir_util.remove_tree(tmpdir)
-        created = True
-        return created, destination
+        return destination
 
     def unpack(self, update=False,
                dryrun=False, nodeps=False, config=None):

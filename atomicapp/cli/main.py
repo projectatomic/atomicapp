@@ -104,9 +104,11 @@ def cli_stop(args):
 def cli_init(args):
     try:
         argdict = args.__dict__
-        created, destination = NuleculeManager.init(argdict['app_name'], argdict['destination'])
-        if created:
-            print('\nAtomic App: %s initialized at %s' % (argdict['app_name'], destination))
+        appdir = NuleculeManager.init(argdict['app_name'],
+                                      argdict['destination'])
+        if appdir:
+            print('\nAtomic App: %s initialized at %s' %
+                  (argdict['app_name'], appdir))
         sys.exit(0)
     except Exception as e:
         logger.error(e, exc_info=True)
