@@ -1,3 +1,119 @@
+## Atomic App 0.5.0 (04-12-2016)
+
+This is a major release of Atomic App where we introduce a new CLI command as well as the renaming of multiple provider configuration parameters.
+
+The main features of this release are:
+  
+  - Introduction of the `atomicapp init` CLI command
+  - Renaming of provider configuration related parameters
+  - --provider-auth added as a CLI command
+
+Other:
+
+  - Updated legal information
+  - Bug fix on persistent storage initialization
+  - Utility method to gather sudo user path and information
+  - Improved detection if we're inside a Docker container
+  - Improved readility on provider failed exceptions
+  - docker inspect bugfix
+
+## Atomic App Initialization
+
+We've included support for initializing a basic Atomic App via the `atomicapp init` command. This creates a basic example that can be used on __Docker__ and __Kubernetes__ providers based on the [centos/httpd](https://hub.docker.com/r/centos/httpd/) docker image.
+
+```bash
+▶ atomicapp init helloworld
+[INFO] - main.py - Action/Mode Selected is: init
+
+Atomic App: helloworld initialized at ./helloworld
+
+▶ vim ./helloworld/Nulecule # Make changes to the Nulecule file
+
+▶ atomicapp run ./helloworld
+[INFO] - main.py - Action/Mode Selected is: run
+[INFO] - base.py - Provider not specified, using default provider - kubernetes
+[WARNING] - plugin.py - Configuration option 'provider-config' not found
+[WARNING] - plugin.py - Configuration option 'provider-config' not found
+[INFO] - kubernetes.py - Using namespace default
+[INFO] - kubernetes.py - trying kubectl at /usr/bin/kubectl
+[INFO] - kubernetes.py - trying kubectl at /usr/local/bin/kubectl
+[INFO] - kubernetes.py - found kubectl at /usr/local/bin/kubectl
+[INFO] - kubernetes.py - Deploying to Kubernetes
+
+Your application resides in ./helloworld
+Please use this directory for managing your application
+
+```
+
+## New provider configuration parameter names
+
+We've renamed the provider-specific parameters for better clarity by adding dashes in-between 'provider' and the specified function.
+
+Major changes include the renaming of __accesstoken__ to __provider-auth__.
+
+```
+providerapi --> provider-api
+accesstoken --> provider-auth
+providertlsverify --> provider-tlsverify
+providercafile --> provider-cafile
+```
+
+```ini
+[general]
+provider = openshift
+namespace = mynamespace
+provider-api = https://127.0.0.1:8443
+provider-auth = sadfasdfasfasfdasfasfasdfsafasfd
+provider-tlsverify = True
+provider-cafile = /etc/myca/ca.pem
+```
+
+```sh
+atomicapp run projectatomic/etherpad-centos7-atomicapp --provider openshift --provider-tlsverify False --provider-auth foo --provider-api "https://localhost:8443"
+```
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Add more legal information
+      Update year
+      Requirements should retrieve from Nulecule object not graph
+      Warn not error on missing requirement
+      Util to gather what user is running Atomic App and which home dir it should use
+      Check to see if it's a Docker container
+      Update Dockerfile.pkgs testing repos
+      Dashes added to CLI commands to distinguish provider config data
+      Fix test params with the new dashes
+      Add provider-auth as a CLI command and convert ACCESSTOKEN to provider-auth
+      Modify accesstoken tests to provider-auth
+      Change constant ACCESS_TOKEN_KEY to PROVIDER_AUTH_KEY
+      Modify documentation to reflect changes in params
+      Remove /host from provider config example path
+
+Dusty Mabe <dusty@dustymabe.com>:
+      init: modify docker template to publish to host port 80
+
+Ratnadeep Debnath <rtnpro@gmail.com>:
+      Added 'init' command to initialize a new atomic app.
+      Make destination optional atomicapp init command
+      Ask user if destination is not empty when initializting atomic app.
+      Do not acquire lock for initializing atomicapp.
+      Set default action as 'Y' when atomicapp init asks to clean dest directory.
+      Include nulecule template files in package data.
+      Add k8s service for initialized app.
+      Moved Nulecule template files to external dir.
+      Don't hard code atomicapp/nulecule versions in atomic app template.
+      Show status message on atomicapp init run.
+      Added doc strings for atomicapp init method.
+
+Shubham Minglani <shubham@linux.com>:
+      Handle ProviderFailedException, fix #627
+      add pass for improved readability
+      replace inspect with ps, fix #672
+
+Suraj Deshmukh <surajssd009005@gmail.com>:
+      Added OrderedDict so as to deploy application in given order
+```
+
 ## Atomic App 0.4.5 (03-29-2016)
 
 This is a minor release of Atomic App where we make some changes to the UI output as well as fix a few provider-specific bugs.
