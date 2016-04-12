@@ -25,6 +25,7 @@ import tarfile
 import time
 from urlparse import urljoin
 from urllib import urlencode
+from collections import OrderedDict
 import websocket
 
 from atomicapp.utils import Utils
@@ -331,11 +332,9 @@ class OpenShiftProvider(Provider):
     # path to file or dir with CA certificates
     provider_ca = None
 
-    # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
-    openshift_artifacts = {}
-
     def init(self):
-        self.openshift_artifacts = {}
+        # Parsed artifacts. Key is kind of artifacts. Value is list of artifacts.
+        self.openshift_artifacts = OrderedDict()
 
         self._set_config_values()
 
