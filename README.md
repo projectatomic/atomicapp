@@ -41,6 +41,7 @@ This README contains some high level overview information on Atomic App. The det
   1. [Docker](docs/providers/docker/overview.md)
   2. [Kubernetes](docs/providers/kubernetes/overview.md)
   3. [OpenShift](docs/providers/openshift/overview.md)
+  4. [Marathon](docs/providers/marathon/overview.md)
 4. [CLI](docs/cli.md)
 5. [Nulecule file](docs/nulecule.md)
 6. [Atomic App lifecycle](docs/atomicapp_lifecycle.md)
