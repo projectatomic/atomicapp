@@ -135,7 +135,7 @@ class NuleculeManager(object):
             app_desc (str): Application description
 
         Returns:
-            created (bool), destination (str)
+            destination (str)
         """
 
         # context to render template files for Atomic App
@@ -146,49 +146,53 @@ class NuleculeManager(object):
             atomicapp_version=__ATOMICAPPVERSION__,
             nulecule_spec_version=__NULECULESPECVERSION__
         )
-        created = False
+
+        if destination is None:
+            destination = os.path.join('.', app_name)
+
+        # Check if destination directory exists and is not empty
+        if os.path.exists(destination) and \
+           os.path.isdir(destination) and os.listdir(destination):
+            value = raw_input('Destination directory is not empty! '
+                              'Do you still want to proceed? [Y]/n: ')
+            value = value or 'y'
+            if value.lower() != 'y':
+                return  # Exit out as the user has chosen not to proceed
 
         # Temporary working dir to render the templates
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
         template_dir = os.path.join(os.path.dirname(__file__),
                                     '../external/templates/nulecule')
-        if destination is None:
-            destination = os.path.join('.', app_name)
 
-        # Check if destination directory exists and is not empty
-        if os.path.exists(destination) and os.path.isdir(destination) and os.listdir(destination):
-            value = raw_input('Destination directory is not empty! Do you still want to proceed? [Y]/n: ')
-            value = value or 'y'
-            if value.lower() != 'y':
-                return created, destination
+        try:
+            # Copy template dir to temporary working directory and render templates
+            distutils.dir_util.copy_tree(template_dir, tmpdir)
+            for item in os.walk(tmpdir):
+                parent_dir, dirs, files = item
+                for filename in files:
+                    if not filename.endswith('.tpl'):
+                        continue
+                    templ_path = os.path.join(parent_dir, filename)
+                    if parent_dir.endswith('artifacts/docker') or \
+                       parent_dir.endswith('artifacts/kubernetes'):
+                        file_path = os.path.join(
+                            parent_dir,
+                            '{}_{}'.format(app_name, filename[:-4]))
+                    else:
+                        file_path = os.path.join(parent_dir, filename[:-4])
+                    with open(templ_path) as f:
+                        s = f.read()
+                    t = Template(s)
+                    with open(file_path, 'w') as f:
+                        f.write(t.safe_substitute(**context))
+                    os.remove(templ_path)
 
-        # Copy template dir to temporary working directory and render templates
-        distutils.dir_util.copy_tree(template_dir, tmpdir)
-        for item in os.walk(tmpdir):
-            parent_dir, dirs, files = item
-            for filename in files:
-                if not filename.endswith('.tpl'):
-                    continue
-                templ_path = os.path.join(parent_dir, filename)
-                if parent_dir.endswith('artifacts/docker') or parent_dir.endswith('artifacts/kubernetes'):
-                    file_path = os.path.join(
-                        parent_dir,
-                        '{}_{}'.format(app_name, filename[:-4]))
-                else:
-                    file_path = os.path.join(parent_dir, filename[:-4])
-                with open(templ_path) as f:
-                    s = f.read()
-                t = Template(s)
-                with open(file_path, 'w') as f:
-                    f.write(t.safe_substitute(**context))
-                os.remove(templ_path)
-
-        # Copy rendered templates to destination directory
-        distutils.dir_util.copy_tree(tmpdir, destination, True)
-        # Remove temporary working directory
-        distutils.dir_util.remove_tree(tmpdir)
-        created = True
-        return created, destination
+            # Copy rendered templates to destination directory
+            distutils.dir_util.copy_tree(tmpdir, destination, True)
+        finally:
+            # Remove temporary working directory
+            distutils.dir_util.remove_tree(tmpdir)
+        return destination
 
     def unpack(self, update=False,
                dryrun=False, nodeps=False, config=None):
