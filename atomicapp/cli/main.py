@@ -301,7 +301,7 @@ class CLI():
             "--ask",
             default=False,
             action="store_true",
-            help="Ask for params even if the defaul value is provided")
+            help="Ask for params even if the default value is provided")
         run_subparser.add_argument(
             "app_spec",
             nargs='?',
