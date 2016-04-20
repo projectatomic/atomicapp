@@ -37,14 +37,12 @@ from atomicapp.constants import (PROVIDER_AUTH_KEY,
                                  NAMESPACE_KEY,
                                  PROVIDER_API_KEY,
                                  PROVIDER_TLS_VERIFY_KEY,
-                                 PROVIDER_CA_KEY)
+                                 PROVIDER_CA_KEY,
+                                 OPENSHIFT_POD_CA_FILE)
 from atomicapp.providers.lib.kubeconfig import KubeConfig
 from requests.exceptions import SSLError
 import logging
 logger = logging.getLogger(LOGGER_DEFAULT)
-
-# If running in an openshift POD via `oc new-app`, the ca file is here
-OPENSHIFT_POD_CA_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
 
 
 class OpenshiftClient(object):

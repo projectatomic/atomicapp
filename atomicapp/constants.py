@@ -78,3 +78,6 @@ PROVIDER_CA_KEY = "provider-cafile"
 
 # Persistent Storage Formats
 PERSISTENT_STORAGE_FORMAT = ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+
+# If running in an openshift POD via `oc new-app`, the ca file is here
+OPENSHIFT_POD_CA_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
