@@ -680,8 +680,7 @@ class OpenShiftProvider(Provider):
         self.provider_tls_verify = result[PROVIDER_TLS_VERIFY_KEY]
         if result[PROVIDER_CA_KEY]:
             # if we are in container translate path to path on host
-            self.provider_ca = os.path.join(Utils.getRoot(),
-                                            result[PROVIDER_CA_KEY].lstrip('/'))
+            self.provider_ca = Utils.get_real_abspath(result[PROVIDER_CA_KEY])
         else:
             self.provider_ca = None
 
