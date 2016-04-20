@@ -22,8 +22,6 @@ import sys
 
 import argparse
 import logging
-from lockfile import LockFile
-from lockfile import AlreadyLocked
 
 from atomicapp.applogging import Logging
 from atomicapp.constants import (__ATOMICAPPVERSION__,
@@ -33,7 +31,6 @@ from atomicapp.constants import (__ATOMICAPPVERSION__,
                                  APP_ENT_PATH,
                                  CACHE_DIR,
                                  HOST_DIR,
-                                 LOCK_FILE,
                                  LOGGER_DEFAULT,
                                  PROVIDERS)
 from atomicapp.nulecule import NuleculeManager
@@ -474,10 +471,7 @@ class CLI():
             if hasattr(args, item) and getattr(args, item) is not None:
                 args.cli_answers[item] = getattr(args, item)
 
-        lock = LockFile(Utils.get_real_abspath(LOCK_FILE))
         try:
-            if args.action != 'init':
-                lock.acquire(timeout=-1)
             cli_func_exec(args.func, args)
         except AttributeError:
             if hasattr(args, 'func'):
@@ -486,8 +480,6 @@ class CLI():
                 self.parser.print_help()
         except KeyboardInterrupt:
             pass
-        except AlreadyLocked:
-            logger.error("Could not proceed - there is probably another instance of Atomic App running on this machine.")
         except Exception as ex:
             if args.verbose:
                 raise
@@ -495,9 +487,6 @@ class CLI():
                 logger.error("Exception caught: %s", repr(ex))
                 logger.error(
                     "Run the command again with -v option to get more information.")
-        finally:
-            if lock.i_am_locking():
-                lock.release()
 
 
 def main():
