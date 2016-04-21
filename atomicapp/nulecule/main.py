@@ -74,14 +74,11 @@ class NuleculeManager(object):
 
         # Adjust app_spec, destination, and answer file paths if absolute.
         if os.path.isabs(app_spec):
-            app_spec = os.path.join(Utils.getRoot(),
-                                    app_spec.lstrip('/'))
+            app_spec = Utils.get_real_abspath(app_spec)
         if destination and os.path.isabs(destination):
-            destination = os.path.join(Utils.getRoot(),
-                                       destination.lstrip('/'))
+            destination = Utils.get_real_abspath(destination)
         if answers_file and os.path.isabs(answers_file):
-            answers_file = os.path.join(Utils.getRoot(),
-                                        answers_file.lstrip('/'))
+            answers_file = Utils.get_real_abspath(answers_file)
 
         # If the user doesn't want the files copied to a permanent
         # location then he provides 'none'. If that is the case we'll

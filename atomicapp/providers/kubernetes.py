@@ -55,7 +55,7 @@ class KubernetesProvider(Provider):
         if self.container:
             self.kubectl = self._find_kubectl(Utils.getRoot())
             kube_conf_path = "/etc/kubernetes"
-            host_kube_conf_path = os.path.join(Utils.getRoot(), kube_conf_path.lstrip("/"))
+            host_kube_conf_path = Utils.get_real_abspath(kube_conf_path)
             if not os.path.exists(kube_conf_path) and os.path.exists(host_kube_conf_path):
                 if self.dryrun:
                     logger.info("DRY-RUN: link %s from %s" % (kube_conf_path, host_kube_conf_path))

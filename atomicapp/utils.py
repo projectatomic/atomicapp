@@ -354,6 +354,21 @@ class Utils(object):
         else:
             return "/"
 
+    @staticmethod
+    def get_real_abspath(path):
+        """
+        Take the user provided 'path' and return the real path to the resource
+        irrespective of the app running location either inside container or
+        outside.
+
+        Args:
+            path (str): path to a resource
+
+        Returns:
+            str: absolute path to resource in the filesystem.
+        """
+        return os.path.join(Utils.getRoot(), path.lstrip('/'))
+
     # generates a unique 12 character UUID
     @staticmethod
     def getUniqueUUID():
