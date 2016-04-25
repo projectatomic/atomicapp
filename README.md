@@ -18,17 +18,17 @@ Atomic App is used to bootstrap packaged container environments and run them on 
 From Linux:
 ```sh
 git clone https://github.com/projectatomic/atomicapp && cd atomicapp
-make install
+sudo make install
 ```
 
 _or_ 
 
 Download a pre-signed .tar.gz from [download.projectatomic.io](https://download.projectatomic.io) / [GitHub](https://github.com/projectatomic/atomicapp/releases):
 ```sh
-export RELEASE=0.4.2
+export RELEASE=0.5.0
 wget https://github.com/projectatomic/atomicapp/releases/download/$RELEASE/atomicapp-$RELEASE.tar.gz
-tar -xvf atomicapp-$RELEASE.tar.gz && cd atomicapp-$RELEASE.tar.gz
-make install
+tar -xvf atomicapp-$RELEASE.tar.gz && cd atomicapp-$RELEASE
+sudo make install
 ```
 
 ## Documentation
