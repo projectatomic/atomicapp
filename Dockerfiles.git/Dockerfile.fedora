@@ -2,7 +2,7 @@ FROM fedora:23
 
 MAINTAINER Red Hat, Inc. <container-tools@redhat.com>
 
-ENV ATOMICAPPVERSION="0.5.0"
+ENV ATOMICAPPVERSION="0.5.1"
 
 LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \
       io.openshift.generate.job=true \
