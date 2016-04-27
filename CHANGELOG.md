@@ -1,3 +1,35 @@
+## Atomic App 0.5.1 (04-26-2016)
+
+This is a minor release of Atomic App where we refactor, fix code bugs as well as deprecate an old feature. Due to the numerous issues of locking as well as the deprectation of the `lockfile` library we have remove the locking mechanism from Atomic App.
+
+The main features of this release are:
+
+  - The deprecation of locking
+  - `atomicapp init` code and UI clean-up
+  - Documentation updates
+  - inContainer() function bug fix for Docker 1.10+
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Add Marathon to index
+      Update README.md with correct installation instructions.
+      Remove dockerenv and dockerinit check
+      Remove locking from Atomic App
+
+Dusty Mabe <dusty@dustymabe.com>:
+      init: remove unnecessary message to the user
+      init: remove number of return variables from NuleculeManager.init()
+      init: add logic to properly cleanup tmp dir
+      init: break a few long lines into shorter ones
+
+Shubham Minglani <shubham@linux.com>:
+      fix typo
+
+Suraj Deshmukh <surajssd009005@gmail.com>:
+      Moved a constant from openshift.py to constants.py
+      Abstracted the way we get absolute path
+```
+
 ## Atomic App 0.5.0 (04-12-2016)
 
 This is a major release of Atomic App where we introduce a new CLI command as well as the renaming of multiple provider configuration parameters.
