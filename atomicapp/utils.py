@@ -336,8 +336,7 @@ class Utils(object):
     def inContainer():
         """
         Determine if we are running inside a container or not. This is done by
-        checking to see if /host has been passed as well as if .dockerenv and
-        .dockerinit files exist
+        checking to see if /host has been passed.
 
         Returns:
             (bool): True == we are in a container
