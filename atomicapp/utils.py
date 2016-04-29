@@ -23,7 +23,6 @@ import os
 import sys
 import tempfile
 import re
-import collections
 import anymarkup
 import uuid
 import requests
@@ -295,22 +294,6 @@ class Utils(object):
                         repeat = True
 
         return value
-
-    @staticmethod
-    def update(old_dict, new_dict):
-        for key, val in new_dict.iteritems():
-            if isinstance(val, collections.Mapping):
-                tmp = Utils.update(old_dict.get(key, {}), val)
-                old_dict[key] = tmp
-            elif isinstance(val, list) and key in old_dict:
-                res = (old_dict[key] + val)
-                if isinstance(val[0], collections.Mapping):
-                    old_dict[key] = [dict(y) for y in set(tuple(x.items()) for x in res)]
-                else:
-                    old_dict[key] = list(set(res))
-            else:
-                old_dict[key] = new_dict[key]
-        return old_dict
 
     @staticmethod
     def getAppId(path):
