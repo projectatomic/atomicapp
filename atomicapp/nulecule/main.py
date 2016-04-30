@@ -36,11 +36,11 @@ from atomicapp.constants import (GLOBAL_CONF,
                                  LOGGER_COCKPIT,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE,
-                                 PROVIDER_KEY,
                                  __ATOMICAPPVERSION__,
                                  __NULECULESPECVERSION__)
 from atomicapp.nulecule.base import Nulecule
 from atomicapp.nulecule.exceptions import NuleculeException
+from atomicapp.nulecule.config import Config
 from atomicapp.utils import Utils
 
 cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
@@ -64,6 +64,7 @@ class NuleculeManager(object):
             destination: where to unpack a nulecule to if it isn't local
             cli_answers: some answer file values provided from cli args
             answers_file: the location of the answers file
+            cli (dict): CLI data
         """
         self.answers = copy.deepcopy(DEFAULT_ANSWERS)
         self.cli_answers = cli_answers
@@ -240,12 +241,12 @@ class NuleculeManager(object):
         if os.path.exists(answers_file):
             raise NuleculeException(
                 "Can't generate answers.conf over existing file")
+        self.config = Config(namespace=GLOBAL_CONF)
 
         # Call unpack to get the app code
-        self.nulecule = self.unpack(update=False, dryrun=dryrun, config=self.answers)
+        self.nulecule = self.unpack(update=False, dryrun=dryrun, config=self.config)
 
-        self.nulecule.load_config(config=self.nulecule.config,
-                                  skip_asking=True)
+        self.nulecule.load_config(skip_asking=True)
         # Get answers and write them out to answers.conf in cwd
         answers = self._get_runtime_answers(
             self.nulecule.config, None)
@@ -272,10 +273,9 @@ class NuleculeManager(object):
 
         # Call unpack. If the app doesn't exist it will be pulled. If
         # it does exist it will be just be loaded and returned
-        self.nulecule = self.unpack(update, dryrun, config=self.answers)
+        self.nulecule = self.unpack(update, dryrun, config=self.config)
 
-        self.nulecule.load_config(config=self.nulecule.config,
-                                  skip_asking=True)
+        self.nulecule.load_config(skip_asking=True)
         runtime_answers = self._get_runtime_answers(
             self.nulecule.config, None)
         # write sample answers file
@@ -283,7 +283,7 @@ class NuleculeManager(object):
             os.path.join(self.app_path, ANSWERS_FILE_SAMPLE),
             runtime_answers, answers_format)
 
-    cockpit_logger.info("Install Successful.")
+        cockpit_logger.info("Install Successful.")
 
     def run(self, cli_provider, answers_output, ask,
             answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
@@ -308,16 +308,18 @@ class NuleculeManager(object):
         self.answers_format = answers_format or ANSWERS_FILE_SAMPLE_FORMAT
         dryrun = kwargs.get('dryrun') or False
 
-        # Call unpack. If the app doesn't exist it will be pulled. If
-        # it does exist it will be just be loaded and returned
-        self.nulecule = self.unpack(dryrun=dryrun, config=self.answers)
-
         # If we didn't find an answers file before then call _process_answers
         # again just in case the app developer embedded an answers file
         if not self.answers_file:
             self._process_answers()
 
-        self.nulecule.load_config(config=self.nulecule.config, ask=ask)
+        # Call unpack. If the app doesn't exist it will be pulled. If
+        # it does exist it will be just be loaded and returned
+        self.nulecule = self.unpack(dryrun=dryrun, config=self.config)
+
+        self.nulecule.load_config(ask=ask)
+        if cli_provider:
+            self.nulecule.config.set('provider', cli_provider)
         self.nulecule.render(cli_provider, dryrun)
         self.nulecule.run(cli_provider, dryrun)
         runtime_answers = self._get_runtime_answers(
@@ -343,10 +345,12 @@ class NuleculeManager(object):
 
         dryrun = kwargs.get('dryrun') or False
         self.nulecule = Nulecule.load_from_path(
-            self.app_path, config=self.answers, dryrun=dryrun)
-        self.nulecule.load_config(config=self.answers)
-        self.nulecule.render(cli_provider, dryrun=dryrun)
-        self.nulecule.stop(cli_provider, dryrun)
+            self.app_path, config=self.config, dryrun=dryrun)
+        self.nulecule.load_config()
+        if cli_provider:
+            self.nulecule.config.set('provider', cli_provider)
+        self.nulecule.render(self.nulecule.config.provider, dryrun=dryrun)
+        self.nulecule.stop(self.nulecule.config.provider, dryrun)
 
     def clean(self, force=False):
         # For future use
@@ -396,10 +400,13 @@ class NuleculeManager(object):
             # Load answers
             self.answers = Utils.loadAnswers(self.answers_file)
 
+        self.config = Config(namespace=GLOBAL_CONF, answers=self.answers,
+                             cli={GLOBAL_CONF: self.cli_answers})
+
         # If there is answers data from the cli then merge it in now
-        if self.cli_answers:
-            for k, v in self.cli_answers.iteritems():
-                self.answers[GLOBAL_CONF][k] = v
+        # if self.cli_answers:
+        #    for k, v in self.cli_answers.iteritems():
+        #        self.answers[GLOBAL_CONF][k] = v
 
     def _write_answers(self, path, answers, answers_format):
         """
@@ -438,11 +445,4 @@ class NuleculeManager(object):
         Returns:
             dict
         """
-        _config = copy.deepcopy(config)
-        _config[GLOBAL_CONF] = config.get(GLOBAL_CONF) or {}
-
-        # If a provider is provided via CLI, override the config parameter
-        if cli_provider:
-            _config[GLOBAL_CONF][PROVIDER_KEY] = cli_provider
-
-        return _config
+        return self.nulecule.config.runtime_answers()

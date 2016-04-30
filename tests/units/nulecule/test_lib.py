@@ -3,6 +3,7 @@ import unittest
 
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.exceptions import NuleculeException
+from atomicapp.nulecule.config import Config
 
 
 class TestNuleculeBaseGetProvider(unittest.TestCase):
@@ -16,7 +17,7 @@ class TestNuleculeBaseGetProvider(unittest.TestCase):
         provider_key = u'openshift'
         # method `get_provider` will read from this config, we give it here
         # since we have neither provided it before nor it is auto-generated
-        nb.config = {u'general': {u'provider': provider_key}}
+        nb.config = Config(answers={u'general': {u'provider': provider_key}})
 
         return_provider = mock.Mock()
         # mocking return value of method plugin.getProvider,because it returns
@@ -35,6 +36,6 @@ class TestNuleculeBaseGetProvider(unittest.TestCase):
         nb = NuleculeBase(params = [], basepath = '', namespace = '')
         # purposefully give the wrong provider key
         provider_key = u'mesos'
-        nb.config = {u'general': {u'provider': provider_key}}
+        nb.config = Config(answers={u'general': {u'provider': provider_key}})
         with self.assertRaises(NuleculeException):
             nb.get_provider() 

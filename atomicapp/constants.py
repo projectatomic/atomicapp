@@ -40,6 +40,7 @@ NAME_KEY = "name"
 DEFAULTNAME_KEY = "default"
 PROVIDER_KEY = "provider"
 NAMESPACE_KEY = "namespace"
+NAMESPACE_SEPARATOR = ":"
 REQUIREMENTS_KEY = "requirements"
 
 # Nulecule spec terminology vs the function within /providers
