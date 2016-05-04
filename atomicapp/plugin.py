@@ -77,7 +77,7 @@ class Provider(object):
             if os.path.isabs(self.config_file):
                 self.config_file = Utils.get_real_abspath(self.config_file)
         else:
-            logger.warning("Configuration option '%s' not found" % PROVIDER_CONFIG_KEY)
+            logger.debug("Configuration option '%s' not provided" % PROVIDER_CONFIG_KEY)
 
     def checkConfigFile(self):
         if not self.config_file:
