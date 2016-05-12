@@ -27,15 +27,29 @@ from atomicapp.constants import (LOGGER_COCKPIT,
 class customOutputFormatter(logging.Formatter):
     """
     A class that adds 'longerfilename' support to the logging formatter
-    This 'longerfilename' will be filename + parent dir.
+    This 'longerfilename' will be path/to/file.py after the root atomicapp
+    folder.
     """
 
-    def format(self, record):
+    def __init__(self, *args):
+        super(customOutputFormatter, self).__init__(*args)
 
-        # Add the 'longerfilename' field to the record dict. This is
-        # then used by the Formatter in the logging library when
-        # formatting the message string.
-        record.longerfilename = '/'.join(record.pathname.split('/')[-2:])
+        # setting the root directory path of code base, currently this file is
+        # at /home/xyz/atomicapp/applogging.py so we need this path except for
+        # the 'applogging.py' so while splitting here, only last component
+        # i.e. 'applogging.py' is excluded by using -1, so if applogging.py
+        # is moved into another directory and if path becomes
+        # /home/xyz/atomicapp/logs/applogging.py to remove
+        # 'logs/applogging.py' use -2
+        self.atomicapproot = '/'.join(__file__.split('/')[:-1])
+
+    def format(self, record):
+        """
+        Add the 'longerfilename' field to the record dict. This is
+        then used by the Formatter in the logging library when
+        formatting the message string.
+        """
+        record.longerfilename = record.pathname.split(self.atomicapproot)[-1].lstrip('/')
 
         # Call the parent class to do formatting.
         return super(customOutputFormatter, self).format(record)
