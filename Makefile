@@ -1,7 +1,8 @@
-# Default dir locations
+# This can be overriden (for eg):
+# make install PYTHON=/usr/bin/python2.7
 PYTHON ?= /usr/bin/python
+DOCKER ?= /usr/bin/docker
 
-# Methods
 .PHONY: all
 all:
 	$(PYTHON) -m pytest -vv
@@ -18,7 +19,7 @@ test:
 
 .PHONY: image
 image:
-	docker build -t $(tag) .
+	$(DOCKER) build -t $(tag) .
 
 .PHONY: syntax-check
 syntax-check:
