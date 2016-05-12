@@ -41,7 +41,6 @@ class NuleculeBase(object):
 
     def __init__(self, basepath, params, namespace):
         self.plugin = Plugin()
-        self.plugin.load_plugins()
         self.basepath = basepath
         self.params = params or []
         self.namespace = namespace
