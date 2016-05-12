@@ -652,9 +652,9 @@ class OpenShiftProvider(Provider):
         for k in result.keys():
             if answers[k] is not None and providerconfig[k] is None:
                 result[k] = answers[k]
-            if answers[k] is None and providerconfig[k] is not None:
+            elif answers[k] is None and providerconfig[k] is not None:
                 result[k] = providerconfig[k]
-            if answers[k] is not None and providerconfig[k] is not None:
+            elif answers[k] is not None and providerconfig[k] is not None:
                 if answers[k] == providerconfig[k]:
                     result[k] = answers[k]
                 else:
