@@ -77,30 +77,20 @@ class KubeConfig(object):
 
         logger.debug("current context: %s", current_context)
 
-        context = None
-        for co in kubecfg["contexts"]:
-            if co["name"] == current_context:
-                context = co
+        try:
+            context = filter(lambda co: co["name"] == current_context,
+                             kubecfg["contexts"])[0]
+            logger.debug("context: %s", context)
 
-        if not context:
+            cluster = filter(lambda cl: cl["name"] == context["context"]["cluster"],
+                             kubecfg["clusters"])[0]
+            logger.debug("cluster: %s", cluster)
+
+            user = filter(lambda usr: usr["name"] == context["context"]["user"],
+                          kubecfg["users"])[0]
+            logger.debug("user: %s", user)
+        except IndexError:
             raise ProviderFailedException()
-
-        cluster = None
-        for cl in kubecfg["clusters"]:
-            if cl["name"] == context["context"]["cluster"]:
-                cluster = cl
-
-        user = None
-        for usr in kubecfg["users"]:
-            if usr["name"] == context["context"]["user"]:
-                user = usr
-
-        if not cluster or not user:
-            raise ProviderFailedException()
-
-        logger.debug("context: %s", context)
-        logger.debug("cluster: %s", cluster)
-        logger.debug("user: %s", user)
 
         url = cluster["cluster"]["server"]
         token = user["user"]["token"]
