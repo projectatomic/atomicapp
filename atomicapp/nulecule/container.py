@@ -85,7 +85,7 @@ class DockerHandler(object):
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", pull_cmd)
-        elif subprocess.call(pull_cmd) != 0:
+        elif subprocess.check_output(pull_cmd) != 0:
             raise DockerException("Could not pull Docker image %s" % image)
 
         cockpit_logger.info('Skipping pulling Docker image: %s' % image)
@@ -123,7 +123,7 @@ class DockerHandler(object):
                   tmpdir]
         logger.debug(
             'Copying data from Docker container: %s' % ' '.join(cp_cmd))
-        subprocess.call(cp_cmd)
+        subprocess.check_output(cp_cmd)
 
         # There has been some inconsistent behavior where docker cp
         # will either copy out the entire dir /APP_ENT_PATH/*files* or
@@ -162,7 +162,7 @@ class DockerHandler(object):
         # Clean up dummy container
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
         logger.debug('Removing Docker container: %s' % ' '.join(rm_cmd))
-        subprocess.call(rm_cmd)
+        subprocess.check_output(rm_cmd)
 
     def is_image_present(self, image):
         """
