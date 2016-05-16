@@ -159,7 +159,7 @@ class NuleculeManager(object):
         # Temporary working dir to render the templates
         tmpdir = tempfile.mkdtemp(prefix='nulecule-new-app-')
         template_dir = os.path.join(os.path.dirname(__file__),
-                                    '../external/templates/nulecule')
+                                    'external/templates/nulecule')
 
         try:
             # Copy template dir to temporary working directory and render templates
