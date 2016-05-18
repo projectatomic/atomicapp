@@ -28,3 +28,7 @@ syntax-check:
 .PHONY: clean
 clean:
 	$(PYTHON) setup.py clean --all
+
+.PHONY: binary
+binary:
+	./script/binary.sh
