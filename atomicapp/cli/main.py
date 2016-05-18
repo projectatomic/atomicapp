@@ -447,7 +447,20 @@ class CLI():
 
         # Setup logging (now with arguments from cmdline) and log a few msgs
         Logging.setup_logging(args.verbose, args.quiet, args.logtype)
-        logger.info("Action/Mode Selected is: %s" % args.action)
+
+        art = """
+   _  _             _      _
+  /_\| |_ ___ _ __ (_)__  /_\  _ __ _ __
+ / _ \  _/ _ \ '  \| / _|/ _ \| '_ \ '_ \\
+/_/ \_\__\___/_|_|_|_\__/_/ \_\ .__/ .__/
+                               |_|  |_|
+        """.splitlines()
+        logger.info("%s" % art[1])
+        logger.info("%s   Version:  %s" % (art[2], __ATOMICAPPVERSION__))
+        logger.info("%s  Nulecule: %s" % (art[3], __NULECULESPECVERSION__))
+        logger.info("%s  Mode:     %s" % (art[4], str(args.action).capitalize()))
+        logger.info("%s" % art[5])
+
         logger.debug("Final parsed cmdline: {}".format(' '.join(cmdline)))
 
         # In the case of Atomic CLI we want to allow the user to specify

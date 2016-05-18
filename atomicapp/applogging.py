@@ -114,6 +114,10 @@ class Logging:
         The 'color' level prints out normal log msgs (no cockpit) with color
         """
 
+        # Shorten the name of WARNING to WARN in order to decrease
+        # output width / character wrapping
+        logging.addLevelName(logging.WARNING, 'WARN')
+
         # If no logtype was set then let's have a sane default
         # If connected to a tty, then default to color, else, no color
         if not logtype:
@@ -132,10 +136,11 @@ class Logging:
 
         # Set the format string to use based on the logging level.
         # For debug we include more of the filename than for !debug.
+        # We use -6s spacing to align all logging outputs
         if logging_level == logging.DEBUG:
-            formatstr = '%(asctime)s - [%(levelname)s] - %(longerfilename)s - %(message)s'
+            formatstr = '%(levelname)-6s :: - %(longerfilename)s :: %(message)s'
         else:
-            formatstr = '[%(levelname)s] - %(filename)s - %(message)s'
+            formatstr = '%(levelname)-6s :: %(message)s'
 
         # Set a tuple of options that will be passed to the formatter. The %s
         # will tell the logging library to use seconds since epoch for time stamps
