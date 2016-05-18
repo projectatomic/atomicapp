@@ -75,20 +75,20 @@ class DockerHandler(object):
             None
         """
         if not self.is_image_present(image) or update:
-            logger.info('Pulling Docker image: %s' % image)
-            cockpit_logger.info('Pulling Docker image: %s' % image)
+            logger.info('Pulling docker image: %s' % image)
+            cockpit_logger.info('Pulling docker image: %s' % image)
             pull_cmd = [self.docker_cli, 'pull', image]
             logger.debug(' '.join(pull_cmd))
         else:
-            logger.info('Skipping pulling Docker image: %s' % image)
+            logger.info('Skipping pulling docker image: %s' % image)
             return
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", pull_cmd)
         elif subprocess.check_output(pull_cmd) != 0:
-            raise DockerException("Could not pull Docker image %s" % image)
+            raise DockerException("Could not pull docker image: %s" % image)
 
-        cockpit_logger.info('Skipping pulling Docker image: %s' % image)
+        cockpit_logger.info('Skipping pulling docker image: %s' % image)
 
     def extract(self, image, source, dest, update=False):
         """
@@ -106,7 +106,7 @@ class DockerHandler(object):
             None
         """
         logger.info(
-            'Extracting nulecule data from image: %s to %s' % (image, dest))
+            'Extracting Nulecule data from image %s to %s' % (image, dest))
         if self.dryrun:
             return
 
@@ -122,7 +122,7 @@ class DockerHandler(object):
                   '%s:/%s' % (container_id, source),
                   tmpdir]
         logger.debug(
-            'Copying data from Docker container: %s' % ' '.join(cp_cmd))
+            'Copying data from docker container: %s' % ' '.join(cp_cmd))
         subprocess.check_output(cp_cmd)
 
         # There has been some inconsistent behavior where docker cp
@@ -141,7 +141,7 @@ class DockerHandler(object):
         if os.path.exists(mainfile):
             existing_id = Utils.getAppId(mainfile)
             new_id = Utils.getAppId(tmpmainfile)
-            cockpit_logger.info("Loading app_id %s ." % new_id)
+            cockpit_logger.info("Loading app_id %s" % new_id)
             if existing_id != new_id:
                 raise NuleculeException(
                     "Existing app (%s) and requested app (%s) differ" %
@@ -161,7 +161,7 @@ class DockerHandler(object):
 
         # Clean up dummy container
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
-        logger.debug('Removing Docker container: %s' % ' '.join(rm_cmd))
+        logger.debug('Removing docker container: %s' % ' '.join(rm_cmd))
         subprocess.check_output(rm_cmd)
 
     def is_image_present(self, image):

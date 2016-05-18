@@ -111,7 +111,7 @@ class Nulecule(NuleculeBase):
         Returns:
             A Nulecule instance, or None in case of dry run.
         """
-        logger.info('Unpacking image: %s to %s' % (image, dest))
+        logger.info('Unpacking image %s to %s' % (image, dest))
         if Utils.running_on_openshift():
             # pass general config data containing provider specific data
             # to Openshift provider
@@ -380,12 +380,12 @@ class NuleculeComponent(NuleculeBase):
             self.basepath, EXTERNAL_APP_DIR, self.name)
         if os.path.isdir(external_app_path) and not update:
             logger.info(
-                'Found existing external application for %s. '
-                'Loading it.' % self.name)
+                'Found existing external application: %s '
+                'Loading: ' % self.name)
             nulecule = Nulecule.load_from_path(
                 external_app_path, dryrun=dryrun, update=update)
         elif not dryrun:
-            logger.info('Pulling external application for %s.' % self.name)
+            logger.info('Pulling external application: %s' % self.name)
             nulecule = Nulecule.unpack(
                 self.source,
                 external_app_path,
