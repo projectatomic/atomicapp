@@ -44,7 +44,6 @@ class Requirements:
 
     def __init__(self, config, basepath, graph, provider, dryrun):
         self.plugin = Plugin()
-        self.plugin.load_plugins()
 
         self.config = config
         self.basepath = basepath

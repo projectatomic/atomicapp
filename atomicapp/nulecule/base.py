@@ -44,7 +44,7 @@ from atomicapp.requirements import Requirements
 from atomicapp.nulecule.lib import NuleculeBase
 from atomicapp.nulecule.container import DockerHandler
 from atomicapp.nulecule.exceptions import NuleculeException
-from atomicapp.providers.openshift import OpenShiftProvider
+from atomicapp.providers.openshift import OpenshiftProvider
 
 from jsonpointer import resolve_pointer, set_pointer, JsonPointerException
 from anymarkup import AnyMarkupError
@@ -115,7 +115,7 @@ class Nulecule(NuleculeBase):
         if Utils.running_on_openshift():
             # pass general config data containing provider specific data
             # to Openshift provider
-            op = OpenShiftProvider(config.get('general', {}), './', False)
+            op = OpenshiftProvider(config.get('general', {}), './', False)
             op.artifacts = []
             op.init()
             op.extract(image, APP_ENT_PATH, dest, update)

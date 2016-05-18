@@ -9,23 +9,23 @@ the external world openshift and kubernetes API.
 
 import unittest
 import mock
-from atomicapp.providers.openshift import OpenShiftProvider
+from atomicapp.providers.openshift import OpenshiftProvider
 from atomicapp.plugin import ProviderFailedException
 
 
 class OpenshiftProviderTestMixin(object):
 
     def setUp(self):
-        # Patch OpenshiftClient to test OpenShiftProvider
+        # Patch OpenshiftClient to test OpenshiftProvider
         self.patcher = mock.patch('atomicapp.providers.openshift.OpenshiftClient')
         self.mock_OpenshiftClient = self.patcher.start()
         self.mock_oc = self.mock_OpenshiftClient()
 
     def get_oc_provider(self, dryrun=False, artifacts=[]):
         """
-        Get OpenShiftProvider instance
+        Get OpenshiftProvider instance
         """
-        op = OpenShiftProvider({}, '.', dryrun)
+        op = OpenshiftProvider({}, '.', dryrun)
         op.artifacts = artifacts
         op.access_token = 'test'
         op.init()
@@ -37,12 +37,12 @@ class OpenshiftProviderTestMixin(object):
 
 class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase):
     """
-    Test OpenShiftProvider.run
+    Test OpenshiftProvider.run
     """
 
     def test_run(self):
         """
-        Test calling OpenshiftClient.run from OpenShiftProvider.run
+        Test calling OpenshiftClient.run from OpenshiftProvider.run
         """
         op = self.get_oc_provider()
         op.oapi_resources = ['foo']
@@ -64,7 +64,7 @@ class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase)
 
     def test_run_dryrun(self):
         """
-        Test running OpenShiftProvider.run as dryrun
+        Test running OpenshiftProvider.run as dryrun
         """
         op = self.get_oc_provider(dryrun=True)
         op.oapi_resources = ['foo']
@@ -84,12 +84,12 @@ class TestOpenshiftProviderDeploy(OpenshiftProviderTestMixin, unittest.TestCase)
 
 class TestOpenshiftProviderUnrun(OpenshiftProviderTestMixin, unittest.TestCase):
     """
-    Test OpenShiftProvider.stop
+    Test OpenshiftProvider.stop
     """
 
     def test_stop(self):
         """
-        Test calling OpenshiftClient.delete from OpenShiftProvider.stop
+        Test calling OpenshiftClient.delete from OpenshiftProvider.stop
         """
         op = self.get_oc_provider()
         op.oapi_resources = ['foo']
@@ -113,7 +113,7 @@ class TestOpenshiftProviderUnrun(OpenshiftProviderTestMixin, unittest.TestCase):
 
     def test_stop_dryrun(self):
         """
-        Test running OpenShiftProvider.stop as dryrun
+        Test running OpenshiftProvider.stop as dryrun
         """
         op = self.get_oc_provider(dryrun=True)
         op.oapi_resources = ['foo']

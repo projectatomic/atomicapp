@@ -31,7 +31,7 @@ cockpit_logger = logging.getLogger(LOGGER_COCKPIT)
 logger = logging.getLogger(LOGGER_DEFAULT)
 
 
-class Marathon(Provider):
+class MarathonProvider(Provider):
 
     key = "marathon"
     config_file = None

@@ -313,7 +313,7 @@ class OpenshiftClient(object):
         return return_data['status']['phase'].lower()
 
 
-class OpenShiftProvider(Provider):
+class OpenshiftProvider(Provider):
     key = "openshift"
     cli_str = "oc"
     cli = None
