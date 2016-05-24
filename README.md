@@ -25,7 +25,7 @@ _or_
 
 Download a pre-signed .tar.gz from [download.projectatomic.io](https://download.projectatomic.io) / [GitHub](https://github.com/projectatomic/atomicapp/releases):
 ```sh
-export RELEASE=0.5.1
+export RELEASE=0.5.2
 wget https://github.com/projectatomic/atomicapp/releases/download/$RELEASE/atomicapp-$RELEASE.tar.gz
 tar -xvf atomicapp-$RELEASE.tar.gz && cd atomicapp-$RELEASE
 sudo make install

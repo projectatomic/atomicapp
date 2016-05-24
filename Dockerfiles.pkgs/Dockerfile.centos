@@ -4,7 +4,7 @@ MAINTAINER Red Hat, Inc. <container-tools@redhat.com>
 
 # Check https://bodhi.fedoraproject.org/updates/?packages=atomicapp
 # for the most recent builds of atomicapp in epel
-ENV ATOMICAPPVERSION="0.5.1"
+ENV ATOMICAPPVERSION="0.5.2"
 ENV TESTING="--enablerepo=epel-testing"
 
 LABEL io.projectatomic.nulecule.atomicappversion=${ATOMICAPPVERSION} \

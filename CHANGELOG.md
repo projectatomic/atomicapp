@@ -1,3 +1,36 @@
+## Atomic App 0.5.2 (05-24-2016)
+
+This release of Atomic App we include binary generation, a logging refactor/clean-up as well as a minor code refactor to the main Nulecule codebase.
+
+The main features are:
+  - Add support for generating a static binary of Atomic App
+  - Logging clean-up
+  - README.md removed from `atomicapp init` generation
+  - Removal of dynamic module/class loading from providers in favour of static
+
+```
+Charlie Drage <charlie@charliedrage.com>:
+      Ignore vim .swo files
+      Change provider-config warning to debug
+      Remove README.MD from init
+      Makes Makefile faster using .PHONY && add default python location
+      Modify TravisCI for updated Makefile
+      Removes loading via .py files
+      Hide container id output on container creation
+      Change dir of /external to /nulecule/external
+      Add binary generation
+      Update to a cleaner logging output.
+      Logging formatting
+
+Suraj Deshmukh <surajssd009005@gmail.com>:
+      Added elif to consecutive exclusive if statements
+      Use filter to search in kubeconfig.py
+      Now logs can show path to file under root atomicapp folder
+      Updated the inContainer function doc string
+      Removed unused function update from utils.py
+      Replaced a for loop that initialized a dict
+```
+
 ## Atomic App 0.5.1 (04-26-2016)
 
 This is a minor release of Atomic App where we refactor, fix code bugs as well as deprecate an old feature. Due to the numerous issues of locking as well as the deprectation of the `lockfile` library we have remove the locking mechanism from Atomic App.
