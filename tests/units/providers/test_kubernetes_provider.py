@@ -28,9 +28,6 @@ from atomicapp.providers.kubernetes import KubernetesProvider
 
 MOCK_CONTENT = "mock_provider_call_content"
 
-def mock_provider_call(self, cmd):
-    return MOCK_CONTENT
-
 class TestKubernetesProviderBase(unittest.TestCase):
 
     # Create a temporary directory for our setup as well as load the required providers
@@ -53,7 +50,6 @@ class TestKubernetesProviderBase(unittest.TestCase):
         return provider
 
     # Check that the provider configuration file exists
-    @mock.patch.object(KubernetesProvider, '_call', mock_provider_call)
     def test_provider_config_exist(self):
         provider_config_path = self.create_temp_file()
         mock_content = "%s_%s" % (MOCK_CONTENT, "_unchanged")

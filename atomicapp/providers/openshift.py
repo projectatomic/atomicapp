@@ -39,7 +39,7 @@ from atomicapp.constants import (PROVIDER_AUTH_KEY,
                                  PROVIDER_TLS_VERIFY_KEY,
                                  PROVIDER_CA_KEY,
                                  OPENSHIFT_POD_CA_FILE)
-from atomicapp.providers.lib.kubeconfig import KubeConfig
+from atomicapp.providers.lib.kubeshift.kubeconfig import KubeConfig
 from requests.exceptions import SSLError
 import logging
 logger = logging.getLogger(LOGGER_DEFAULT)

@@ -14,6 +14,70 @@ logger = logging.getLogger(LOGGER_DEFAULT)
 class KubeConfig(object):
 
     @staticmethod
+    def from_file(filename):
+        '''
+        Load a file using anymarkup
+
+        Params:
+            filename (str): File location
+        '''
+
+        return anymarkup.parse_file(filename)
+
+    @staticmethod
+    def from_params(api=None, auth=None, ca=None, verify=True):
+        '''
+        Creates a .kube/config configuration as an
+        object based upon the arguments given.
+
+        Params:
+            api(str): API URL of the server
+            auth(str): Authentication key for the server
+            ca(str): The certificate being used. This can be either a file location or a base64 encoded string
+            verify(bool): true/false of whether or not certificate verification is enabled
+
+        Returns:
+            config(obj): An object file of generate .kube/config
+
+        '''
+        config = {
+            "clusters": [
+                {
+                    "name": "self",
+                    "cluster": {
+                    },
+                },
+            ],
+            "users": [
+                {
+                    "name": "self",
+                    "user": {
+                        "token": ""
+                    },
+                },
+            ],
+            "contexts": [
+                {
+                    "name": "self",
+                    "context": {
+                        "cluster": "self",
+                        "user": "self",
+                    },
+                }
+            ],
+            "current-context": "self",
+        }
+        if api:
+            config['clusters'][0]['cluster']['server'] = api
+
+        if auth:
+            config['users'][0]['user']['token'] = auth
+
+        if ca:
+            config['clusters'][0]['cluster']['certificate-authority'] = ca
+        return config
+
+    @staticmethod
     def parse_kubeconf(filename):
         """"
         Parse kubectl config file
