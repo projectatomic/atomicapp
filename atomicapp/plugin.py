@@ -40,7 +40,9 @@ class Provider(object):
     dryrun = None
     container = False
     config_file = None
-    __artifacts = None
+
+    # By default, no artifacts are loaded
+    __artifacts = []
 
     @property
     def artifacts(self):

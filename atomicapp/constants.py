@@ -75,6 +75,8 @@ PROVIDER_CONFIG_KEY = "provider-config"
 PROVIDER_TLS_VERIFY_KEY = "provider-tlsverify"
 PROVIDER_CA_KEY = "provider-cafile"
 
+K8S_DEFAULT_API = "http://localhost:8080"
+
 # Persistent Storage Formats
 PERSISTENT_STORAGE_FORMAT = ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
 

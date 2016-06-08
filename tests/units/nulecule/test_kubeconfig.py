@@ -1,6 +1,6 @@
 import unittest
 from atomicapp.plugin import ProviderFailedException
-from atomicapp.providers.lib.kubeconfig import KubeConfig
+from atomicapp.providers.lib.kubeshift.kubeconfig import KubeConfig
 
 
 class TestKubeConfParsing(unittest.TestCase):
