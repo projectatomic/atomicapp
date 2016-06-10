@@ -54,6 +54,17 @@ class KubeKubernetesClient(object):
         # Gather the resource names which will be used for the 'kind' API calls
         self.k8s_api_resources = self.api.get_resources(self.k8s_api)
 
+        # Gather what API groups are available
+        self.k8s_apis = urljoin(url, "apis/")
+
+        # Gather the group names from which resource names will be derived
+        self.k8s_api_groups = self.api.get_groups(self.k8s_apis)
+
+        for (name, versions) in self.k8s_api_groups:
+            for version in versions:
+                url = urljoin(self.k8s_apis, "%s/%s" % (name, version))
+                self.k8s_api_resources += self.api.get_resources(url)
+
     def create(self, obj, namespace):
         '''
         Create an object from the Kubernetes cluster
@@ -129,15 +140,23 @@ class KubeKubernetesClient(object):
             kind (str): The kind used
             url (str): The URL to be used / artifact URL
         '''
+        if 'apiVersion' not in obj.keys():
+            raise KubeKubernetesError("Error processing object. There is no apiVersion")
+
         if 'kind' not in obj.keys():
             raise KubeKubernetesError("Error processing object. There is no kind")
+
+        api_version = obj['apiVersion']
 
         kind = obj['kind']
 
         resource = KubeBase.kind_to_resource_name(kind)
 
         if resource in self.k8s_api_resources:
-            url = self.k8s_api
+            if api_version == 'v1':
+                url = self.k8s_api
+            else:
+                url = urljoin(self.k8s_apis, "%s/" % api_version)
         else:
             raise KubeKubernetesError("No kind by that name: %s" % kind)
 
