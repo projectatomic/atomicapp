@@ -19,11 +19,13 @@
 
 from urlparse import urljoin
 from urllib import urlencode
-from atomicapp.providers.lib.kubeshift.kubebase import KubeBase
-from atomicapp.providers.lib.kubeshift.exceptions import (KubeKubernetesError)
-from atomicapp.constants import LOGGER_DEFAULT
 import logging
 import re
+
+from atomicapp.constants import LOGGER_DEFAULT
+from atomicapp.providers.lib.kubeshift.kubebase import KubeBase
+from atomicapp.providers.lib.kubeshift.exceptions import (KubeKubernetesError)
+
 logger = logging.getLogger(LOGGER_DEFAULT)
 
 
@@ -52,7 +54,8 @@ class KubeKubernetesClient(object):
         self.api.test_connection(self.k8s_api)
 
         # Gather the resource names which will be used for the 'kind' API calls
-        self.k8s_api_resources = self.api.get_resources(self.k8s_api)
+        self.k8s_api_resources = {}
+        self.k8s_api_resources['v1'] = self.api.get_resources(self.k8s_api)
 
         # Gather what API groups are available
         self.k8s_apis = urljoin(url, "apis/")
@@ -62,8 +65,9 @@ class KubeKubernetesClient(object):
 
         for (name, versions) in self.k8s_api_groups:
             for version in versions:
-                url = urljoin(self.k8s_apis, "%s/%s" % (name, version))
-                self.k8s_api_resources += self.api.get_resources(url)
+                api = "%s/%s" % (name, version)
+                url = urljoin(self.k8s_apis, api)
+                self.k8s_api_resources[api] = self.api.get_resources(url)
 
     def create(self, obj, namespace):
         '''
@@ -72,7 +76,7 @@ class KubeKubernetesClient(object):
         name = self._get_metadata_name(obj)
         kind, url = self._generate_kurl(obj, namespace)
         self.api.request("post", url, data=obj)
-        logger.info("%s '%s' successfully created" % (kind.capitalize(), name))
+        logger.info("%s '%s' successfully created", kind.capitalize(), name)
 
     def delete(self, obj, namespace):
         '''
@@ -97,7 +101,7 @@ class KubeKubernetesClient(object):
             self.scale(obj, namespace)
 
         self.api.request("delete", url)
-        logger.info("%s '%s' successfully deleted" % (kind.capitalize(), name))
+        logger.info("%s '%s' successfully deleted", kind.capitalize(), name)
 
     def scale(self, obj, namespace, replicas=0):
         '''
@@ -115,7 +119,7 @@ class KubeKubernetesClient(object):
         name = self._get_metadata_name(obj)
         _, url = self._generate_kurl(obj, namespace, name)
         self.api.request("patch", url, data=patch)
-        logger.info("'%s' successfully scaled to %s" % (name, replicas))
+        logger.info("'%s' successfully scaled to %s", name, replicas)
 
     def namespaces(self):
         '''
@@ -152,7 +156,7 @@ class KubeKubernetesClient(object):
 
         resource = KubeBase.kind_to_resource_name(kind)
 
-        if resource in self.k8s_api_resources:
+        if resource in self.k8s_api_resources[api_version]:
             if api_version == 'v1':
                 url = self.k8s_api
             else:
@@ -170,7 +174,8 @@ class KubeKubernetesClient(object):
 
         return (resource, url)
 
-    def _get_metadata_name(self, obj):
+    @staticmethod
+    def _get_metadata_name(obj):
         '''
         This looks at the object and grabs the metadata name of said object
 
