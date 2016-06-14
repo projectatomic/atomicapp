@@ -1,3 +1,22 @@
+## Atomic App 0.6.0 (06-14-2016)
+
+A major release of Atomic App, we incorporate major changes to the **kubernetes** provider. With this release we replace the usage of kubectl with the *requests* Python library and the Kubernetes HTTP API end-point. This change results in faster deployment, smaller image sizes and detailed error messages.
+
+The main features of this release are:
+  - Kubectl to API conversion for the Kubernetes provider
+  - Removal of ASCII art
+
+```
+Charlie Drage <charlie@charliedrage.com> (3):
+      Ignore .swn vim temp files
+      Remove ASCII art
+      Add a new 'library' for k8s/openshift providers.
+
+Khris Richardson <khris.richardson@intel.com> (2):
+      add support for api-groups
+      add precision to resource membership test
+```
+
 ## Atomic App 0.5.2 (05-24-2016)
 
 This release of Atomic App we include binary generation, a logging refactor/clean-up as well as a minor code refactor to the main Nulecule codebase.
