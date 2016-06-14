@@ -142,7 +142,7 @@ class KubeBase(object):
             outfile (str): path of the outfile/data.
         '''
         url = 'wss://' + url.split('://', 1)[-1]
-        logger.debug('Converted http to wss url: {}'.format(url))
+        logger.debug('Converted http to wss url: %s', url)
         results = []
 
         ws = websocket.WebSocketApp(
@@ -157,13 +157,22 @@ class KubeBase(object):
         if not outfile:
             return ''.join(results)
 
+    def get_groups(self, url):
+        '''
+        Get the groups of APIs available.
+        '''
+        data = self.request("get", url)
+        groups = data["groups"] or []
+        groups = [(group['name'], [i['version'] for i in group['versions']]) for group in groups]
+        return groups
+
     def get_resources(self, url):
         '''
         Get the resources available to the API. This is a list of all available
         API calls that can be made to the API.
         '''
         data = self.request("get", url)
-        resources = data["resources"]
+        resources = data["resources"] or []
         resources = [res['name'] for res in resources]
         return resources
 
