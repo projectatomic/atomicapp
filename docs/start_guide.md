@@ -22,7 +22,7 @@ __atomicapp genanswers__: By examing the `Nulecule` file. Atomic App will genera
 
 ex. `atomicapp genanswers ./myappdir`
 
-For more detailed information as well as a list of all parameters, use `atomicapp --help` on the command line. Alternatively, you can read our [CLI doc](docs/cli.md).
+For more detailed information as well as a list of all parameters, use `atomicapp --help` on the command line. Alternatively, you can read our [CLI doc](/docs/cli.md).
 
 ## Atomic App on Project Atomic hosts
 
