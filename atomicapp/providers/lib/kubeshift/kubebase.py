@@ -224,7 +224,7 @@ class KubeBase(object):
             Resource name (str) (kind in plural form)
         """
         singular = kind.lower()
-        if singular.endswith("status"):
+        if singular.endswith(("s", "x", "z", "ch", "sh")):
             plural = singular + "es"
         else:
             if singular[-1] == "s":
