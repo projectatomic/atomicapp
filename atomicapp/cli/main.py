@@ -208,60 +208,6 @@ class CLI():
             action="store_true",
             help="Quiet output mode.")
         globals_parser.add_argument(
-            "--mode",
-            dest="mode",
-            default=None,
-            choices=['fetch', 'run', 'stop', 'genanswers'],
-            help=('''
-                 The mode Atomic App is run in. This option has the
-                 effect of switching the 'verb' that was passed by the
-                 user as the first positional argument. This is useful
-                 in cases where a user is not using the Atomic App cli
-                 directly, but through another interface such as the
-                 Atomic CLI. EX: `atomic run <IMAGE> --mode=genanswers`'''))
-        globals_parser.add_argument(
-            "--dry-run",
-            dest="dryrun",
-            default=False,
-            action="store_true",
-            help=(
-                "Don't actually call provider. The commands that should be "
-                "run will be logged but not run."))
-        globals_parser.add_argument(
-            "--answers-format",
-            dest="answers_format",
-            default=ANSWERS_FILE_SAMPLE_FORMAT,
-            choices=['ini', 'json', 'xml', 'yaml'],
-            help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
-        globals_parser.add_argument(
-            "--namespace",
-            dest="namespace",
-            help=('The namespace to use in the target provider'))
-        globals_parser.add_argument(
-            "--provider-tlsverify",
-            dest="provider-tlsverify",
-            action=TrueOrFalseAction,
-            choices=['True', 'False'],
-            help=('''
-                Value for provider-tlsverify answers option.
-                --providertlsverify=False to disable tls verification'''))
-        globals_parser.add_argument(
-            "--provider-config",
-            dest="provider-config",
-            help='Value for provider-config answers option.')
-        globals_parser.add_argument(
-            "--provider-cafile",
-            dest="provider-cafile",
-            help='Value for provider-cafile answers option.')
-        globals_parser.add_argument(
-            "--provider-api",
-            dest="provider-api",
-            help='Value for provider-api answers option.')
-        globals_parser.add_argument(
-            "--provider-auth",
-            dest="provider-auth",
-            help='Value for provider-auth answers option.')
-        globals_parser.add_argument(
             "--logtype",
             dest="logtype",
             choices=['cockpit', 'color', 'nocolor', 'none'],
@@ -274,9 +220,68 @@ class CLI():
                 If nothing is set and logging to file then 'nocolor' by default.
                 If nothing is set and logging to tty then 'color' by default.""")
 
+        # === DEPLOY PARSER ===
+        # Create a 'deploy parser' that will include flags related to deploying
+        # and answers files
+        deploy_parser = argparse.ArgumentParser(add_help=False)
+        deploy_parser.add_argument(
+            "--mode",
+            dest="mode",
+            default=None,
+            choices=['fetch', 'run', 'stop', 'genanswers'],
+            help=('''
+                 The mode Atomic App is run in. This option has the
+                 effect of switching the 'verb' that was passed by the
+                 user as the first positional argument. This is useful
+                 in cases where a user is not using the Atomic App cli
+                 directly, but through another interface such as the
+                 Atomic CLI. EX: `atomic run <IMAGE> --mode=genanswers`'''))
+        deploy_parser.add_argument(
+            "--dry-run",
+            dest="dryrun",
+            default=False,
+            action="store_true",
+            help=(
+                "Don't actually call provider. The commands that should be "
+                "run will be logged but not run."))
+        deploy_parser.add_argument(
+            "--answers-format",
+            dest="answers_format",
+            default=ANSWERS_FILE_SAMPLE_FORMAT,
+            choices=['ini', 'json', 'xml', 'yaml'],
+            help="The format for the answers.conf.sample file. Default: %s" % ANSWERS_FILE_SAMPLE_FORMAT)
+        deploy_parser.add_argument(
+            "--namespace",
+            dest="namespace",
+            help=('The namespace to use in the target provider'))
+        deploy_parser.add_argument(
+            "--provider-tlsverify",
+            dest="provider-tlsverify",
+            action=TrueOrFalseAction,
+            choices=['True', 'False'],
+            help=('''
+                Value for provider-tlsverify answers option.
+                --providertlsverify=False to disable tls verification'''))
+        deploy_parser.add_argument(
+            "--provider-config",
+            dest="provider-config",
+            help='Value for provider-config answers option.')
+        deploy_parser.add_argument(
+            "--provider-cafile",
+            dest="provider-cafile",
+            help='Value for provider-cafile answers option.')
+        deploy_parser.add_argument(
+            "--provider-api",
+            dest="provider-api",
+            help='Value for provider-api answers option.')
+        deploy_parser.add_argument(
+            "--provider-auth",
+            dest="provider-auth",
+            help='Value for provider-auth answers option.')
+
         # === "run" SUBPARSER ===
         run_subparser = toplevel_subparsers.add_parser(
-            "run", parents=[globals_parser])
+            "run", parents=[globals_parser, deploy_parser])
         run_subparser.add_argument(
             "-a",
             "--answers",
@@ -315,7 +320,7 @@ class CLI():
 
         # === "fetch" SUBPARSER ===
         fetch_subparser = toplevel_subparsers.add_parser(
-            "fetch", parents=[globals_parser])
+            "fetch", parents=[globals_parser, deploy_parser])
         fetch_subparser.add_argument(
             "-a",
             "--answers",
@@ -353,7 +358,7 @@ class CLI():
 
         # === "stop" SUBPARSER ===
         stop_subparser = toplevel_subparsers.add_parser(
-            "stop", parents=[globals_parser])
+            "stop", parents=[globals_parser, deploy_parser])
         stop_subparser.add_argument(
             "--provider",
             dest="cli_provider",
@@ -398,7 +403,9 @@ class CLI():
         # suppress the usage message from being output from the
         # globals parser.
         globals_parser.usage = argparse.SUPPRESS
+        deploy_parser.usage = argparse.SUPPRESS
         toplevel_parser.epilog = globals_parser.format_help()
+        toplevel_parser.epilog = deploy_parser.format_help()
 
         # Return the toplevel parser
         return toplevel_parser
@@ -438,7 +445,7 @@ class CLI():
         # NOTE: Also allow "mode" to override 'action' if specified
         args, _ = self.parser.parse_known_args(cmdline)
         cmdline.remove(args.action)     # Remove 'action' from the cmdline
-        if args.mode:
+        if hasattr(args, 'mode') and args.mode:
             args.action = args.mode     # Allow mode to override 'action'
         cmdline.insert(0, args.action)  # Place 'action' at front
 
