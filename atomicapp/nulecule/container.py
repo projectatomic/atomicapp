@@ -85,8 +85,12 @@ class DockerHandler(object):
 
         if self.dryrun:
             logger.info("DRY-RUN: %s", pull_cmd)
-        elif subprocess.check_output(pull_cmd) != 0:
-            raise DockerException("Could not pull docker image: %s" % image)
+            return
+
+        try:
+            subprocess.check_output(pull_cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise DockerException("Could not pull docker image: %s.\n%s" % (image, e.output))
 
         cockpit_logger.info('Skipping pulling docker image: %s' % image)
 
