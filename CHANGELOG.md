@@ -1,3 +1,24 @@
+## Atomic App 0.6.1 (07-06-2016)
+
+A minor release for Atomic App.
+
+With this release, we merge a few bug fixes in relation to our Kubernetes provider as well as clean up documentation.
+
+Features:
+  - Fix inclusive rules issue with Kubernetes
+  - Clean up CLI parsing documentation / help command 
+
+
+```
+Charlie Drage <charlie@charliedrage.com>::
+      Fix link issue on CLI doc within start guide
+      Clean up parsing
+      False positive error out on docker pull
+
+Khris Richardson <khris.richardson@intel.com>:
+      more inclusive rules for adding es
+```
+
 ## Atomic App 0.6.0 (06-14-2016)
 
 A major release of Atomic App, we incorporate major changes to the **kubernetes** provider. With this release we replace the usage of kubectl with the *requests* Python library and the Kubernetes HTTP API end-point. This change results in faster deployment, smaller image sizes and detailed error messages.
