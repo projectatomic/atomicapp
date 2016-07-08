@@ -122,7 +122,7 @@ class Nulecule(NuleculeBase):
         else:
             docker_handler = DockerHandler(dryrun=dryrun)
             docker_handler.pull(image)
-            docker_handler.extract(image, APP_ENT_PATH, dest, update)
+            docker_handler.extract_nulecule_data(image, APP_ENT_PATH, dest, update)
             cockpit_logger.info("All dependencies installed successfully.")
         return cls.load_from_path(
             dest, config=config, namespace=namespace, nodeps=nodeps,
