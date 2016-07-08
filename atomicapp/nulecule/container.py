@@ -21,8 +21,7 @@ import subprocess
 import uuid
 import logging
 
-from atomicapp.constants import (APP_ENT_PATH,
-                                 LOGGER_COCKPIT,
+from atomicapp.constants import (LOGGER_COCKPIT,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE)
 from atomicapp.utils import Utils
@@ -129,19 +128,11 @@ class DockerHandler(object):
             'Copying data from docker container: %s' % ' '.join(cp_cmd))
         subprocess.check_output(cp_cmd)
 
-        # There has been some inconsistent behavior where docker cp
-        # will either copy out the entire dir /APP_ENT_PATH/*files* or
-        # it will copy out just /*files* without APP_ENT_PATH. Detect
-        # that here and adjust accordingly.
-        src = os.path.join(tmpdir, APP_ENT_PATH)
-        if not os.path.exists(src):
-            src = tmpdir
-
         # If the application already exists locally then need to
         # make sure the local app id is the same as the one requested
         # on the command line.
         mainfile = os.path.join(dest, MAIN_FILE)
-        tmpmainfile = os.path.join(src, MAIN_FILE)
+        tmpmainfile = os.path.join(tmpdir, MAIN_FILE)
         if os.path.exists(mainfile):
             existing_id = Utils.getAppId(mainfile)
             new_id = Utils.getAppId(tmpmainfile)
@@ -158,8 +149,8 @@ class DockerHandler(object):
                 return
 
         # Copy files
-        logger.debug('Copying nulecule data from %s to %s' % (src, dest))
-        Utils.copy_dir(src, dest, update)
+        logger.debug('Copying nulecule data from %s to %s' % (tmpdir, dest))
+        Utils.copy_dir(tmpdir, dest, update)
         logger.debug('Removing tmp dir: %s' % tmpdir)
         Utils.rm_dir(tmpdir)
 
