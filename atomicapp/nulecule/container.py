@@ -21,8 +21,7 @@ import subprocess
 import uuid
 import logging
 
-from atomicapp.constants import (APP_ENT_PATH,
-                                 LOGGER_COCKPIT,
+from atomicapp.constants import (LOGGER_COCKPIT,
                                  LOGGER_DEFAULT,
                                  MAIN_FILE)
 from atomicapp.utils import Utils
@@ -94,10 +93,46 @@ class DockerHandler(object):
 
         cockpit_logger.info('Skipping pulling docker image: %s' % image)
 
-    def extract(self, image, source, dest, update=False):
+    def extract_files(self, image, source, dest):
         """
-        Extracts content from a directory in a Docker image to specified
+        Extracts a directory/file in a Docker image to a specified
         destination.
+
+        Args:
+            image (str): Docker image name
+            source (str): Source directory in Docker image to copy from
+            dest (str): Path to destination directory on host
+
+        Returns:
+            None
+        """
+        logger.info(
+            'Copying files from image %s:%s to %s' % (image, source, dest))
+        if self.dryrun:
+            return
+
+        # Create a dummy container in order to retrieve the file(s)
+        run_cmd = [
+            self.docker_cli, 'create', '--entrypoint', '/bin/true', image]
+        logger.debug('Creating docker container: %s' % ' '.join(run_cmd))
+        container_id = subprocess.check_output(run_cmd).strip()
+
+        # Copy files out of dummy container to the destination directory
+        cp_cmd = [self.docker_cli, 'cp',
+                  '%s:/%s' % (container_id, source), dest]
+        logger.debug(
+            'Copying data from docker container: %s' % ' '.join(cp_cmd))
+        subprocess.check_output(cp_cmd)
+
+        # Clean up dummy container
+        rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
+        logger.debug('Removing docker container: %s' % ' '.join(rm_cmd))
+        subprocess.check_output(rm_cmd)
+
+    def extract_nulecule_data(self, image, source, dest, update=False):
+        """
+        Extract the Nulecule contents from a container into a destination
+        directory.
 
         Args:
             image (str): Docker image name
@@ -114,34 +149,16 @@ class DockerHandler(object):
         if self.dryrun:
             return
 
-        # Create dummy container
-        run_cmd = [
-            self.docker_cli, 'create', '--entrypoint', '/bin/true', image]
-        logger.debug('Creating docker container: %s' % ' '.join(run_cmd))
-        container_id = subprocess.check_output(run_cmd).strip()
-
-        # Copy files out of dummy container to tmpdir
+        # Create a temporary directory for extraction
         tmpdir = '/tmp/nulecule-{}'.format(uuid.uuid1())
-        cp_cmd = [self.docker_cli, 'cp',
-                  '%s:/%s' % (container_id, source),
-                  tmpdir]
-        logger.debug(
-            'Copying data from docker container: %s' % ' '.join(cp_cmd))
-        subprocess.check_output(cp_cmd)
 
-        # There has been some inconsistent behavior where docker cp
-        # will either copy out the entire dir /APP_ENT_PATH/*files* or
-        # it will copy out just /*files* without APP_ENT_PATH. Detect
-        # that here and adjust accordingly.
-        src = os.path.join(tmpdir, APP_ENT_PATH)
-        if not os.path.exists(src):
-            src = tmpdir
+        self.extract_files(image, source=source, dest=tmpdir)
 
         # If the application already exists locally then need to
         # make sure the local app id is the same as the one requested
         # on the command line.
         mainfile = os.path.join(dest, MAIN_FILE)
-        tmpmainfile = os.path.join(src, MAIN_FILE)
+        tmpmainfile = os.path.join(tmpdir, MAIN_FILE)
         if os.path.exists(mainfile):
             existing_id = Utils.getAppId(mainfile)
             new_id = Utils.getAppId(tmpmainfile)
@@ -157,16 +174,13 @@ class DockerHandler(object):
                 logger.info("App exists locally and no update requested")
                 return
 
-        # Copy files
-        logger.debug('Copying nulecule data from %s to %s' % (src, dest))
-        Utils.copy_dir(src, dest, update)
+        # Copy files from tmpdir into place
+        logger.debug('Copying nulecule data from %s to %s' % (tmpdir, dest))
+        Utils.copy_dir(tmpdir, dest, update)
+
+        # Clean up tmpdir
         logger.debug('Removing tmp dir: %s' % tmpdir)
         Utils.rm_dir(tmpdir)
-
-        # Clean up dummy container
-        rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
-        logger.debug('Removing docker container: %s' % ' '.join(rm_cmd))
-        subprocess.check_output(rm_cmd)
 
     def is_image_present(self, image):
         """
