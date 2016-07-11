@@ -429,7 +429,7 @@ class Utils(object):
         return home
 
     @staticmethod
-    def make_rest_request(method, url, verify=True, data=None):
+    def make_rest_request(method, url, verify=True, data=None, headers={}):
         """
         Make HTTP request to url
 
@@ -456,15 +456,15 @@ class Utils(object):
 
         try:
             if method.lower() == "get":
-                res = requests.get(url, verify=verify)
+                res = requests.get(url, verify=verify, headers=headers)
             elif method.lower() == "post":
-                res = requests.post(url, json=data, verify=verify)
+                res = requests.post(url, json=data, verify=verify, headers=headers)
             elif method.lower() == "put":
-                res = requests.put(url, json=data, verify=verify)
+                res = requests.put(url, json=data, verify=verify, headers=headers)
             elif method.lower() == "delete":
-                res = requests.delete(url, json=data, verify=verify)
+                res = requests.delete(url, json=data, verify=verify, headers=headers)
             elif method.lower() == "patch":
-                headers = {"Content-Type": "application/json-patch+json"}
+                headers.update({"Content-Type": "application/json-patch+json"})
                 res = requests.patch(url, json=data, verify=verify, headers=headers)
 
             status_code = res.status_code
