@@ -97,7 +97,7 @@ class DockerProvider(Provider):
             # If --name is provided, do not re-name due to potential linking of containers. Warn user instead.
             # Else use namespace provided within answers.conf
             if '--name' in run_args:
-                logger.info("WARNING: Using --name provided within artifact file.")
+                logger.warning("WARNING: Using --name provided within artifact file.")
             else:
                 run_args.insert(run_args.index('run') + 1, "--name=%s_%s_%s" % (self.namespace, self.image, Utils.getUniqueUUID()))
 
