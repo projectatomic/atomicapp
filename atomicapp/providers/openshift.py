@@ -78,7 +78,8 @@ class OpenshiftClient(object):
             (status_code, return_data) = \
                 Utils.make_rest_request("get",
                                         self.openshift_api,
-                                        verify=self._requests_tls_verify())
+                                        verify=self._requests_tls_verify(),
+                                        headers={'Authorization': "Bearer %s" % self.access_token})
         except SSLError as e:
             if self.provider_tls_verify:
                 msg = "SSL/TLS ERROR: invalid certificate. " \
@@ -98,7 +99,8 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("get",
                                     self.openshift_api,
-                                    verify=self._requests_tls_verify())
+                                    verify=self._requests_tls_verify(),
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
         if status_code == 200:
             oapi_resources = return_data["resources"]
         else:
@@ -119,7 +121,8 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("get",
                                     self.kubernetes_api,
-                                    verify=self._requests_tls_verify())
+                                    verify=self._requests_tls_verify(),
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
         if status_code == 200:
             kapi_resources = return_data["resources"]
         else:
@@ -137,7 +140,8 @@ class OpenshiftClient(object):
             Utils.make_rest_request("post",
                                     url,
                                     verify=self._requests_tls_verify(),
-                                    data=artifact)
+                                    data=artifact,
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
         if status_code == 201:
             logger.info("Object %s successfully deployed.",
                         artifact['metadata']['name'])
@@ -160,7 +164,8 @@ class OpenshiftClient(object):
         (status_code, return_data) = \
             Utils.make_rest_request("delete",
                                     url,
-                                    verify=self._requests_tls_verify())
+                                    verify=self._requests_tls_verify(),
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
         if status_code == 200:
             logger.info("Successfully deleted.")
         else:
@@ -184,7 +189,8 @@ class OpenshiftClient(object):
             Utils.make_rest_request("patch",
                                     url,
                                     data=patch,
-                                    verify=self._requests_tls_verify())
+                                    verify=self._requests_tls_verify(),
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
         if status_code == 200:
             logger.info("Successfully scaled to %s replicas", replicas)
         else:
@@ -197,7 +203,8 @@ class OpenshiftClient(object):
             Utils.make_rest_request("post",
                                     url,
                                     verify=self._requests_tls_verify(),
-                                    data=template)
+                                    data=template,
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
         if status_code == 201:
             logger.info("template processed %s", template['metadata']['name'])
             logger.debug("processed template %s", return_data)
@@ -304,7 +311,10 @@ class OpenshiftClient(object):
             'namespaces/{namespace}/pods/{pod}?'
             'access_token={access_token}'.format(**args))
         (status_code, return_data) = \
-            Utils.make_rest_request("get", url, verify=self._requests_tls_verify())
+            Utils.make_rest_request("get",
+                                    url,
+                                    verify=self._requests_tls_verify(),
+                                    headers={'Authorization': "Bearer %s" % self.access_token})
 
         if status_code != 200:
             raise ProviderFailedException(
