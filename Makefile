@@ -15,7 +15,7 @@ install:
 test:
 	pip install -qr requirements.txt
 	pip install -qr test-requirements.txt
-	$(PYTHON) -m pytest -vv
+	$(PYTHON) -m pytest -vv --cov atomicapp
 
 .PHONY: image
 image:
