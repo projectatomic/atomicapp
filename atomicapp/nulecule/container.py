@@ -122,12 +122,18 @@ class DockerHandler(object):
                   '%s:/%s' % (container_id, source), dest]
         logger.debug(
             'Copying data from docker container: %s' % ' '.join(cp_cmd))
-        subprocess.check_output(cp_cmd)
+        try:
+            subprocess.check_output(cp_cmd, stderr=subprocess.STDOUT)
+        except subprocess.CalledProcessError as e:
+            raise DockerException('Copying data from docker container failed: %s. \n%s' % (cp_cmd, e.output))
 
         # Clean up dummy container
         rm_cmd = [self.docker_cli, 'rm', '-f', container_id]
         logger.debug('Removing docker container: %s' % ' '.join(rm_cmd))
-        subprocess.check_output(rm_cmd)
+        try:
+            subprocess.check_output(rm_cmd)
+        except subprocess.CalledProcessError as e:
+            raise DockerException('Removing docker container failed: %s. \n%s' % (rm_cmd, e.output))
 
     def extract_nulecule_data(self, image, source, dest, update=False):
         """
