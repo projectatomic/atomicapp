@@ -267,9 +267,10 @@ class Utils(object):
         return ec, stdout, stderr
 
     @staticmethod
-    def askFor(what, info):
+    def askFor(what, info, app_name):
         repeat = True
         desc = info["description"]
+        logger.debug(info)
         constraints = None
         if "constraints" in info:
             constraints = info["constraints"]
@@ -277,12 +278,12 @@ class Utils(object):
             repeat = False
             if "default" in info:
                 value = raw_input(
-                    "ANSWER >> %s (%s, default: %s): " % (what, desc, info["default"]))
+                    "ANSWER => %s | %s (%s, default: %s): " % (app_name, what, desc, info["default"]))
                 if len(value) == 0:
                     value = info["default"]
             else:
                 try:
-                    value = raw_input("ANSWER >> %s (%s): " % (what, desc))
+                    value = raw_input("ANSWER => %s | %s (%s): " % (app_name, what, desc))
                 except EOFError:
                     raise
 
