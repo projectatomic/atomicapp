@@ -26,6 +26,7 @@ from atomicapp.constants import (DEFAULT_CONTAINER_NAME,
                                  LOGGER_DEFAULT)
 from atomicapp.plugin import Provider, ProviderFailedException
 from atomicapp.utils import Utils
+from atomicapp.nulecule.exceptions import DockerException
 
 logger = logging.getLogger(LOGGER_DEFAULT)
 
@@ -105,7 +106,10 @@ class DockerProvider(Provider):
             if self.dryrun:
                 logger.info("DRY-RUN: %s", " ".join(cmd))
             else:
-                subprocess.check_output(cmd)
+                try:
+                    subprocess.check_output(cmd)
+                except subprocess.CalledProcessError as e:
+                    raise DockerException("%s. \n%s" % (cmd, e.output))
 
     def stop(self):
         logger.info("Undeploying to provider: Docker")
@@ -142,4 +146,7 @@ class DockerProvider(Provider):
                 if self.dryrun:
                     logger.info("DRY-RUN: STOPPING CONTAINER %s", " ".join(cmd))
                 else:
-                    subprocess.check_output(cmd)
+                    try:
+                        subprocess.check_output(cmd)
+                    except subprocess.CalledProcessError as e:
+                        raise DockerException("STOPPING CONTAINER failed: %s. \n%s" % (cmd, e.output))
