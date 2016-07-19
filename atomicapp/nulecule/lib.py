@@ -69,7 +69,7 @@ class NuleculeBase(object):
             if value is None and (ask or (
                     not skip_asking and param.get(DEFAULTNAME_KEY) is None)):
                 cockpit_logger.info("%s is missing in answers.conf." % param[NAME_KEY])
-                value = Utils.askFor(param[NAME_KEY], param)
+                value = Utils.askFor(param[NAME_KEY], param, self.namespace)
             elif value is None:
                 value = param.get(DEFAULTNAME_KEY)
             if config.get(self.namespace) is None:
