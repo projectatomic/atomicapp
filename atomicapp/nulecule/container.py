@@ -135,6 +135,9 @@ class DockerHandler(object):
         except subprocess.CalledProcessError as e:
             raise DockerException('Removing docker container failed: %s. \n%s' % (rm_cmd, e.output))
 
+        # Set the proper permissions on the extracted folder
+        Utils.setFileOwnerGroup(dest)
+
     def extract_nulecule_data(self, image, source, dest, update=False):
         """
         Extract the Nulecule contents from a container into a destination
