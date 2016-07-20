@@ -188,6 +188,9 @@ class DockerHandler(object):
         logger.debug('Removing tmp dir: %s' % tmpdir)
         Utils.rm_dir(tmpdir)
 
+        # Set the proper permissions on the extracted folder
+        Utils.setFileOwnerGroup(dest)
+
     def is_image_present(self, image):
         """
         Check if a Docker image is present in the host.

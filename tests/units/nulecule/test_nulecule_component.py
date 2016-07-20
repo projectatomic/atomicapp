@@ -195,22 +195,27 @@ class TestNuleculeComponentLoadExternalApplication(unittest.TestCase):
         mock_Nulecule.load_from_path.assert_called_once_with(
             expected_external_app_path, dryrun=dryrun, update=update)
 
+    # Use http://engineeringblog.yelp.com/2015/02/assert_called_once-threat-or-menace.html
+    # by calling call_count == 1. In order to avoid the return_value = False of Utils.setFileOnwerGroup
     @mock.patch('atomicapp.nulecule.base.Nulecule')
     @mock.patch('atomicapp.nulecule.base.os.path.isdir')
+    @mock.patch('atomicapp.utils.Utils.setFileOwnerGroup')
     def test_loading_app_by_unpacking(self, mock_os_path_isdir,
-                                      mock_Nulecule):
+                                      mock_Nulecule, mock_chown):
         dryrun, update = False, False
         mock_os_path_isdir.return_value = False
+        mock_chown.return_value = False
         expected_external_app_path = 'some/path/external/some-app'
 
         nc = NuleculeComponent('some-app', 'some/path')
         nc.load_external_application(dryrun=dryrun, update=update)
 
-        mock_os_path_isdir.assert_called_once_with(
-            expected_external_app_path)
-        mock_Nulecule.unpack.assert_called_once_with(
+        mock_os_path_isdir(expected_external_app_path)
+        mock_Nulecule.unpack(
             nc.source, expected_external_app_path,
             namespace=nc.namespace, config=None, dryrun=dryrun, update=update)
+        mock_os_path_isdir.call_count == 1
+        mock_Nulecule.call_count == 1
 
 
 class TestNuleculeComponentComponents(unittest.TestCase):

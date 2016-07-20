@@ -418,6 +418,9 @@ class NuleculeManager(object):
         logger.debug("ANSWERS: %s", answers)
         anymarkup.serialize_file(answers, path, format=answers_format)
 
+        # Make sure that the permission of the file is set to the current user
+        Utils.setFileOwnerGroup(path)
+
     # TODO - once we rework config data we shouldn't need this
     # function anymore, we should be able to take the data
     # straight from the config object since the defaults and args

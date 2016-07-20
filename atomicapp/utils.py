@@ -20,6 +20,7 @@
 from __future__ import print_function
 import distutils.dir_util
 import os
+import pwd
 import sys
 import tempfile
 import re
@@ -376,6 +377,54 @@ class Utils(object):
     def rm_dir(directory):
         logger.debug('Recursively removing directory: %s' % directory)
         distutils.dir_util.remove_tree(directory)
+
+    @staticmethod
+    def getUidGid(user):
+        """
+        Get the UID and GID of the specific user by grepping /etc/passwd unless
+        we are in a container.
+
+        Returns:
+            (int): User UID
+            (int): User GID
+        """
+
+        # If we're in a container we should be looking in the /host/ directory
+        if Utils.inContainer():
+            os.chroot(HOST_DIR)
+            uid = pwd.getpwnam(user).pw_uid
+            gid = pwd.getpwnam(user).pw_gid
+            os.chroot("../..")
+        else:
+            uid = pwd.getpwnam(user).pw_uid
+            gid = pwd.getpwnam(user).pw_gid
+
+        return int(uid), int(gid)
+
+    @staticmethod
+    def setFileOwnerGroup(src):
+        """
+        This function sets the correct uid and gid bits to a source
+        file or directory given the current user that is running Atomic
+        App.
+        """
+        user = Utils.getUserName()
+
+        # Get the UID of the User
+        uid, gid = Utils.getUidGid(user)
+
+        logger.debug("Setting gid/uid of %s to %s,%s" % (src, uid, gid))
+
+        # chown the file/dir
+        os.chown(src, uid, gid)
+
+        # If it's a dir, chown all files within it
+        if os.path.isdir(src):
+            for root, dirs, files in os.walk(src):
+                for d in dirs:
+                    os.chown(os.path.join(root, d), uid, gid)
+                for f in files:
+                    os.chown(os.path.join(root, f), uid, gid)
 
     @staticmethod
     def getUserName():

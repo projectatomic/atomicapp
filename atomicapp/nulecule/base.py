@@ -124,6 +124,7 @@ class Nulecule(NuleculeBase):
             docker_handler.pull(image)
             docker_handler.extract_nulecule_data(image, APP_ENT_PATH, dest, update)
             cockpit_logger.info("All dependencies installed successfully.")
+
         return cls.load_from_path(
             dest, config=config, namespace=namespace, nodeps=nodeps,
             dryrun=dryrun, update=update)
@@ -394,6 +395,11 @@ class NuleculeComponent(NuleculeBase):
                 dryrun=dryrun,
                 update=update
             )
+
+            # When pulling an external application, make sure that the
+            # "external" folder is owned by the respective user extracting it
+            # by providing the basepath of the extraction
+            Utils.setFileOwnerGroup(self.basepath)
         self._app = nulecule
         cockpit_logger.info("Copied app successfully.")
 
