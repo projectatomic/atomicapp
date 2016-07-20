@@ -37,6 +37,7 @@ from atomicapp.nulecule import NuleculeManager
 from atomicapp.nulecule.exceptions import NuleculeException, DockerException
 from atomicapp.plugin import ProviderFailedException
 from atomicapp.utils import Utils
+from atomicapp.index import Index
 
 logger = logging.getLogger(LOGGER_DEFAULT)
 
@@ -110,6 +111,18 @@ def cli_init(args):
     except Exception as e:
         logger.error(e, exc_info=True)
         sys.exit(1)
+
+
+def cli_index(args):
+    argdict = args.__dict__
+    i = Index()
+    if argdict["index_action"] == "list":
+        i.list()
+    elif argdict["index_action"] == "update":
+        i.update()
+    elif argdict["index_action"] == "generate":
+        i.generate(argdict["location"])
+    sys.exit(0)
 
 
 # Create a custom action parser. Need this because for some args we don't
@@ -381,6 +394,25 @@ class CLI():
             help='The name of a container image containing an Atomic App.')
         gena_subparser.set_defaults(func=cli_genanswers)
 
+        # === "index" SUBPARSER ===
+        index_subparser = toplevel_subparsers.add_parser(
+            "index", parents=[globals_parser])
+        index_action = index_subparser.add_subparsers(dest="index_action")
+
+        index_list = index_action.add_parser("list")
+        index_list.set_defaults(func=cli_index)
+
+        index_update = index_action.add_parser("update")
+        index_update.set_defaults(func=cli_index)
+
+        index_generate = index_action.add_parser("generate")
+        index_generate.add_argument(
+            "location",
+            help=(
+                "Path containing Nulecule applications "
+                "which will be part of the generated index"))
+        index_generate.set_defaults(func=cli_index)
+
         # === "init" SUBPARSER ===
         init_subparser = toplevel_subparsers.add_parser(
             "init", parents=[globals_parser])
@@ -466,7 +498,7 @@ class CLI():
         # a directory if they want to for "run". For that reason we won't
         # default the RUN label for Atomic App to provide an app_spec argument.
         # In this case pick up app_spec from $IMAGE env var (set by RUN label).
-        if args.action != 'init' and args.app_spec is None:
+        if args.action != 'init' and args.action != 'index' and args.app_spec is None:
             if os.environ.get('IMAGE') is not None:
                 logger.debug("Setting app_spec based on $IMAGE env var")
                 args.app_spec = os.environ['IMAGE']

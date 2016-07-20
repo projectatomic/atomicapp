@@ -82,3 +82,10 @@ PERSISTENT_STORAGE_FORMAT = ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
 
 # If running in an openshift POD via `oc new-app`, the ca file is here
 OPENSHIFT_POD_CA_FILE = "/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+
+# Index
+INDEX_IMAGE = "projectatomic/nulecule-library"
+INDEX_DEFAULT_IMAGE_LOCATION = "localhost"
+INDEX_NAME = "index.yaml"
+INDEX_LOCATION = ".atomicapp/" + INDEX_NAME
+INDEX_GEN_DEFAULT_OUTPUT_LOC = "./" + INDEX_NAME
