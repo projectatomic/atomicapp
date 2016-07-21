@@ -176,9 +176,8 @@ class Nulecule(NuleculeBase):
             raise NuleculeException("Failure parsing %s file. Validation error on line %s, column %s:\n%s"
                                     % (nulecule_path, line, column, output))
 
-        nulecule = Nulecule(config=config,
-                            basepath=src, namespace=namespace,
-                            **nulecule_data)
+        nulecule = Nulecule(config=config, basepath=src,
+                            namespace=namespace, **nulecule_data)
         nulecule.load_components(nodeps, dryrun)
         return nulecule
 
@@ -247,7 +246,7 @@ class Nulecule(NuleculeBase):
             # FIXME: Find a better way to expose config data to components.
             #        A component should not get access to all the variables,
             #        but only to variables it needs.
-            component.load_config(config=config.clone(component.namespace),
+            component.load_config(config=config,
                                   ask=ask, skip_asking=skip_asking)
 
     def load_components(self, nodeps=False, dryrun=False):
@@ -294,6 +293,18 @@ class Nulecule(NuleculeBase):
             component.render(provider_key=provider_key, dryrun=dryrun)
 
     def _get_component_namespace(self, component_name):
+        """
+        Get a unique namespace for a Nulecule graph item, by concatinating
+        the namespace of the current Nulecule (which could be the root Nulecule
+        app or a child or external Nulecule app) and name of the Nulecule
+        graph item.
+
+        Args:
+            component_name (str): Name of the Nulecule graph item
+
+        Returns:
+            A string
+        """
         current_namespace = '' if self.namespace == GLOBAL_CONF else self.namespace
         return (
             '%s%s%s' % (current_namespace, NAMESPACE_SEPARATOR, component_name)
@@ -366,7 +377,7 @@ class NuleculeComponent(NuleculeBase):
         super(NuleculeComponent, self).load_config(
             config, ask=ask, skip_asking=skip_asking)
         if isinstance(self._app, Nulecule):
-            self._app.load_config(config=self.config.clone(self.namespace),
+            self._app.load_config(config=self.config,
                                   ask=ask, skip_asking=skip_asking)
 
     def load_external_application(self, dryrun=False, update=False):
@@ -443,7 +454,7 @@ class NuleculeComponent(NuleculeBase):
             raise NuleculeException(
                 "Data for provider \"%s\" are not part of this app"
                 % provider_key)
-        context = self.get_context()
+        context = self.config.context(self.namespace)
         for provider in self.artifacts:
             if provider_key and provider != provider_key:
                 continue

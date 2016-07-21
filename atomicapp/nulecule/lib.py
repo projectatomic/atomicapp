@@ -19,7 +19,8 @@
 """
 import logging
 
-from atomicapp.constants import (LOGGER_COCKPIT,
+from atomicapp.constants import (GLOBAL_CONF,
+                                 LOGGER_COCKPIT,
                                  NAME_KEY,
                                  DEFAULTNAME_KEY,
                                  PROVIDERS)
@@ -61,22 +62,20 @@ class NuleculeBase(object):
         Returns:
             None
         """
-        for param in self.params:
-            value = config.get(param[NAME_KEY])
-            if value is None and (ask or (
-                    not skip_asking and param.get(DEFAULTNAME_KEY) is None)):
-                cockpit_logger.info("%s is missing in answers.conf." % param[NAME_KEY])
-                value = Utils.askFor(param[NAME_KEY], param, self.namespace)
-            elif value is None:
-                value = param.get(DEFAULTNAME_KEY)
-            config.set(param[NAME_KEY], value)
         self.config = config
-
-    def get_context(self):
-        """
-        Get context data from config data for rendering an artifact.
-        """
-        return self.config.context()
+        for param in self.params:
+            value = config.get(param[NAME_KEY], scope=self.namespace, ignore_sources=['defaults'])
+            if value is None:
+                if ask or (not skip_asking and
+                           param.get(DEFAULTNAME_KEY) is None):
+                    cockpit_logger.info(
+                        "%s is missing in answers.conf." % param[NAME_KEY])
+                    value = config.get(param[NAME_KEY], scope=self.namespace) \
+                        or Utils.askFor(param[NAME_KEY], param, self.namespace)
+                else:
+                    value = param.get(DEFAULTNAME_KEY)
+                config.set(param[NAME_KEY], value, source='runtime',
+                           scope=self.namespace)
 
     def get_provider(self, provider_key=None, dry=False):
         """
@@ -91,7 +90,7 @@ class NuleculeBase(object):
         """
         # If provider_key isn't provided via CLI, let's grab it the configuration
         if provider_key is None:
-            provider_key = self.config.provider
+            provider_key = self.config.get('provider', scope=GLOBAL_CONF)
         provider_class = self.plugin.getProvider(provider_key)
         if provider_class is None:
             raise NuleculeException("Invalid Provider - '{}', provided in "
@@ -99,7 +98,7 @@ class NuleculeBase(object):
                                     .format(provider_key, ', '
                                                           .join(PROVIDERS)))
         return provider_key, provider_class(
-            self.get_context(), self.basepath, dry)
+            self.config.context(), self.basepath, dry)
 
     def run(self, provider_key=None, dry=False):
         raise NotImplementedError
