@@ -44,11 +44,10 @@ This README contains some high level overview information on Atomic App. The det
   4. [Marathon](docs/providers/marathon/overview.md)
 4. [CLI](docs/cli.md)
 5. [Nulecule file](docs/nulecule.md)
-6. [Atomic App lifecycle](docs/atomicapp_lifecycle.md)
-7. [File handling](docs/file_handling.md)
-8. [Specification coverage](docs/spec_coverage.md)
-9. [Contributing](CONTRIBUTING.md)
-10. [Dependencies](docs/requirements.md)
+6. [File handling](docs/file_handling.md)
+7. [Specification coverage](docs/spec_coverage.md)
+8. [Contributing](CONTRIBUTING.md)
+9. [Dependencies](docs/requirements.md)
 
 
 ## Getting started
