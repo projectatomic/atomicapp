@@ -1,9 +1,38 @@
 import unittest
+import pytest
+import tempfile
+import os
 from atomicapp.plugin import ProviderFailedException
 from atomicapp.providers.lib.kubeshift.kubeconfig import KubeConfig
 
 
 class TestKubeConfParsing(unittest.TestCase):
+
+    def test_from_file(self):
+        """
+        Test parsing a hello world JSON example and returning back the
+        respective anymarkup content
+        """
+        _, tmpfilename = tempfile.mkstemp()
+        f = open(tmpfilename, 'w')
+        f.write("{ 'hello': 'world'}")
+        f.close()
+        KubeConfig.from_file(tmpfilename)
+
+    def test_from_params(self):
+        KubeConfig.from_params("foo", "bar", "foo", "bar")
+
+    def test_parse_kubeconf_from_file_failure(self):
+        _, tmpfilename = tempfile.mkstemp()
+        f = open(tmpfilename, 'w')
+        f.write("{ 'hello': 'world'}")
+        f.close()
+        with pytest.raises(KeyError):
+            KubeConfig.parse_kubeconf(tmpfilename)
+
+    def test_parse_kubeconf_from_file(self):
+        example_kubeconfig = os.path.dirname(__file__) + '/external/example_kubeconfig'
+        KubeConfig.parse_kubeconf(example_kubeconfig)
 
     def test_parse_kubeconf_data_insecure(self):
         """

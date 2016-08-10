@@ -178,7 +178,7 @@ class KubeBase(object):
 
     def test_connection(self, url):
         self.api.request("get", url)
-        logger.debug("Connection successfully tested")
+        logger.debug("Connection successfully tested on URL %s" % url)
 
     @staticmethod
     def cert_file(data, key):
@@ -337,7 +337,7 @@ class KubeBase(object):
             data (object): object of the data that is being passed (will be converted to json)
         '''
         if method.lower() == "get":
-            res = self.api.get(url)
+            res = self.api.get(url, json=data)
         elif method.lower() == "post":
             res = self.api.post(url, json=data)
         elif method.lower() == "put":

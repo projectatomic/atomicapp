@@ -17,11 +17,11 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 
-from urlparse import urljoin
-from urllib import urlencode
 import logging
 import re
 
+from urlparse import urljoin
+from urllib import urlencode
 from atomicapp.constants import LOGGER_DEFAULT
 from atomicapp.providers.lib.kubeshift.kubebase import KubeBase
 from atomicapp.providers.lib.kubeshift.exceptions import (KubeKubernetesError)
@@ -39,7 +39,7 @@ class KubeKubernetesClient(object):
 
         '''
 
-        # Pass in the configuration data (.kube/config object) to the KubeBase
+        # The configuration data passed in will be .kube/config data, so process is accordingly.
         self.api = KubeBase(config)
 
         # Check the API url
@@ -75,7 +75,9 @@ class KubeKubernetesClient(object):
         '''
         name = self._get_metadata_name(obj)
         kind, url = self._generate_kurl(obj, namespace)
+
         self.api.request("post", url, data=obj)
+
         logger.info("%s '%s' successfully created", kind.capitalize(), name)
 
     def delete(self, obj, namespace):
@@ -99,8 +101,8 @@ class KubeKubernetesClient(object):
 
         if kind in ['rcs', 'replicationcontrollers']:
             self.scale(obj, namespace)
-
         self.api.request("delete", url)
+
         logger.info("%s '%s' successfully deleted", kind.capitalize(), name)
 
     def scale(self, obj, namespace, replicas=0):
