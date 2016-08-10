@@ -75,6 +75,9 @@ class KubeConfig(object):
 
         if ca:
             config['clusters'][0]['cluster']['certificate-authority'] = ca
+
+        if verify is False:
+            config['clusters'][0]['cluster']['insecure-skip-tls-verify'] = 'true'
         return config
 
     @staticmethod

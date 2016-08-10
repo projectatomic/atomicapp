@@ -153,11 +153,13 @@ class KubernetesProvider(Provider):
         self._check_required_params(exception=True)
         paramdict = self._build_param_dict()
 
+        logger.debug("Building from required params")
         # Generate the configuration from the paramters
         config = KubeConfig().from_params(api=paramdict[PROVIDER_API_KEY],
                                           auth=paramdict[PROVIDER_AUTH_KEY],
                                           ca=paramdict[PROVIDER_CA_KEY],
                                           verify=paramdict[PROVIDER_TLS_VERIFY_KEY])
+        logger.debug("Passed configuration for .kube/config %s" % config)
         return config
 
     def _check_namespaces(self):

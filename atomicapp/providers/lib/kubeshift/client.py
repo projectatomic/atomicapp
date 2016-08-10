@@ -18,6 +18,7 @@
 """
 
 from atomicapp.providers.lib.kubeshift.kubernetes import KubeKubernetesClient
+from atomicapp.providers.lib.kubeshift.openshift import KubeOpenshiftClient
 from atomicapp.providers.lib.kubeshift.exceptions import KubeClientError
 from atomicapp.constants import LOGGER_DEFAULT
 import logging
@@ -41,6 +42,9 @@ class Client(object):
         if provider is "kubernetes":
             self.connection = KubeKubernetesClient(config)
             logger.debug("Using Kubernetes Provider KubeClient library")
+        elif provider is "openshift":
+            self.connection = KubeOpenshiftClient(config)
+            logger.debug("Using OpenShift Provider KubeClient library")
         else:
             raise KubeClientError("No provider by that name.")
 
