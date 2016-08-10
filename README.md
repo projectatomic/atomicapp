@@ -2,7 +2,7 @@
 
 ![](docs/images/logo.png "Project Atomic")
 
-Atomic App is a reference implementation of the [Nulecule](https://github.com/projectatomic/nulecule) specification. Packaged Atomic App containers are "Nuleculized" and each component of the package is a "Nulecule".
+Atomic App is a reference implementation of the [Nulecule](docs/spec/README.md) specification. Packaged Atomic App containers are "Nuleculized" and each component of the package is a "Nulecule".
 
 Atomic App is used to bootstrap packaged container environments and run them on multiple container orchestrators. It is designed from the ground-up to be portable and provider pluggable.
 
@@ -48,6 +48,7 @@ This README contains some high level overview information on Atomic App. The det
 7. [Specification coverage](docs/spec_coverage.md)
 8. [Contributing](CONTRIBUTING.md)
 9. [Dependencies](docs/requirements.md)
+10. [Specification](docs/spec/README.md)
 
 
 ## Getting started
@@ -88,6 +89,10 @@ If you have any issues or get stuck, feel free to open a GitHub issue or reach u
 ## Dependencies
 
 See [REQUIREMENTS.md](docs/requirements.md) for a list of current Atomic App dependencies.
+
+## Specification
+
+Want to view the specification and contribute to changes? See the [Nulecule spec](docs/spec/README.MD) for more information.
 
 ## Communication channels
 
