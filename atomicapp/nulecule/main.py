@@ -249,7 +249,7 @@ class NuleculeManager(object):
         # Get answers and write them out to answers.conf in cwd
         answers = self._get_runtime_answers(
             self.nulecule.config, None)
-        self._write_answers(answers_file, answers, answers_format)
+        self._write_answers(answers_file, answers, self.answers_format)
 
     def fetch(self, nodeps=False, update=False, dryrun=False,
               answers_format=ANSWERS_FILE_SAMPLE_FORMAT, **kwargs):
@@ -416,6 +416,7 @@ class NuleculeManager(object):
         logger.debug("Writing answers to file.")
         logger.debug("FILE: %s", path)
         logger.debug("ANSWERS: %s", answers)
+        logger.debug("ANSWERS FORMAT: %s", answers_format)
         anymarkup.serialize_file(answers, path, format=answers_format)
 
         # Make sure that the permission of the file is set to the current user
