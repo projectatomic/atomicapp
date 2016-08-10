@@ -25,8 +25,10 @@ class TestNuleculeBaseGetProvider(unittest.TestCase):
         nb.plugin.getProvider = mock.Mock(return_value=return_provider)
         ret_provider_key, ret_provider = nb.get_provider()
         self.assertEqual(provider_key, ret_provider_key)
-        return_provider.assert_called_with({u'provider': provider_key}, 
-                                            '', False)
+        return_provider.assert_called_with(
+            {'provider': provider_key, 'namespace': 'default'},
+            '',
+            False)
 
     def test_get_provider_failure(self):
         """

@@ -101,23 +101,24 @@ class TestNuleculeLoadConfig(unittest.TestCase):
                 'key3': 'val3'
             },
             'component1': {
-                'key2': 'val2',
-                'key1': 'val1'
+                'key2': 'val2'
             }
         })
 
-        self.assertEqual(n.components[0].config.context(), {
-            'key3': 'val3',
-            'key2': 'val2',
-            'key1': 'val1',
-            'provider': 'docker'
-        })
+        self.assertEqual(
+            n.components[0].config.context(scope=n.components[0].namespace),
+            {'key3': 'val3',
+             'key2': 'val2',
+             'key1': 'val1',
+             'provider': 'docker',
+             'namespace': 'default'}
+        )
 
     def test_load_config_without_default_provider(self):
         """
         Test Nulecule load_config without specifying a default provider.
         """
-        config = Config(answers={})
+        config = Config()
 
         params = [
             {
@@ -150,7 +151,7 @@ class TestNuleculeLoadConfig(unittest.TestCase):
                      graph=graph, params=params, basepath='some/path',
                      config=config)
         n.load_components()
-        n.load_config(config)
+        n.load_config()
 
         self.assertEqual(n.config.runtime_answers(), {
             'general': {
@@ -160,17 +161,18 @@ class TestNuleculeLoadConfig(unittest.TestCase):
                 'key3': 'val3'
             },
             'component1': {
-                'key2': 'val2',
-                'key1': 'val1'
+                'key2': 'val2'
             }
         })
 
-        self.assertEqual(n.components[0].config.context(), {
-            'key3': 'val3',
-            'key2': 'val2',
-            'key1': 'val1',
-            'provider': 'kubernetes'
-        })
+        self.assertEqual(
+            n.components[0].config.context(n.components[0].namespace),
+            {'key3': 'val3',
+             'key2': 'val2',
+             'key1': 'val1',
+             'namespace': 'default',
+             'provider': 'kubernetes'}
+        )
 
     def test_load_config_with_default_provider_overridden_by_answers(self):
         """
@@ -228,17 +230,18 @@ class TestNuleculeLoadConfig(unittest.TestCase):
                 'key3': 'val3'
             },
             'component1': {
-                'key2': 'val2',
-                'key1': 'val1'
+                'key2': 'val2'
             }
         })
 
-        self.assertEqual(n.components[0].config.context(), {
-            'key3': 'val3',
-            'key2': 'val2',
-            'key1': 'val1',
-            'provider': 'openshift'
-        })
+        self.assertEqual(
+            n.components[0].config.context(n.components[0].namespace),
+            {'key3': 'val3',
+             'key2': 'val2',
+             'key1': 'val1',
+             'namespace': 'default',
+             'provider': 'openshift'}
+        )
 
 
 class TestNuleculeLoadComponents(unittest.TestCase):
