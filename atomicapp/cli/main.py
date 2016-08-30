@@ -232,12 +232,7 @@ class CLI():
                     none: atomicapp will disable any logging.
                 If nothing is set and logging to file then 'nocolor' by default.
                 If nothing is set and logging to tty then 'color' by default.""")
-
-        # === DEPLOY PARSER ===
-        # Create a 'deploy parser' that will include flags related to deploying
-        # and answers files
-        deploy_parser = argparse.ArgumentParser(add_help=False)
-        deploy_parser.add_argument(
+        globals_parser.add_argument(
             "--mode",
             dest="mode",
             default=None,
@@ -249,6 +244,11 @@ class CLI():
                  in cases where a user is not using the Atomic App cli
                  directly, but through another interface such as the
                  Atomic CLI. EX: `atomic run <IMAGE> --mode=genanswers`'''))
+
+        # === DEPLOY PARSER ===
+        # Create a 'deploy parser' that will include flags related to deploying
+        # and answers files
+        deploy_parser = argparse.ArgumentParser(add_help=False)
         deploy_parser.add_argument(
             "--dry-run",
             dest="dryrun",
