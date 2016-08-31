@@ -1,3 +1,26 @@
+## Atomic App 0.6.3 (08-31-2016)
+
+This release focuses on bug fixes, scripts as well as the Nulecule specification being merged into Atomic App.
+
+Features:
+  - The Nulecule spec is now located within the Atomic App repo / project
+  - Bug fixes with the `atomicapp genanswers` command
+  - Release script added
+
+```
+Charlie Drage <charlie@charliedrage.com> (7):
+      Remove lifecycle for updated CLI doc
+      Merge Nulecule specification into Atomic App
+      Formatting error with anymarkup and genanswers
+      Openshift to KubeShift conversion and improvements
+      Add release script for Atomic App
+      Fix typo in openshift.py provider
+      Fixes mode argument with --mode=genanswers
+
+Ratnadeep Debnath <rtnpro@gmail.com> (1):
+      Use travis CI to run tests from tests/units dir.
+```
+
 ## Atomic App 0.6.2 (07-27-2016)
 
 This release of Atomic App introduces the new `atomicapp index` command.
