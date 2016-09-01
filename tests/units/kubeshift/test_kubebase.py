@@ -65,15 +65,15 @@ def test_kind_to_resource_name():
 
 def test_request_methods_failures():
     with pytest.raises(KubeConnectionError):
-        kubebase.request("get", "http://foobar")
+        kubebase.request("get", "http://localhost")
     with pytest.raises(KubeConnectionError):
-        kubebase.request("post", "http://foobar")
+        kubebase.request("post", "http://localhost")
     with pytest.raises(KubeConnectionError):
-        kubebase.request("put", "http://foobar")
+        kubebase.request("put", "http://localhost")
     with pytest.raises(KubeConnectionError):
-        kubebase.request("delete", "http://foobar")
+        kubebase.request("delete", "http://localhost")
     with pytest.raises(KubeConnectionError):
-        kubebase.request("patch", "http://foobar")
+        kubebase.request("patch", "http://localhost")
 
 
 def test_request_timeout(httpserver):
