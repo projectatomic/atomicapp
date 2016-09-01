@@ -18,7 +18,6 @@
  along with Atomic App. If not, see <http://www.gnu.org/licenses/>.
 """
 import anymarkup
-import copy
 import logging
 import os
 import yaml
@@ -38,7 +37,7 @@ from atomicapp.constants import (APP_ENT_PATH,
                                  NAME_KEY,
                                  INHERIT_KEY,
                                  ARTIFACTS_KEY,
-                                 DEFAULT_PROVIDER)
+                                 NAMESPACE_SEPARATOR)
 from atomicapp.utils import Utils
 from atomicapp.requirements import Requirements
 from atomicapp.nulecule.lib import NuleculeBase
@@ -76,7 +75,7 @@ class Nulecule(NuleculeBase):
             metadata (dict): Nulecule metadata
             requirements (dict): Requirements for the Nulecule application
             params (list): List of params for the Nulecule application
-            config (dict): Config data for the Nulecule application
+            config (atomicapp.nulecule.config.Config): Config data
             namespace (str): Namespace of the current Nulecule application
 
         Returns:
@@ -88,7 +87,7 @@ class Nulecule(NuleculeBase):
         self.metadata = metadata or {}
         self.graph = graph
         self.requirements = requirements
-        self.config = config or {}
+        self.config = config
 
     @classmethod
     def unpack(cls, image, dest, config=None, namespace=GLOBAL_CONF,
@@ -101,7 +100,7 @@ class Nulecule(NuleculeBase):
             image (str): A Docker image name.
             dest (str): Destination path where Nulecule data from Docker
                         image should be extracted.
-            config (dict): Dictionary, config data for Nulecule application.
+            config: An instance of atomicapp.nulecule.config.Config
             namespace (str): Namespace for Nulecule application.
             nodeps (bool): Don't pull external Nulecule dependencies when
                            True.
@@ -115,7 +114,7 @@ class Nulecule(NuleculeBase):
         if Utils.running_on_openshift():
             # pass general config data containing provider specific data
             # to Openshift provider
-            op = OpenshiftProvider(config.get('general', {}), './', False)
+            op = OpenshiftProvider(config.globals, './', False)
             op.artifacts = []
             op.init()
             op.extract(image, APP_ENT_PATH, dest, update)
@@ -138,7 +137,8 @@ class Nulecule(NuleculeBase):
 
         Args:
             src (str): Path to load Nulecule application from.
-            config (dict): Config data for Nulecule application.
+            config (atomicapp.nulecule.config.Config): Config data for
+                Nulecule application.
             namespace (str): Namespace for Nulecule application.
             nodeps (bool): Do not pull external applications if True.
             dryrun (bool): Do not make any change to underlying host.
@@ -231,25 +231,23 @@ class Nulecule(NuleculeBase):
         It updates self.config.
 
         Args:
-            config (dict): Existing config data, may be from ANSWERS
-                           file or any other source.
+            config (atomicapp.nulecule.config.Config): Existing config data,
+                may be from ANSWERS file or any other source.
 
         Returns:
             None
         """
+        if config is None:
+            config = self.config
         super(Nulecule, self).load_config(
             config=config, ask=ask, skip_asking=skip_asking)
-        if self.namespace == GLOBAL_CONF and self.config[GLOBAL_CONF].get('provider') is None:
-            self.config[GLOBAL_CONF]['provider'] = DEFAULT_PROVIDER
-            logger.info("Provider not specified, using default provider - {}".
-                        format(DEFAULT_PROVIDER))
+
         for component in self.components:
             # FIXME: Find a better way to expose config data to components.
             #        A component should not get access to all the variables,
             #        but only to variables it needs.
-            component.load_config(config=copy.deepcopy(self.config),
+            component.load_config(config=config,
                                   ask=ask, skip_asking=skip_asking)
-            self.merge_config(self.config, component.config)
 
     def load_components(self, nodeps=False, dryrun=False):
         """
@@ -270,8 +268,8 @@ class Nulecule(NuleculeBase):
             node_name = node[NAME_KEY]
             source = Utils.getSourceImage(node)
             component = NuleculeComponent(
-                node_name, self.basepath, source,
-                node.get(PARAMS_KEY), node.get(ARTIFACTS_KEY),
+                self._get_component_namespace(node_name), self.basepath,
+                source, node.get(PARAMS_KEY), node.get(ARTIFACTS_KEY),
                 self.config)
             component.load(nodeps, dryrun)
             components.append(component)
@@ -293,6 +291,24 @@ class Nulecule(NuleculeBase):
         """
         for component in self.components:
             component.render(provider_key=provider_key, dryrun=dryrun)
+
+    def _get_component_namespace(self, component_name):
+        """
+        Get a unique namespace for a Nulecule graph item, by concatinating
+        the namespace of the current Nulecule (which could be the root Nulecule
+        app or a child or external Nulecule app) and name of the Nulecule
+        graph item.
+
+        Args:
+            component_name (str): Name of the Nulecule graph item
+
+        Returns:
+            A string
+        """
+        current_namespace = '' if self.namespace == GLOBAL_CONF else self.namespace
+        return (
+            '%s%s%s' % (current_namespace, NAMESPACE_SEPARATOR, component_name)
+            if current_namespace else component_name)
 
 
 class NuleculeComponent(NuleculeBase):
@@ -356,12 +372,13 @@ class NuleculeComponent(NuleculeBase):
         """
         Load config for the Nulecule component.
         """
+        if config is None:
+            config = self.config
         super(NuleculeComponent, self).load_config(
             config, ask=ask, skip_asking=skip_asking)
         if isinstance(self._app, Nulecule):
-            self._app.load_config(config=copy.deepcopy(self.config),
+            self._app.load_config(config=self.config,
                                   ask=ask, skip_asking=skip_asking)
-            self.merge_config(self.config, self._app.config)
 
     def load_external_application(self, dryrun=False, update=False):
         """
@@ -384,7 +401,8 @@ class NuleculeComponent(NuleculeBase):
                 'Found existing external application: %s '
                 'Loading: ' % self.name)
             nulecule = Nulecule.load_from_path(
-                external_app_path, dryrun=dryrun, update=update)
+                external_app_path, dryrun=dryrun, update=update,
+                namespace=self.namespace)
         elif not dryrun:
             logger.info('Pulling external application: %s' % self.name)
             nulecule = Nulecule.unpack(
@@ -436,7 +454,7 @@ class NuleculeComponent(NuleculeBase):
             raise NuleculeException(
                 "Data for provider \"%s\" are not part of this app"
                 % provider_key)
-        context = self.get_context()
+        context = self.config.context(self.namespace)
         for provider in self.artifacts:
             if provider_key and provider != provider_key:
                 continue

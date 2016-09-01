@@ -360,13 +360,22 @@ class Utils(object):
         return data
 
     @staticmethod
-    def loadAnswers(answers_file):
+    def loadAnswers(answers_file, format=None):
         if not os.path.isfile(answers_file):
             raise AtomicAppUtilsException(
                 "Provided answers file does not exist: %s" % answers_file)
 
         logger.debug("Loading answers from file: %s", answers_file)
-        return anymarkup.parse_file(answers_file)
+        try:
+            # Try to load answers file with a specified answers file format
+            # or the default format.
+            result = anymarkup.parse_file(answers_file, format=format)
+        except anymarkup.AnyMarkupError:
+            # if no answers file format is provided and the answers file
+            # is not a JSON file, try to load it using anymarkup in a
+            # generic way.
+            result = anymarkup.parse_file(answers_file)
+        return result
 
     @staticmethod
     def copy_dir(src, dest, update=False, dryrun=False):
