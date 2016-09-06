@@ -223,7 +223,7 @@ update_library() {
   git checkout -b $BRANCH
 
   # Commit
-  find . -type f -iname 'Dockerfile' -exec sed -i "s,^FROM.projectatomic*,FROM projectatomic/atomicapp:$1," "{}" +;
+  find . -type f -iname 'Dockerfile' -exec sed -i "s,FROM projectatomic/atomicapp:[0-9].[0-9].[0-9],FROM projectatomic/atomicapp:$1," "{}" +;
   git add .
   git commit -m "Sync with $1 release"
   git push origin $BRANCH
