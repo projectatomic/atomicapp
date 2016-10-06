@@ -1,3 +1,22 @@
+## Atomic App 0.6.4 (10-06-2016)
+
+This release of Atomic App includes a large refactor of the "config" class as well as a minor change to our release script.
+
+Features:
+  - Config refactor
+  - Release script fix
+  - Test cases added to the config class
+
+```
+Charlie Drage <charlie@charliedrage.com> (1):
+      Update release script regex
+
+Ratnadeep Debnath <rtnpro@gmail.com> (3):
+      Initial work on refactoring Nulecule config. #524
+      Re implememt Config class to be more generic. Fixes #524
+      Fixed tests for config refactor.
+```
+
 ## Atomic App 0.6.3 (08-31-2016)
 
 This release focuses on bug fixes, scripts as well as the Nulecule specification being merged into Atomic App.
