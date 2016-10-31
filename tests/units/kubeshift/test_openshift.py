@@ -43,7 +43,7 @@ class FakeClient():
         pass
 
     def get_resources(self, *args):
-        return ['Pod', 'template']
+        return ['Pod', 'template', 'Route']
 
     def get_groups(self, *args):
         return {}
@@ -57,7 +57,7 @@ class FakeClient():
 
 
 @mock.patch("atomicapp.providers.lib.kubeshift.openshift.KubeBase")
-def test_create(mock_class):
+def test_k8s_create(mock_class):
     # Mock the API class
     mock_class.return_value = FakeClient()
     mock_class.get_resources.return_value = ['Pod']
@@ -69,9 +69,29 @@ def test_create(mock_class):
     a = KubeOpenshiftClient(config)
     a.create(k8s_object, "foobar")
 
+@mock.patch("atomicapp.providers.lib.kubeshift.openshift.KubeBase")
+def test_oc_create(mock_class):
+    mock_class.return_value = FakeClient()
+    mock_class.get_resources.return_value = ['Route']
+    mock_class.kind_to_resource_name.return_value = 'Route'
+
+    oc_object = {"apiVersion": "v1", "kind": "Route", "metadata": {"labels": {"name": "helloapache-route"}, "name": "helloapache-route"}, "spec": {
+        "host": "$endpoint", "to": [{"kind": "Service", "name": "helloapache-svc"}]}}
+    a = KubeOpenshiftClient(config)
+    a.create(oc_object, "foobar")
 
 @mock.patch("atomicapp.providers.lib.kubeshift.openshift.KubeBase")
-def test_delete(mock_class):
+def test_oc_delete(mock_class):
+    mock_class.return_value = FakeClient()
+    mock_class.kind_to_resource_name.return_value = 'Route'
+
+    oc_object = {"apiVersion": "v1", "kind": "Route", "metadata": {"labels": {"name": "helloapache-route"}, "name": "helloapache-route"}, "spec": {
+        "host": "$endpoint", "to": [{"kind": "Service", "name": "helloapache-svc"}]}}
+    a = KubeOpenshiftClient(config)
+    a.delete(oc_object, "foobar")
+
+@mock.patch("atomicapp.providers.lib.kubeshift.openshift.KubeBase")
+def test_k8s_delete(mock_class):
     # Mock the API class
     mock_class.return_value = FakeClient()
     mock_class.kind_to_resource_name.return_value = 'Pod'
