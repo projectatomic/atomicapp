@@ -180,6 +180,8 @@ class KubeOpenshiftClient(object):
                 url = self.k8s_api
             else:
                 url = urljoin(self.k8s_apis, "%s/" % api_version)
+        elif resource in self.oc_api_resources:
+            url = self.oc_api
         else:
             raise KubeOpenshiftError("No kind by that name: %s" % kind)
 
